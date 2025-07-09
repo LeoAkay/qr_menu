@@ -1,0 +1,74 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Company {
+  id             BigInt  @id @unique @default(autoincrement())
+  C_id           BigInt  @unique
+  C_Name         String?
+  Username       String  @unique
+  Password       String
+  C_Logo_Image   Bytes?
+  C_QR_URL       String?
+  Welcoming_Page Bytes?
+
+  Main_Categories Main_Category[]
+  Password_resets Password_reset[]
+  Themes          Theme[]
+}
+
+model Main_Category {
+  Main_Category_id BigInt @id @unique @default(autoincrement())
+  Company_id       BigInt
+  Category_Name    String
+  Category_No      BigInt
+  Background_image Bytes?
+
+  Company        Company        @relation(fields: [Company_id], references: [id])
+  Sub_Categories Sub_Category[]
+}
+
+model Password_reset {
+  Password_id  BigInt   @id @unique @default(autoincrement())
+  old_password String
+  new_password String
+  rest_time    DateTime @default(now())
+  Company_id   BigInt
+
+  Company Company @relation(fields: [Company_id], references: [id])
+}
+
+model Sub_Category {
+  Sub_Category_id   BigInt @id @unique @default(autoincrement())
+  Sub_Category_Name String
+  Sub_Order_No      BigInt
+  MainCategory_ID   BigInt
+  Menu_Image        Bytes?
+
+  Main_Category Main_Category @relation(fields: [MainCategory_ID], references: [Main_Category_id])
+}
+
+model Theme {
+  Theme_id          BigInt  @id @unique @default(autoincrement())
+  Theme_Style       String
+  Background_colour String?
+  Logo_Area_Colour  String?
+  Text_Colour       String?
+  Facebook_URL      String?
+  Instagram_URL     String?
+  X_URL             String?
+  Company_ID        BigInt
+
+  Company Company @relation(fields: [Company_ID], references: [id])
+}
