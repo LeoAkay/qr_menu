@@ -26,7 +26,6 @@ export default function CompanyForm() {
       })
 
       if (!res.ok) {
-        console.log(res)
         throw new Error('Failed to add company')
       }
 

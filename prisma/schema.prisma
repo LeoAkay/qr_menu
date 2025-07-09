@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,10 +8,10 @@ datasource db {
 }
 
 model Company {
-  id             BigInt  @id @unique @default(autoincrement())
-  C_id           BigInt  @unique
+  id             String   @id @unique @default(uuid()) // changed to UUID
+  C_id           Int      @unique
   C_Name         String?
-  Username       String  @unique
+  Username       String   @unique
   Password       String
   C_Logo_Image   Bytes?
   C_QR_URL       String?
@@ -29,10 +23,10 @@ model Company {
 }
 
 model Main_Category {
-  Main_Category_id BigInt @id @unique @default(autoincrement())
-  Company_id       BigInt
+  Main_Category_id String  @id @unique @default(uuid()) // changed to UUID
+  Company_id       String
   Category_Name    String
-  Category_No      BigInt
+  Category_No      Int
   Background_image Bytes?
 
   Company        Company        @relation(fields: [Company_id], references: [id])
@@ -40,27 +34,27 @@ model Main_Category {
 }
 
 model Password_reset {
-  Password_id  BigInt   @id @unique @default(autoincrement())
+  Password_id  String   @id @unique @default(uuid()) // changed to UUID
   old_password String
   new_password String
   rest_time    DateTime @default(now())
-  Company_id   BigInt
+  Company_id   String
 
   Company Company @relation(fields: [Company_id], references: [id])
 }
 
 model Sub_Category {
-  Sub_Category_id   BigInt @id @unique @default(autoincrement())
+  Sub_Category_id   String @id @unique @default(uuid()) // changed to UUID
   Sub_Category_Name String
-  Sub_Order_No      BigInt
-  MainCategory_ID   BigInt
+  Sub_Order_No      Int
+  MainCategory_ID   String
   Menu_Image        Bytes?
 
   Main_Category Main_Category @relation(fields: [MainCategory_ID], references: [Main_Category_id])
 }
 
 model Theme {
-  Theme_id          BigInt  @id @unique @default(autoincrement())
+  Theme_id          String  @id @unique @default(uuid()) // changed to UUID
   Theme_Style       String
   Background_colour String?
   Logo_Area_Colour  String?
@@ -68,7 +62,7 @@ model Theme {
   Facebook_URL      String?
   Instagram_URL     String?
   X_URL             String?
-  Company_ID        BigInt
+  Company_ID        String
 
   Company Company @relation(fields: [Company_ID], references: [id])
 }

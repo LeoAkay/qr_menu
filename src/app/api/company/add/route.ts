@@ -1,13 +1,6 @@
 import { prisma } from "@/app/lib/prisma"
 import { NextResponse } from "next/server"
 
-function serializeCompany(company: any) {
-  return {
-    ...company,
-    C_id: company.C_id.toString(),
-  }
-}
-
 export async function POST(req: Request) {
   const { C_id, Username, Password, C_Name } = await req.json()
 
@@ -18,7 +11,7 @@ export async function POST(req: Request) {
   try {
     const existingCompany = await prisma.company.findFirst({
       where: {
-        C_id: BigInt(C_id),
+        C_id,
         Username,
         Password,
       },
@@ -36,7 +29,7 @@ export async function POST(req: Request) {
       // Create new
       company = await prisma.company.create({
         data: {
-          C_id: BigInt(C_id),
+          C_id,
           Username,
           Password,
           C_Name,
@@ -44,7 +37,7 @@ export async function POST(req: Request) {
       })
     }
 
-    return NextResponse.json(serializeCompany(company))
+    return NextResponse.json(company)
   } catch (error) {
     console.error('Error handling company:', error)
     return NextResponse.json({ error: 'Failed to process company' }, { status: 500 })
