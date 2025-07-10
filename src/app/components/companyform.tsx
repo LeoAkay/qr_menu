@@ -6,42 +6,45 @@ export default function CompanyForm() {
   const [cId, setCId] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [cName, setCName] = useState('')
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+  e.preventDefault()
+  setLoading(true)
 
-    try {
-      const res = await fetch('/api/company/add', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          C_id: parseInt(cId),
-          Username: username,
-          Password: password,
-          C_Name: cName,
-        }),
-      })
+  const adminId = localStorage.getItem('adminId')
 
-      if (!res.ok) {
-        throw new Error('Failed to add company')
-      }
-
-      alert('Company added!')
-      setCId('')
-      setUsername('')
-      setPassword('')
-      setCName('')
-    } catch (err) {
-      alert('Error adding company')
-      console.error(err)
-    } finally {
-      setLoading(false)
-    }
+  if (!adminId) {
+    alert('Admin not logged in')
+    setLoading(false)
+    return
   }
 
+  try {
+    const res = await fetch('/api/company/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        C_id: parseInt(cId),
+        Username: username,
+        Password: password,
+        CreatedByAdmin: adminId,
+      }),
+    })
+
+    if (!res.ok) throw new Error('Failed to add company')
+
+    alert('Company added!')
+    setCId('')
+    setUsername('')
+    setPassword('')
+  } catch (err) {
+    alert('Error adding company')
+    console.error(err)
+  } finally {
+    setLoading(false)
+  }
+}
   return (
     <form onSubmit={handleSubmit} className="space-y-4 mb-8 max-w-md">
       <div>
@@ -72,17 +75,6 @@ export default function CompanyForm() {
           type="text"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          required
-          className="w-full p-2 border rounded"
-        />
-      </div>
-
-      <div>
-        <label className="block font-medium">Restaurant Name (C_Name)</label>
-        <input
-          type="text"
-          value={cName}
-          onChange={(e) => setCName(e.target.value)}
           required
           className="w-full p-2 border rounded"
         />

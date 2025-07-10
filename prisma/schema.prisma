@@ -7,23 +7,37 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Company {
-  id             String   @id @unique @default(uuid()) // changed to UUID
-  C_id           Int      @unique
-  C_Name         String?
-  Username       String   @unique
-  Password       String
-  C_Logo_Image   Bytes?
-  C_QR_URL       String?
-  Welcoming_Page Bytes?
+model Admin {
+  Admin_id         String    @id @unique @default(uuid()) // changed to UUID
+  Username         String    @unique
+  Password         String    @unique
+  Admin_Image      Bytes?
+  CreatedCompanies Company[] @relation("AdminToCompany")
+  UpdatedCompanies Company[] @relation("AdminToCompanyUpdate")
+}
 
+model Company {
+  id              String           @id @unique @default(uuid()) // changed to UUID
+  C_id            Int              @unique
+  C_Name          String?
+  Username        String           @unique
+  Password        String
+  C_Logo_Image    Bytes?
+  C_QR_URL        String?
+  Welcoming_Page  Bytes?
+  CreatedByAdmin  String?
+  CreatedAt       DateTime         @default(now())
+  UpdatedAt       DateTime         @updatedAt
+  UpdatedByAdmin  String?
+  createdByAdmin  Admin?           @relation("AdminToCompany", fields: [CreatedByAdmin], references: [Admin_id])
+  updatedByAdmin  Admin?           @relation("AdminToCompanyUpdate", fields: [UpdatedByAdmin], references: [Admin_id])
   Main_Categories Main_Category[]
   Password_resets Password_reset[]
   Themes          Theme[]
 }
 
 model Main_Category {
-  Main_Category_id String  @id @unique @default(uuid()) // changed to UUID
+  Main_Category_id String @id @unique @default(uuid()) // changed to UUID
   Company_id       String
   Category_Name    String
   Category_No      Int

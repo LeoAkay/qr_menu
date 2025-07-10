@@ -1,4 +1,11 @@
 import './globals.css'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Admin Panel',
+  description: 'Admin dashboard login and control panel',
+}
+
 export default function RootLayout({
   children,
 }: {
@@ -6,7 +13,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className="dashboard-mode">
+        {children}
+      </body>
     </html>
   )
 }
