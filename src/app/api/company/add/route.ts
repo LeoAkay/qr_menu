@@ -2,7 +2,7 @@ import { prisma } from "@/app/lib/prisma"
 import { NextResponse } from "next/server"
 
 export async function POST(req: Request) {
-  const { C_id, Username, Password, CreatedByAdmin,UpdatedByAdmin } = await req.json()
+  const { C_id, Username, Password, CreatedByAdmin} = await req.json()
 
   if (!C_id || !Username || !Password) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -14,20 +14,12 @@ export async function POST(req: Request) {
         C_id,
         Username,
         Password,
-        CreatedByAdmin,
       },
     })
 
     let company
 
-    if (existingCompany) {
-      // Update existing
-      company = await prisma.company.update({
-        where: { C_id: existingCompany.C_id },
-        data: { UpdatedByAdmin },
-      })
-    } else {
-      // Create new
+    if (!existingCompany) {
       company = await prisma.company.create({
         data: {
           C_id,
@@ -36,8 +28,7 @@ export async function POST(req: Request) {
           CreatedByAdmin,
         },
       })
-    }
-
+    } 
     return NextResponse.json(company)
   } catch (error) {
     console.error('Error handling company:', error)

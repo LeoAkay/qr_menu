@@ -22,12 +22,10 @@ export default function LoginPage() {
       }
 
       const data = await res.json()
-
-      // ✅ Save admin login data
       localStorage.setItem('isAdmin', 'true')
       localStorage.setItem('adminId', data.admin.Admin_id)
 
-      router.push('/admin_login/dashboard')
+      router.push('/admin_login/home')
     } catch (err) {
       setError('Invalid credentials')
       console.error(err)
