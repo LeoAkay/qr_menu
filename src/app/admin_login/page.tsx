@@ -9,8 +9,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
 
-  //ONLY THE ADMIN ROLE CAN SEE THIS PAGE
-  // GET THE USER ROLE, IF NOT AN ADMIN, REDIRECT TO HOME PAGE
 
   const handleLogin = async () => {
     try {
@@ -27,6 +25,7 @@ export default function LoginPage() {
       const data = await res.json()
       localStorage.setItem('isAdmin', 'true')
       localStorage.setItem('adminId', data.admin.Admin_id)
+      localStorage.setItem('User_Name', data.admin.user_name)
 
       router.push('/admin_login/home')
     } catch (err) {

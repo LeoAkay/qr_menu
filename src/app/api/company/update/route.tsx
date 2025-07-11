@@ -2,21 +2,23 @@ import { prisma } from "@/app/lib/prisma"
 import { NextResponse } from "next/server"
 
 export async function POST(req: Request) {
-  const { C_id, Username, Password, UpdatedByAdmin } = await req.json()
+  const { C_id, Username, Password } = await req.json()
 
   if (!C_id) {
     return NextResponse.json({ error: 'Company ID (C_id) is required' }, { status: 400 })
   }
 
   try {
-    const company = await prisma.company.update({
+    if (C_id === 0) {
+    return NextResponse.json({ error: 'Invalid Company ID (cId cannot be 0)' }, { status: 400 })
+  }
+    const company = await prisma.user.update({
       where: {
-        C_id: C_id,
+        cId: C_id,
       },
       data: {
-        Username: Username,
-        Password: Password,
-        UpdatedByAdmin: UpdatedByAdmin, 
+        userName: Username,
+        password: Password,
       },
     })
 

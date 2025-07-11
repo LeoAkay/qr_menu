@@ -1,12 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-
-type Company = {
-  C_id: number
-  Username: string
-  Password: string
-}
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function EditCompanyForm() {
   const [cId, setCId] = useState('')
@@ -14,28 +9,20 @@ export default function EditCompanyForm() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
 
+  const router = useRouter()
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-
-    const adminId = localStorage.getItem('adminId')
-
-    if (!adminId) {
-      alert('Admin not logged in')
-      setLoading(false)
-      return
-    }
 
     try {
       const res = await fetch('/api/company/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          // Make sure to send C_id
-          C_id: parseInt(cId), // Convert cId to a number as expected by the API
+          C_id: parseInt(cId),
           Username: username,
           Password: password,
-          UpdatedByAdmin: adminId, // Changed from CreatedByAdmin to UpdatedByAdmin
         }),
       })
 
@@ -45,9 +32,8 @@ export default function EditCompanyForm() {
       }
 
       alert('Company Updated!')
-      setCId('')
-      setUsername('')
-      setPassword('')
+      
+      router.push('/admin_login/home')
     } catch (err: any) {
       alert(`Error updating company: ${err.message || 'Unknown error'}`)
       console.error(err)

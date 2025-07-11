@@ -7,89 +7,88 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Role{
-  id   String @id @default(uuid())
-  Role_Name String @unique @default("USER")
-  users User[]
-
+model Role {
+  id        String  @id @default(uuid())
+  roleName  String  @unique @default("USER")
+  users     User[]
 }
 
 model User {
   id        String   @id @default(uuid())
-  User_Name     String   @unique
+  cId       Int      @unique
+  userName  String   @unique
   password  String
-  role      Role     @relation(fields: [id], references: [id])
-  company   Company?
-
-  CreatedCompanies Company[] @relation("AdminToCompany")
-  UpdatedCompanies Company[] @relation("AdminToCompanyUpdate")
+  roleId    String
+  role      Role     @relation(fields: [roleId], references: [id])
+  company   Company? 
 }
+
 
 model Company {
   id              String   @id @default(uuid())
-  C_id            Int      @unique
-  C_Name          String?
-  C_Logo_Image    Bytes?
-  C_QR_URL        String?
-  Welcoming_Page  Bytes?
-  CreatedByAdmin  String?
-  UpdatedByAdmin  String?
-  CreatedAt       DateTime @default(now())
-  UpdatedAt       DateTime @updatedAt
   userId          String   @unique
-
   user            User     @relation(fields: [userId], references: [id])
-  createdByAdmin  User?   @relation("AdminToCompany", fields: [CreatedByAdmin], references: [id])
-  updatedByAdmin  User?   @relation("AdminToCompanyUpdate", fields: [UpdatedByAdmin], references: [id])
-
-  Main_Categories Main_Category[]
-  Password_resets Password_reset[]
-  Themes          Theme[]
+  C_Name           String?
+  C_Logo_Image     Bytes?
+  C_QR_URL         String?
+  Welcoming_Page   Bytes?
+  CreatedAt        DateTime   @default(now())
+  UpdatedAt        DateTime   @updatedAt
+  Main_Categories  MainCategory[]
+  Password_resets  PasswordReset[]
+  Themes           Theme[]
 }
 
 
+model MainCategory {
+  id              String         @id @default(uuid())
+  companyId       String
+  name            String
+  categoryNo      Int
+  backgroundImage Bytes?
 
-model Main_Category {
-  Main_Category_id String @id @unique @default(uuid()) // changed to UUID
-  Company_id       String
-  Category_Name    String
-  Category_No      Int
-  Background_image Bytes?
-
-  Company        Company        @relation(fields: [Company_id], references: [id])
-  Sub_Categories Sub_Category[]
+  company         Company        @relation(fields: [companyId], references: [id])
+  subCategories   SubCategory[]
+  
+  @@index([companyId])
 }
 
-model Password_reset {
-  Password_id  String   @id @unique @default(uuid()) // changed to UUID
-  old_password String
-  new_password String
-  rest_time    DateTime @default(now())
-  Company_id   String
+model PasswordReset {
+  id                 String    @id @default(uuid())
+  previousPassword   String
+  newPassword        String
+  resetTime          DateTime @default(now())
+  companyId          String
 
-  Company Company @relation(fields: [Company_id], references: [id])
+  company            Company   @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
 }
 
-model Sub_Category {
-  Sub_Category_id   String @id @unique @default(uuid()) // changed to UUID
-  Sub_Category_Name String
-  Sub_Order_No      Int
-  MainCategory_ID   String
-  Menu_Image        Bytes?
+model SubCategory {
+  id                String        @id @default(uuid())
+  name              String
+  orderNo           Int
+  mainCategoryId    String
+  menuImage         Bytes?
 
-  Main_Category Main_Category @relation(fields: [MainCategory_ID], references: [Main_Category_id])
+  mainCategory      MainCategory @relation(fields: [mainCategoryId], references: [id])
+
+  @@index([mainCategoryId])
 }
 
 model Theme {
-  Theme_id          String  @id @unique @default(uuid()) // changed to UUID
-  Theme_Style       String
-  Background_colour String?
-  Logo_Area_Colour  String?
-  Text_Colour       String?
-  Facebook_URL      String?
-  Instagram_URL     String?
-  X_URL             String?
-  Company_ID        String
+  id                String   @id @default(uuid())
+  style             String
+  backgroundColor   String?
+  logoAreaColor     String?
+  textColor         String?
+  facebookUrl       String?
+  instagramUrl      String?
+  xUrl              String?
+  companyId         String
 
-  Company Company @relation(fields: [Company_ID], references: [id])
+  company           Company  @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
 }
