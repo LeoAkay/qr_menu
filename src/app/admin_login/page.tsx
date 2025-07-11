@@ -9,6 +9,9 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
 
+  //ONLY THE ADMIN ROLE CAN SEE THIS PAGE
+  // GET THE USER ROLE, IF NOT AN ADMIN, REDIRECT TO HOME PAGE
+
   const handleLogin = async () => {
     try {
       const res = await fetch('/api/admin/login', {

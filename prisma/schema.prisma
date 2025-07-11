@@ -7,34 +7,47 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Admin {
-  Admin_id         String    @id @unique @default(uuid()) // changed to UUID
-  Username         String    @unique
-  Password         String    @unique
-  Admin_Image      Bytes?
+model Role{
+  id   String @id @default(uuid())
+  Role_Name String @unique @default("USER")
+  users User[]
+
+}
+
+model User {
+  id        String   @id @default(uuid())
+  User_Name     String   @unique
+  password  String
+  role      Role     @relation(fields: [id], references: [id])
+  company   Company?
+
   CreatedCompanies Company[] @relation("AdminToCompany")
   UpdatedCompanies Company[] @relation("AdminToCompanyUpdate")
 }
 
 model Company {
-  id              String           @id @unique @default(uuid()) // changed to UUID
-  C_id            Int              @unique
+  id              String   @id @default(uuid())
+  C_id            Int      @unique
   C_Name          String?
-  Username        String           @unique
-  Password        String
   C_Logo_Image    Bytes?
   C_QR_URL        String?
   Welcoming_Page  Bytes?
   CreatedByAdmin  String?
-  CreatedAt       DateTime         @default(now())
-  UpdatedAt       DateTime         @updatedAt
   UpdatedByAdmin  String?
-  createdByAdmin  Admin?           @relation("AdminToCompany", fields: [CreatedByAdmin], references: [Admin_id])
-  updatedByAdmin  Admin?           @relation("AdminToCompanyUpdate", fields: [UpdatedByAdmin], references: [Admin_id])
+  CreatedAt       DateTime @default(now())
+  UpdatedAt       DateTime @updatedAt
+  userId          String   @unique
+
+  user            User     @relation(fields: [userId], references: [id])
+  createdByAdmin  User?   @relation("AdminToCompany", fields: [CreatedByAdmin], references: [id])
+  updatedByAdmin  User?   @relation("AdminToCompanyUpdate", fields: [UpdatedByAdmin], references: [id])
+
   Main_Categories Main_Category[]
   Password_resets Password_reset[]
   Themes          Theme[]
 }
+
+
 
 model Main_Category {
   Main_Category_id String @id @unique @default(uuid()) // changed to UUID
