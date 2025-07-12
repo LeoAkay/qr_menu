@@ -7,35 +7,39 @@ export default function AdminHome() {
   const router = useRouter()
 
   return (
-   <main className="min-h-screen flex flex-col items-center justify-center p-6">
-
-  <h1 className="text-6xl font-bold mb-8 text-center w-full absolute top-12">ADMIN DASHBOARD</h1>
-
-
-  <div className="mt-20"> 
+    <main className="min-h-screen flex flex-col items-center justify-center p-6 ">
+      
+  <h1 className="text-6xl font-extrabold mb-16 text-center w-full absolute top-21 tracking-wide text-gray-800">
+    ADMIN DASHBOARD
+  </h1>
+<div className="absolute top-10 right-8">
     <LogoutButton />
   </div>
+  
 
-  <div className="flex flex-wrap justify-center gap-6 mt-8"> 
+  <div className="flex flex-row items-center justify-center gap-8 w-full max-w-4xl px-4">
     <button
       onClick={() => router.push('/admin_login/create_company')}
-      className="px-10 py-5 text-lg bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition"
+      className="px-12 py-6 text-xl bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition shadow-lg"
     >
       Create New Company
     </button>
+
     <button
       onClick={() => router.push('/admin_login/edit_company')}
-      className="px-10 py-5 text-lg bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition"
+      className="px-12 py-6 text-xl bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition shadow-lg"
     >
       Edit Company
     </button>
+
     <button
       onClick={() => router.push('/admin_login/view_companies')}
-      className="px-10 py-5 text-lg bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition"
+      className="px-12 py-6 text-xl bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition shadow-lg"
     >
       View Companies
     </button>
   </div>
 </main>
+
   )
 }

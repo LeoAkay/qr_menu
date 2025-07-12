@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import ReturnButton from './returnButton'
 
 export default function CompanyForm() {
   const [cId, setCId] = useState('')
@@ -38,47 +39,58 @@ export default function CompanyForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 mb-8 max-w-md mx-auto">
-      <div>
-        <label className="block font-medium">Company ID (C_id)</label>
-        <input
-          type="number"
-          value={cId}
-          onChange={(e) => setCId(e.target.value)}
-          required
-          className="w-full p-2 border rounded"
-        />
-      </div>
+    <div className="fixed inset-0 flex items-center justify-center">
+      <ReturnButton/>
+  <form
+    onSubmit={handleSubmit}
+    className="w-full max-w-2xl bg-gray bg-opacity-90 backdrop-blur-md rounded-2xl shadow-2xl p-12 space-y-8 mb-8 mx-auto"
+  >
+    
+    <div>
+      <label className="block mb-3 text-lg font-medium">Company ID (C_id)</label>
+      <input
+        type="number"
+        value={cId}
+        placeholder="Enter Company ID"
+        onChange={(e) => setCId(e.target.value)}
+        required
+        className="w-full p-4 border rounded text-lg"
+      />
+    </div>
 
-      <div>
-        <label className="block font-medium">Username</label>
-        <input
-          type="text"
-          value={userName}
-          onChange={(e) => setUsername(e.target.value)}
-          required
-          className="w-full p-2 border rounded"
-        />
-      </div>
+    <div>
+      <label className="block mb-3 text-lg font-medium">Username</label>
+      <input
+        type="text"
+        value={userName}
+        placeholder="Enter Username"
+        onChange={(e) => setUsername(e.target.value)}
+        required
+        className="w-full p-4 border rounded text-lg"
+      />
+    </div>
 
-      <div>
-        <label className="block font-medium">Password</label>
-        <input
-          type="text"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          className="w-full p-2 border rounded"
-        />
-      </div>
+    <div>
+      <label className="block mb-3 text-lg font-medium">Password</label>
+      <input
+        type="text"
+        value={password}
+        placeholder="Enter Password"
+        onChange={(e) => setPassword(e.target.value)}
+        required
+        className="w-full p-4 border rounded text-lg"
+      />
+    </div>
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 transition duration-300 text-xl font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {loading ? 'Adding...' : 'Add Company'}
-      </button>
-    </form>
+    <button
+      type="submit"
+      disabled={loading}
+      className="w-full bg-green-600 text-white px-8 py-4 rounded-md hover:bg-green-700 transition duration-300 text-xl font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      {loading ? 'Adding...' : 'Add Company'}
+    </button>
+  </form>
+</div>
+
   )
 }

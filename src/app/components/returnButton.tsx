@@ -12,7 +12,7 @@ export default function ReturnButton() {
   return (
     <button
       onClick={handleReturn}
-      className="absolute top-4 right-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+      className="absolute top-12 right-8 bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700 transition"
     >
       Return
     </button>
