@@ -19,6 +19,8 @@ model User {
   userName  String   @unique
   password  String
   roleId    String
+  CreatedAt        DateTime   @default(now())
+  UpdatedAt        DateTime   @updatedAt
   role      Role     @relation(fields: [roleId], references: [id])
   company   Company? 
 }
