@@ -24,6 +24,7 @@ export default function EditCompanyForm() {
           C_id: parseInt(cId),
           Username: username,
           Password: password,
+          updatedBy: localStorage.getItem('adminId'), // Assuming adminId is stored in localStorage
         }),
       })
 

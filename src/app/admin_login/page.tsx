@@ -22,9 +22,8 @@ export default function LoginPage() {
       if (!res.ok) throw new Error('Login failed')
 
       const data = await res.json()
-      // Optionally store admin info locally
-      localStorage.setItem('adminId', data.admin.Admin_id)
-      localStorage.setItem('User_Name', data.admin.userName)
+      localStorage.setItem('adminId', data.admin.id);
+      localStorage.setItem('User_Name', data.admin.userName);
 
       router.push('/admin_login/home')
     } catch (err) {

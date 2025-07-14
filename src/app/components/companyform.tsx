@@ -12,31 +12,38 @@ export default function CompanyForm() {
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+  e.preventDefault();
+  setLoading(true);
 
-    try {
-      const res = await fetch('/api/company/add', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          cId: parseInt(cId),
-          userName,
-          password,
-        }),
-      })
-
-      if (!res.ok) throw new Error('Failed to add company')
-
-      // ✅ Redirect after success
-      router.push('/admin_login/home')
-    } catch (err) {
-      alert('Error adding company')
-      console.error(err)
-    } finally {
-      setLoading(false)
+  try {
+    const adminId = localStorage.getItem('adminId');
+    if (!adminId) {
+      alert('Admin not logged in');
+      setLoading(false);
+      return;
     }
+
+    const res = await fetch('/api/company/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        cId: parseInt(cId),
+        userName,
+        password,
+        createdBy: adminId,  // pass admin id here
+      }),
+    });
+
+    if (!res.ok) throw new Error('Failed to add company');
+
+    router.push('/admin_login/home');
+  } catch (err) {
+    alert('Error adding company');
+    console.error(err);
+  } finally {
+    setLoading(false);
   }
+};
 
   return (
     <div className="fixed inset-0 flex items-center justify-center">

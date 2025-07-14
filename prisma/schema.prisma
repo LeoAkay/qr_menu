@@ -9,7 +9,7 @@ datasource db {
 
 model Role {
   id        String  @id @default(uuid())
-  roleName  String  @unique @default("USER")
+  roleName  String  @unique @default("User")
   users     User[]
 }
 
@@ -19,26 +19,36 @@ model User {
   userName  String   @unique
   password  String
   roleId    String
-  CreatedAt        DateTime   @default(now())
-  UpdatedAt        DateTime   @updatedAt
-  role      Role     @relation(fields: [roleId], references: [id])
-  company   Company? 
-}
+  CreatedAt DateTime @default(now())
+  UpdatedAt DateTime @updatedAt
 
+  role     Role     @relation(fields: [roleId], references: [id])
+  company  Company? 
+
+  createdCompanies Company[] @relation("CreatedCompanies")
+  updatedCompanies Company[] @relation("UpdatedCompanies")
+}
 
 model Company {
   id              String   @id @default(uuid())
   userId          String   @unique
   user            User     @relation(fields: [userId], references: [id])
-  C_Name           String?
-  C_Logo_Image     Bytes?
-  C_QR_URL         String?
-  Welcoming_Page   Bytes?
-  CreatedAt        DateTime   @default(now())
-  UpdatedAt        DateTime   @updatedAt
-  Main_Categories  MainCategory[]
-  Password_resets  PasswordReset[]
-  Themes           Theme[]
+  C_Name          String?
+  C_Logo_Image    Bytes?
+  C_QR_URL        String?
+  Welcoming_Page  Bytes?
+  CreatedAt       DateTime @default(now())
+  UpdatedAt       DateTime @updatedAt
+
+  Main_Categories MainCategory[]
+  Password_resets PasswordReset[]
+  Themes          Theme[]
+
+  createdBy       String?
+  updatedBy       String?
+
+  creator         User? @relation("CreatedCompanies", fields: [createdBy], references: [id])
+  updater         User? @relation("UpdatedCompanies", fields: [updatedBy], references: [id])
 }
 
 
