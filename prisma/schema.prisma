@@ -7,76 +7,100 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Admin {
-  Admin_id         String    @id @unique @default(uuid()) // changed to UUID
-  Username         String    @unique
-  Password         String    @unique
-  Admin_Image      Bytes?
-  CreatedCompanies Company[] @relation("AdminToCompany")
-  UpdatedCompanies Company[] @relation("AdminToCompanyUpdate")
+model Role {
+  id        String  @id @default(uuid())
+  roleName  String  @unique @default("User")
+  users     User[]
+}
+
+model User {
+  id        String   @id @default(uuid())
+  cId       Int      @unique
+  userName  String   @unique
+  password  String
+  roleId    String
+  CreatedAt DateTime @default(now())
+  UpdatedAt DateTime @updatedAt
+
+  role     Role     @relation(fields: [roleId], references: [id])
+  company  Company? 
+
+  createdCompanies Company[] @relation("CreatedCompanies")
+  updatedCompanies Company[] @relation("UpdatedCompanies")
 }
 
 model Company {
-  id              String           @id @unique @default(uuid()) // changed to UUID
-  C_id            Int              @unique
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id])
   C_Name          String?
-  Username        String           @unique
-  Password        String
   C_Logo_Image    Bytes?
   C_QR_URL        String?
   Welcoming_Page  Bytes?
-  CreatedByAdmin  String?
-  CreatedAt       DateTime         @default(now())
-  UpdatedAt       DateTime         @updatedAt
-  UpdatedByAdmin  String?
-  createdByAdmin  Admin?           @relation("AdminToCompany", fields: [CreatedByAdmin], references: [Admin_id])
-  updatedByAdmin  Admin?           @relation("AdminToCompanyUpdate", fields: [UpdatedByAdmin], references: [Admin_id])
-  Main_Categories Main_Category[]
-  Password_resets Password_reset[]
+  CreatedAt       DateTime @default(now())
+  UpdatedAt       DateTime @updatedAt
+
+  Main_Categories MainCategory[]
+  Password_resets PasswordReset[]
   Themes          Theme[]
+
+  createdBy       String?
+  updatedBy       String?
+
+  creator         User? @relation("CreatedCompanies", fields: [createdBy], references: [id])
+  updater         User? @relation("UpdatedCompanies", fields: [updatedBy], references: [id])
 }
 
-model Main_Category {
-  Main_Category_id String @id @unique @default(uuid()) // changed to UUID
-  Company_id       String
-  Category_Name    String
-  Category_No      Int
-  Background_image Bytes?
 
-  Company        Company        @relation(fields: [Company_id], references: [id])
-  Sub_Categories Sub_Category[]
+model MainCategory {
+  id              String         @id @default(uuid())
+  companyId       String
+  name            String
+  categoryNo      Int
+  backgroundImage Bytes?
+
+  company         Company        @relation(fields: [companyId], references: [id])
+  subCategories   SubCategory[]
+  
+  @@index([companyId])
 }
 
-model Password_reset {
-  Password_id  String   @id @unique @default(uuid()) // changed to UUID
-  old_password String
-  new_password String
-  rest_time    DateTime @default(now())
-  Company_id   String
+model PasswordReset {
+  id                 String    @id @default(uuid())
+  previousPassword   String
+  newPassword        String
+  resetTime          DateTime @default(now())
+  companyId          String
 
-  Company Company @relation(fields: [Company_id], references: [id])
+  company            Company   @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
 }
 
-model Sub_Category {
-  Sub_Category_id   String @id @unique @default(uuid()) // changed to UUID
-  Sub_Category_Name String
-  Sub_Order_No      Int
-  MainCategory_ID   String
-  Menu_Image        Bytes?
+model SubCategory {
+  id                String        @id @default(uuid())
+  name              String
+  orderNo           Int
+  mainCategoryId    String
+  menuImage         Bytes?
 
-  Main_Category Main_Category @relation(fields: [MainCategory_ID], references: [Main_Category_id])
+  mainCategory      MainCategory @relation(fields: [mainCategoryId], references: [id])
+
+  @@index([mainCategoryId])
 }
 
 model Theme {
-  Theme_id          String  @id @unique @default(uuid()) // changed to UUID
-  Theme_Style       String
-  Background_colour String?
-  Logo_Area_Colour  String?
-  Text_Colour       String?
-  Facebook_URL      String?
-  Instagram_URL     String?
-  X_URL             String?
-  Company_ID        String
+  id                String   @id @default(uuid())
+  style             String
+  backgroundColor   String?
+  logoAreaColor     String?
+  textColor         String?
+  facebookUrl       String?
+  instagramUrl      String?
+  xUrl              String?
+  companyId         String
 
-  Company Company @relation(fields: [Company_ID], references: [id])
+  company           Company  @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
 }
