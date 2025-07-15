@@ -12,7 +12,7 @@ export function middleware(req: NextRequest) {
 
   // If already admin and tries to go to login page → redirect to admin home
   if (url.pathname === "/admin_login" && role === "Admin") {
-    url.pathname = "/admin_login/home"
+    url.pathname = "/admin_login/view_companies"
     return NextResponse.redirect(url)
   }
 

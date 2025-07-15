@@ -36,7 +36,9 @@ export default function CompanyForm() {
 
     if (!res.ok) throw new Error('Failed to add company');
 
-    router.push('/admin_login/home');
+   alert('Company Created!')
+      
+      router.push('/admin_login/view_companies')
   } catch (err) {
     alert('Error adding company');
     console.error(err);
@@ -46,8 +48,7 @@ export default function CompanyForm() {
 };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center">
-      <ReturnButton/>
+    <div className="fixed inset-0 flex items-start justify-center mt-28">
   <form
     onSubmit={handleSubmit}
     className="w-full max-w-2xl bg-gray bg-opacity-90 backdrop-blur-md rounded-2xl shadow-2xl p-12 space-y-8 mb-8 mx-auto"

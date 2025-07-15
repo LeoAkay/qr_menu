@@ -1,16 +1,33 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import ReturnButton from './returnButton'
 
 export default function EditCompanyForm() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
   const [cId, setCId] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const router = useRouter()
+  // Auto-fill Company ID from query
+  useEffect(() => {
+    const companyId = searchParams.get('cId')
+    const userName = searchParams.get('username')
+    const pass = searchParams.get('password')
+    if (companyId) {
+      setCId(companyId)
+    }
+    if (userName) {
+      setUsername(userName)
+    }
+    if (pass) {
+      setPassword(pass)
+    }
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -35,7 +52,7 @@ export default function EditCompanyForm() {
 
       alert('Company Updated!')
       
-      router.push('/admin_login/home')
+      router.push('/admin_login/view_companies')
     } catch (err: any) {
       alert(`Error updating company: ${err.message || 'Unknown error'}`)
       console.error(err)
@@ -45,7 +62,8 @@ export default function EditCompanyForm() {
   }
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center px-4"><ReturnButton />
+    <div className="fixed inset-0 flex items-start justify-center mt-28">
+
   <div className="w-full max-w-2xl bg-gray bg-opacity-90 backdrop-blur-md rounded-2xl shadow-2xl p-12 space-y-8 mb-8">
     
 

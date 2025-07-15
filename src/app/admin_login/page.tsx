@@ -25,7 +25,7 @@ export default function LoginPage() {
       localStorage.setItem('adminId', data.admin.id);
       localStorage.setItem('User_Name', data.admin.userName);
 
-      router.push('/admin_login/home')
+      router.push('/admin_login/view_companies')
     } catch (err) {
       setError('Invalid credentials')
       console.error('Login error:', err)

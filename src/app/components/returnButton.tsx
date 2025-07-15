@@ -6,7 +6,7 @@ export default function ReturnButton() {
   const router = useRouter()
 
   const handleReturn = () => {
-    router.push('/admin_login/home')
+    router.push('/admin_login/view_companies') 
   }
 
   return (
