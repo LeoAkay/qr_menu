@@ -16,7 +16,7 @@ export default function LoginPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userName, password }),
-        credentials: 'include', // Important to send cookies
+        credentials: 'include',
       })
 
       if (!res.ok) throw new Error('Login failed')

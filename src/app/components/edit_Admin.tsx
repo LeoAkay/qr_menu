@@ -39,7 +39,7 @@ export default function EditAdminForm() {
           Username: username,
           Pass: Pass,
           Password: password,
-          updatedBy: localStorage.getItem('adminId'), // Assuming adminId is stored in localStorage
+          updatedBy: localStorage.getItem('adminId'),
         }),
       })
 

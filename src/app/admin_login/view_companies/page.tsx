@@ -1,13 +1,7 @@
 import LogoutButton from '@/app/components/LogoutButtonForAdminPanel'
-import { useRouter } from 'next/navigation'
 import { prisma } from "@/app/lib/prisma"
-import { Router } from 'next/router'
 import CreateCompanyButton from '@/app/components/CreateCompanyButton'
 import UpdateCompanyButton from '@/app/components/UpdateCompanyButton'
-import CreateNewAdmin from '@/app/components/CreateNewAdmin'
-import EditAdmin from '@/app/components/updateAdminButton'
-import ViewAdmin from '../view_admins/page'
-import ViewAdmins from '@/app/components/UpdateCompanyButton'
 import ViewAdminsButton from '@/app/components/viewAdminButton'
 
 
