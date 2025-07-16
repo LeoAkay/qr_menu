@@ -67,11 +67,11 @@ export default function EditAdminForm() {
 
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <label className="block mb-2 text-lg font-medium">Company ID (C_id)</label>
+        <label className="block mb-2 text-lg font-medium">Admin ID (C_id)</label>
         <input
           type="number"
           value={cId}
-          placeholder="Enter Company ID"
+          placeholder="Enter Admin ID"
           onChange={(e) => setCId(e.target.value)}
           required
           className="w-full p-3 border rounded text-lg"
