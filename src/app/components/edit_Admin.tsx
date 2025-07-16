@@ -3,30 +3,27 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-export default function EditCompanyForm() {
+export default function EditAdminForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
   const [cId, setCId] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [newPassword, setNewPassword] = useState('')
+  const [Pass, setPass] = useState('')
   const [loading, setLoading] = useState(false)
 
   // Auto-fill Company ID from query
   useEffect(() => {
     const companyId = searchParams.get('cId')
     const userName = searchParams.get('username')
-    const pass = searchParams.get('password')
     if (companyId) {
       setCId(companyId)
     }
     if (userName) {
       setUsername(userName)
     }
-    if (pass) {
-      setPassword(pass)
-    }
+    
   }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,28 +31,28 @@ export default function EditCompanyForm() {
     setLoading(true)
 
     try {
-      const res = await fetch('/api/company/update', {
+      const res = await fetch('/api/admin/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           C_id: parseInt(cId),
           Username: username,
+          Pass: Pass,
           Password: password,
           updatedBy: localStorage.getItem('adminId'), // Assuming adminId is stored in localStorage
-          NewPass: newPassword,
         }),
       })
 
       if (!res.ok) {
         const errorData = await res.json()
-        throw new Error(errorData.error || 'Failed to update company')
+        throw new Error(errorData.error || 'Failed to update Admin')
       }
 
-      alert('Company Updated!')
+      alert('Admin Updated!')
       
-      router.push('/admin_login/view_companies')
+      router.push('/admin_login/view_admins')
     } catch (err: any) {
-      alert(`Error updating company: ${err.message || 'Unknown error'}`)
+      alert(`Error updating Admin: ${err.message || 'Unknown error'}`)
       console.error(err)
     } finally {
       setLoading(false)
@@ -93,24 +90,25 @@ export default function EditCompanyForm() {
         />
       </div>
 
-      <div>
-        <label className="block mb-2 text-lg font-medium">Old Password</label>
+<div>
+        <label className="block mb-2 text-lg font-medium"> Old Password</label>
         <input
           type="text"
-          value={password}
+          value={Pass}
           placeholder='Enter Old Password'
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e) => setPass(e.target.value)}
           required
           className="w-full p-3 border rounded text-lg"
         />
       </div>
+
       <div>
-        <label className="block mb-2 text-lg font-medium">New Password</label>
+        <label className="block mb-2 text-lg font-medium"> New Password</label>
         <input
           type="text"
-          value={newPassword}
+          value={password}
           placeholder='Enter New Password'
-          onChange={(e) => setNewPassword(e.target.value)}
+          onChange={(e) => setPassword(e.target.value)}
           required
           className="w-full p-3 border rounded text-lg"
         />
@@ -121,7 +119,7 @@ export default function EditCompanyForm() {
         disabled={loading}
         className="w-full bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 transition duration-300 text-xl font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {loading ? 'Updating...' : 'Update Company'}
+        {loading ? 'Updating...' : 'Update Admin'}
       </button>
     </form>
   </div>

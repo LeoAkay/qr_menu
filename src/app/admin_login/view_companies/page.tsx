@@ -4,6 +4,11 @@ import { prisma } from "@/app/lib/prisma"
 import { Router } from 'next/router'
 import CreateCompanyButton from '@/app/components/CreateCompanyButton'
 import UpdateCompanyButton from '@/app/components/UpdateCompanyButton'
+import CreateNewAdmin from '@/app/components/CreateNewAdmin'
+import EditAdmin from '@/app/components/updateAdminButton'
+import ViewAdmin from '../view_admins/page'
+import ViewAdmins from '@/app/components/UpdateCompanyButton'
+import ViewAdminsButton from '@/app/components/viewAdminButton'
 
 
 export default async function ViewCompany() {
@@ -27,6 +32,7 @@ export default async function ViewCompany() {
           <h1 className="text-6xl font-bold mb-4 text-center">Admin Dashboard</h1>
           <LogoutButton/>
     <CreateCompanyButton />
+    <ViewAdminsButton/>
         </main>
       </div>
       <main className="max-h-screen flex flex-col items-center  justify-start gap-8 p-8 pt-22 ">
