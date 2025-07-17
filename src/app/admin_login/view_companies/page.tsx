@@ -1,8 +1,8 @@
-import LogoutButton from '@/app/components/LogoutButtonForAdminPanel'
+import LogoutButton from '@/app/components/AdminComponents/LogoutButtonForAdminPanel'
 import { prisma } from "@/app/lib/prisma"
-import CreateCompanyButton from '@/app/components/CreateCompanyButton'
-import UpdateCompanyButton from '@/app/components/UpdateCompanyButton'
-import ViewAdminsButton from '@/app/components/viewAdminButton'
+import CreateCompanyButton from '@/app/components/AdminComponents/CreateCompanyButton'
+import UpdateCompanyButton from '@/app/components/AdminComponents/UpdateCompanyButton'
+import ViewAdminsButton from '@/app/components/AdminComponents/viewAdminButton'
 
 
 export default async function ViewCompany() {

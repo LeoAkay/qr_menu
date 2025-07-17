@@ -12,7 +12,7 @@ export default function LoginPage() {
   const handleLogin = async () => {
     setError('')
     try {
-      const res = await fetch('/api/admin/login', {
+      const res = await fetch('/api/AdminPanel/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userName, password }),

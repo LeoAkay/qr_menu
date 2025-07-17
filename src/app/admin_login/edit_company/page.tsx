@@ -1,5 +1,5 @@
-import EditCompanyForm from "@/app/components/updateForm"
-import ReturnButton from "@/app/components/returnButton"
+import EditCompanyForm from "@/app/components/AdminComponents/updateForm"
+import ReturnButton from "@/app/components/AdminComponents/returnButton"
 
 export default async function EditPage() {
   

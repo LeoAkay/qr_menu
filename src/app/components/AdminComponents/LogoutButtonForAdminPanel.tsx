@@ -7,7 +7,7 @@ export default function LogoutButton() {
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/admin/logout', {
+      await fetch('/api/AdminPanel/admin/logout', {
         method: 'POST',
         credentials: 'include', // send cookies to clear on server
       })

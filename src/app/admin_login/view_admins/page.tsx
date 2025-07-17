@@ -1,7 +1,7 @@
 import { prisma } from "@/app/lib/prisma"
-import CreateNewAdmin from '@/app/components/CreateNewAdmin'
-import ReturnButton from '@/app/components/returnButton'
-import UpdateAdminButton from '@/app/components/updateAdminButton'
+import CreateNewAdmin from '@/app/components/AdminComponents/CreateNewAdmin'
+import ReturnButton from '@/app/components/AdminComponents/returnButton'
+import UpdateAdminButton from '@/app/components/AdminComponents/updateAdminButton'
 
 
 export default async function ViewAdmin() {

@@ -2,9 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import ReturnButton from './returnButton'
 
-export default function CompanyForm() {
+export default function AdminForm() {
   const [cId, setCId] = useState('')
   const [userName, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -23,24 +22,23 @@ export default function CompanyForm() {
       return;
     }
 
-    const res = await fetch('/api/company/add', {
+    const res = await fetch('/api/AdminPanel/admin/add', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         cId: parseInt(cId),
         userName,
         password,
-        createdBy: adminId,  // pass admin id here
       }),
     });
 
-    if (!res.ok) throw new Error('Failed to add company');
+    if (!res.ok) throw new Error('Failed to add Admin');
 
-   alert('Company Created!')
+   alert('Admin Created!')
       
-      router.push('/admin_login/view_companies')
+      router.push('/admin_login/view_admins')
   } catch (err) {
-    alert('Error adding company');
+    alert('Error adding Admin');
     console.error(err);
   } finally {
     setLoading(false);
@@ -55,11 +53,11 @@ export default function CompanyForm() {
   >
     
     <div>
-      <label className="block mb-3 text-lg font-medium">Company ID (C_id) *has to start from 100</label>
+      <label className="block mb-3 text-lg font-medium">Admin ID (C_id) *has to be between 0-99</label>
       <input
         type="number"
         value={cId}
-        placeholder="Enter Company ID"
+        placeholder="Enter Admin ID"
         onChange={(e) => setCId(e.target.value)}
         required
         className="w-full p-4 border rounded text-lg"
@@ -95,7 +93,7 @@ export default function CompanyForm() {
       disabled={loading}
       className="w-full bg-green-600 text-white px-8 py-4 rounded-md hover:bg-green-700 transition duration-300 text-xl font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
     >
-      {loading ? 'Adding...' : 'Add Company'}
+      {loading ? 'Adding...' : 'Add Admin'}
     </button>
   </form>
 </div>

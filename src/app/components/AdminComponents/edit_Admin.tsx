@@ -31,7 +31,7 @@ export default function EditAdminForm() {
     setLoading(true)
 
     try {
-      const res = await fetch('/api/admin/update', {
+      const res = await fetch('/api/AdminPanel/admin/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

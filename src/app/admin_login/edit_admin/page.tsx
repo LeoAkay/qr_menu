@@ -1,5 +1,5 @@
-import EditAdminForm from "@/app/components/edit_Admin"
-import ReturnButtonAdmin from "@/app/components/ReturnButtonAdmin"
+import EditAdminForm from "@/app/components/AdminComponents/edit_Admin"
+import ReturnButtonAdmin from "@/app/components/AdminComponents/ReturnButtonAdmin"
 
 export default async function EditAdminPage() {
   

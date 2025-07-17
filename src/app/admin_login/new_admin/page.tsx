@@ -1,5 +1,5 @@
-import AdminForm from "@/app/components/adminform"
-import ReturnButtonAdmin from "@/app/components/ReturnButtonAdmin"
+import AdminForm from "@/app/components/AdminComponents/adminform"
+import ReturnButtonAdmin from "@/app/components/AdminComponents/ReturnButtonAdmin"
 export default async function adminPage() {
 
   return (

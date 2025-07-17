@@ -1,5 +1,5 @@
-import CompanyForm from "@/app/components/companyform"
-import ReturnButton from "@/app/components/returnButton"
+import CompanyForm from "@/app/components/AdminComponents/companyform"
+import ReturnButton from "@/app/components/AdminComponents/returnButton"
 
 export default async function DashboardPage() {
 

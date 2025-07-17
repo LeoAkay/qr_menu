@@ -34,7 +34,7 @@ export default function EditCompanyForm() {
     setLoading(true)
 
     try {
-      const res = await fetch('/api/company/update', {
+      const res = await fetch('/api/AdminPanel/company/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
