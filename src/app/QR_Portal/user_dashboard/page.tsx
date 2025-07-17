@@ -211,28 +211,53 @@ export default function UserDashboard() {
             </div>
 
             {/* Profile Icon */}
-            <div className="flex items-center space-x-4">
-              <div className="relative">
-                <button
-                  onClick={() => setActiveTab('profile')}
-                  className="bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full p-2 transition-all mr-2"
-                  title="Profile"
-                >
-                  <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                </button>
-            <button
-              onClick={handleLogout}
-                  className="bg-red-500 bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 transition-all"
-                  title="Logout"
-            >
-                  <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                  </svg>
-            </button>
-              </div>
-            </div>
+<div className="flex items-center space-x-4">
+  <div className="flex items-center space-x-2">
+    {/* Profile Button */}
+    {/* Profile Button */}
+<button
+  onClick={() => setActiveTab('profile')}
+  aria-label="Go to profile"
+  className="bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full p-1.5 transition-all mr-2"
+  title="Profile"
+>
+  <img
+    src={
+      userData?.company?.C_Logo_Image
+        ? `/api/AdminPanel/company/image/${userData.company.id}/logo`
+        : '/user-icon-on-transparent-background-free-png.webp' // ✅ Corrected fallback path
+    }
+    alt="Company Logo"
+    className="w-8 h-8 object-cover rounded-full ring-1 ring-white hover:ring-2 transition duration-200"
+    loading="lazy"
+  />
+</button>
+
+
+    {/* Logout Button */}
+    <button
+      onClick={handleLogout}
+      aria-label="Logout"
+      className="bg-red-500 bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 transition-all"
+      title="Logout"
+    >
+      <svg
+        className="h-6 w-6 text-white transition-transform duration-200"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+        />
+      </svg>
+    </button>
+  </div>
+</div>
+
           </div>
         </div>
       </header>
