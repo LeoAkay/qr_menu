@@ -62,7 +62,7 @@ body {
 
 /* Common styles for both pages */
 body.dashboard-mode {
-  --background: #ffffff;
+  --background: #000000;
   --foreground: #000000;
   --background-image: url(https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRFdR5duGXRu6NBtxIy6R2Y7SWAJOdAOJgBuw&s);
 }
