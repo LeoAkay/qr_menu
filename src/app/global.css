@@ -1,28 +1,107 @@
 @import "tailwindcss";
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+
+/* Default (light) theme */
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #000000;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* Base styles */
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  position: relative;
+  z-index: 1;
+}
+
+/* Blob Animation for Login Page */
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+.animation-delay-1000 {
+  animation-delay: 1s;
+}
+
+.animation-delay-3000 {
+  animation-delay: 3s;
+}
+
+.animation-delay-5000 {
+  animation-delay: 5s;
+}
+
+/* Text shadow for welcoming screen */
+.text-shadow-lg {
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+}
+
+/* Common styles for both pages */
+body.dashboard-mode {
+  --background: #ffffff;
+  --foreground: #000000;
+  --background-image: url(https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRFdR5duGXRu6NBtxIy6R2Y7SWAJOdAOJgBuw&s);
+}
+
+body.dashboard-mode::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(rgba(132, 132, 132, 0), rgb(255, 255, 255)),
+              var(--background-image);
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* === Bubble Pastel Background (refined) === */
+.bubble-bg {
+  background: radial-gradient(800px at 0% 0%, rgba(200,220,255,0.4), transparent 70%),
+              radial-gradient(600px at 100% 90%, rgba(180,200,255,0.5), transparent 70%),
+              radial-gradient(700px at 30% 70%, rgba(200,255,255,0.35), transparent 70%),
+              #f3f9f9;
+}
+
+/* === Reusable Buttons === */
+.btn {
+  @apply px-6 py-2 rounded font-semibold transition-colors duration-150 shadow-sm focus:outline-none;
+}
+.btn-green {
+  @apply bg-green-600 hover:bg-green-700 text-white;
+}
+.btn-red {
+  @apply bg-red-600 hover:bg-red-700 text-white;
+}
+.btn-gray {
+  @apply bg-gray-800 hover:bg-gray-900 text-white;
 }

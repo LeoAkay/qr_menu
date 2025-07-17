@@ -37,6 +37,9 @@ model Company {
   C_Logo_Image    Bytes?
   C_QR_URL        String?
   Welcoming_Page  Bytes?
+  pdfMenuFile     Bytes?   // PDF dosyası binary olarak saklanır
+  pdfMenuUrl      String?
+  menuType        String?  @default("none") // "pdf" or "manual" or "none"
   CreatedAt       DateTime @default(now())
   UpdatedAt       DateTime @updatedAt
 

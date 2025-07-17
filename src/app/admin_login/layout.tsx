@@ -1,21 +1,20 @@
-import './Adminglobals.css'
-import type { Metadata } from 'next'
+import type { Metadata } from "next";
+import "./Adminglobals.css";
+import RootLayout from "../layout";
 
 export const metadata: Metadata = {
-  title: 'Admin Panel',
-  description: 'Admin dashboard login and control panel',
-}
+  title: "Admin Panel",
+  description: "Admin dashboard login and control panel",
+};
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  // Instead of overriding <body>, wrap in a div and use RootLayout with className
   return (
-    <html lang="en">
-      <body className="dashboard-mode">
+    <RootLayout bodyClassName="dashboard-mode">
+      <div>
         {children}
-      </body>
-    </html>
-  )
+      </div>
+    </RootLayout>
+  );
 }
