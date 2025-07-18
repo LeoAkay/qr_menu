@@ -55,15 +55,15 @@ export default function GetStartedPage() {
       <div className="absolute top-1/4 right-1/4 w-44 h-44 bg-gradient-to-br from-pink-300 to-pink-500 rounded-full mix-blend-multiply opacity-70 animate-blob animation-delay-1000"></div>
       <div className="absolute bottom-1/4 left-1/3 w-40 h-40 bg-gradient-to-br from-pink-400 to-rose-400 rounded-full mix-blend-multiply opacity-70 animate-blob animation-delay-3000"></div>
       <div className="absolute bottom-0 right-0 w-60 h-60 bg-gradient-to-br from-pink-300 to-pink-500 rounded-full mix-blend-multiply opacity-70 animate-blob animation-delay-5000"></div>
-
-      <div className="mt-8 text-center">
+      {!submitted &&(<div className="mt-8 text-center">
         <Link
           href="/"
           className="absolute right-5 top-6 bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-semibold text-lg"
         >
           Return
         </Link> 
-        </div>
+        </div>)}
+      
 
         
         {submitted ? (
