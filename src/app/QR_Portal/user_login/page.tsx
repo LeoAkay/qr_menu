@@ -62,17 +62,18 @@ export default function UserLoginPage() {
       </div>
 
       {/* Login Form */}
-      <div className="relative z-10 w-full max-w-md mx-auto px-6">
+      <div className="relative z-10 w-full max-w-md mx-auto px-6 ">
+        <h1 className="text-5xl font-bold text-center text-gray-900 mb-12">QR Menu System</h1>
         <div className="bg-white/20 backdrop-blur-md border border-white/30 rounded-2xl p-8 shadow-2xl">
           <div className="space-y-6">
             {/* Username Input */}
             <div>
-              <label className="block text-gray-700 text-sm font-medium mb-2">
+              <label className="block text-black-700 text-sm font-medium mb-2">
                 Username
               </label>
               <input
                 type="text"
-                placeholder="username"
+                placeholder="Username"
                 value={userName}
                 onChange={(e) => setUsername(e.target.value)}
                 onKeyPress={handleKeyPress}
@@ -83,12 +84,12 @@ export default function UserLoginPage() {
             
             {/* Password Input */}
             <div>
-              <label className="block text-gray-700 text-sm font-medium mb-2">
+              <label className="block text-black-700 text-sm font-medium mb-2">
                 Password
               </label>
               <input
-                type="password"
-                placeholder="password"
+                type="Password"
+                placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyPress={handleKeyPress}
@@ -101,7 +102,7 @@ export default function UserLoginPage() {
             <button
               onClick={handleLogin}
               disabled={loading || !userName || !password}
-              className="w-full bg-gray-800 hover:bg-gray-900 text-white py-3 px-4 rounded-lg font-medium text-lg transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              className="w-full bg-blue-600 hover:bg-purple-700 text-white py-3 px-4 rounded-lg font-medium text-lg transition-all duration-200 disabled:bg-blue-600 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >
               {loading ? 'Signing In...' : 'Sign In'}
             </button>

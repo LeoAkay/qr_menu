@@ -211,14 +211,13 @@ export default function UserDashboard() {
             </div>
 
             {/* Profile Icon */}
-<div className="flex items-center space-x-4">
+<div className=" flex items-center space-x-4">
   <div className="flex items-center space-x-2">
-    {/* Profile Button */}
     {/* Profile Button */}
 <button
   onClick={() => setActiveTab('profile')}
   aria-label="Go to profile"
-  className="bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full p-1.5 transition-all mr-2"
+  className="bg-white absolute right-18 bg-opacity-20 hover:bg-opacity-30 rounded-full p-1.5 transition-all mr-2"
   title="Profile"
 >
   <img
@@ -238,7 +237,7 @@ export default function UserDashboard() {
     <button
       onClick={handleLogout}
       aria-label="Logout"
-      className="bg-red-500 bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 transition-all"
+      className="bg-red-500 bg-opacity-80 absolute right-5 hover:bg-opacity-100 rounded-full p-2.5 transition-all"
       title="Logout"
     >
       <svg
@@ -276,46 +275,36 @@ export default function UserDashboard() {
         </div>
 
         {/* Main Dashboard Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {/* Menu Preview Card */}
-          <div 
-            onClick={() => setActiveTab('preview')}
-            className="bg-gradient-to-br from-pink-200 to-pink-300 hover:from-pink-300 hover:to-pink-400 rounded-xl p-8 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-          >
-            <div className="text-center">
-              <div className="text-3xl mb-4">👁️</div>
-              <h3 className="text-xl font-semibold text-gray-800">Menu Preview</h3>
-            </div>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 justify-center max-w-4xl mx-auto">
+  {/* PDF Upload Card */}
+  <div
+    onClick={() => {
+      setMenuType('pdf')
+      setActiveTab('pdf')
+    }}
+    className="bg-gradient-to-br from-pink-200 to-pink-300 hover:from-pink-300 hover:to-pink-400 rounded-xl p-8 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+  >
+    <div className="text-center">
+      <div className="text-3xl mb-4">📄</div>
+      <h3 className="text-xl font-semibold text-gray-800">PDF Upload</h3>
+    </div>
+  </div>
 
-          {/* PDF Upload Card */}
-          <div 
-            onClick={() => {
-              setMenuType('pdf')
-              setActiveTab('pdf')
-            }}
-            className="bg-gradient-to-br from-pink-200 to-pink-300 hover:from-pink-300 hover:to-pink-400 rounded-xl p-8 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-          >
-            <div className="text-center">
-              <div className="text-3xl mb-4">📄</div>
-              <h3 className="text-xl font-semibold text-gray-800">PDF Upload</h3>
-            </div>
-          </div>
+  {/* Manual Upload Card */}
+  <div
+    onClick={() => {
+      setMenuType('manual')
+      setActiveTab('manual')
+    }}
+    className="bg-gradient-to-br from-pink-200 to-pink-300 hover:from-pink-300 hover:to-pink-400 rounded-xl p-8 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+  >
+    <div className="text-center">
+      <div className="text-3xl mb-4">📝</div>
+      <h3 className="text-xl font-semibold text-gray-800">Manual Upload</h3>
+    </div>
+  </div>
+</div>
 
-          {/* Manual Upload Card */}
-          <div 
-            onClick={() => {
-              setMenuType('manual')
-              setActiveTab('manual')
-            }}
-            className="bg-gradient-to-br from-pink-200 to-pink-300 hover:from-pink-300 hover:to-pink-400 rounded-xl p-8 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-          >
-            <div className="text-center">
-              <div className="text-3xl mb-4">📝</div>
-              <h3 className="text-xl font-semibold text-gray-800">Manual Upload</h3>
-            </div>
-          </div>
-        </div>
 
         {/* Content Area */}
         <div className="bg-white rounded-xl shadow-lg p-6">
@@ -601,16 +590,16 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
 
   return (
     <div>
-      <h2 className="text-2xl font-semibold mb-6 text-gray-800">PDF Menu Management</h2>
+      <h2 className="text-2xl font-semibold text-center mb-6 text-gray-800">PDF Menu Management</h2>
       
       {/* Existing PDF Display */}
       {existingPDF && (
         <div className="mb-8 p-6 bg-green-50 border border-green-200 rounded-xl">
           <div className="flex items-center justify-between">
-            <div className="flex items-center">
+            <div className="flex text-center items-center">
               <div className="text-4xl mr-4">📄</div>
               <div>
-                <h3 className="text-lg font-semibold text-green-800">Current PDF Menu</h3>
+                <h3 className="text-lg font-semibold  text-green-800">Current PDF Menu</h3>
                 <p className="text-green-600">Your PDF menu has been successfully uploaded</p>
                 {userData?.company?.pdfMenuFile && (
                   <a 
@@ -1193,65 +1182,73 @@ function PreviewSection({
 }) {
   return (
     <div>
-      <h2 className="text-2xl font-semibold mb-4 text-gray-800">Preview & QR Code</h2>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <h3 className="text-lg font-medium mb-3 text-gray-700">Menu Preview</h3>
-          <div 
-            className="border-2 border-gray-200 rounded-xl p-4 min-h-[500px]"
-            style={{ 
-              backgroundColor: theme.backgroundColor,
-              color: theme.textColor 
-            }}
+  <h2 className="text-2xl font-semibold mb-2 text-center text-gray-800">Preview & QR Code</h2>
+
+  <div className="flex flex-col lg:flex-row gap-6">
+    {/* Menu Preview Box */}
+    <div
+      className="border-2 border-gray-200 rounded-xl p-6 flex-1 flex flex-col items-center justify-center min-h-[500px]"
+      style={{
+        backgroundColor: theme.backgroundColor,
+        color: theme.textColor,
+      }}
+    >
+      <h3 className="text-lg font-medium mb-3 text-gray-700">Menu Preview</h3>
+
+      <div className="text-center">
+        <h1 className="text-2xl font-bold mb-4">
+          {userData?.company?.C_Name || 'Your Restaurant'}
+        </h1>
+        <p className="text-base mb-4">Menu preview will appear here</p>
+
+        {userData?.company?.id && (
+          <a
+            href={`/QR_Portal/menu/${userData.company.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg transition-colors font-medium text-lg"
           >
-            <div className="text-center">
-              <h1 className="text-2xl font-bold mb-4">
-                {userData?.company?.C_Name || 'Your Restaurant'}
-              </h1>
-              <p className="text-base mb-4">Menu preview will appear here</p>
-              
-              {userData?.company?.id && (
-                <div className="mt-4">
-                  <a
-                    href={`/QR_Portal/menu/${userData.company.id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg transition-colors font-medium text-lg"
-                  >
-                    🔗 Menu Preview
-                  </a>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-        
-        <div>
-          <h3 className="text-lg font-medium mb-3 text-gray-700">QR Code</h3>
-          <div className="text-center">
-            {qrUrl && (
-              <>
-                <div id="qr-container" className="inline-block p-4 bg-white rounded-xl shadow-lg border-2 border-gray-100">
-                  <QRCodeSVG value={qrUrl} size={180} />
-                </div>
-                <div className="mt-4">
-                  <button
-                    onClick={onDownloadQR}
-                    className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition-colors font-medium shadow-lg"
-                  >
-                    📥 Download QR Code
-                  </button>
-                </div>
-                <p className="text-sm text-gray-500 mt-3">
-                  Scan to view your menu
-                </p>
-              </>
-            )}
-          </div>
-        </div>
+            🔗 Menu Preview
+          </a>
+        )}
       </div>
     </div>
+
+    {/* QR Code Box */}
+    <div
+      className="border-2 border-gray-200 rounded-xl p-6 flex-1 flex flex-col items-center justify-center min-h-[500px]"
+      style={{
+        backgroundColor: theme.backgroundColor,
+        color: theme.textColor,
+      }}
+    >
+      <h3 className="text-lg font-medium mb-3 text-gray-700">QR Code</h3>
+
+      <div className="text-center">
+        {qrUrl && (
+          <>
+            <div
+              id="qr-container"
+              className="inline-block p-4 bg-white rounded-xl shadow-lg border-2 border-gray-100"
+            >
+              <QRCodeSVG value={qrUrl} size={180} />
+            </div>
+            <div className="mt-4">
+              <button
+                onClick={onDownloadQR}
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition-colors font-medium shadow-lg"
+              >
+                📥 Download QR Code
+              </button>
+            </div>
+            <p className="text-sm text-gray-500 mt-3">Scan to view your menu</p>
+          </>
+        )}
+      </div>
+    </div>
+  </div>
+</div>
+
   )
 }
 
@@ -1407,8 +1404,8 @@ function ProfileSection({ userData }: { userData: UserData | null }) {
 
       {/* Account Info */}
       <div className="mt-8 p-6 bg-gray-50 rounded-xl">
-        <h3 className="text-lg font-medium text-gray-700 mb-4">Account Information</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+        <h3 className="text-lg font-medium text-black-700 mb-4">Account Information</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-black-600">
           <div>
             <span className="font-medium">Registration Date:</span> {userData?.CreatedAt ? new Date(userData.CreatedAt).toLocaleDateString('en-US') : 'Unknown'}
           </div>
@@ -1416,7 +1413,7 @@ function ProfileSection({ userData }: { userData: UserData | null }) {
             <span className="font-medium">Last Update:</span> {userData?.UpdatedAt ? new Date(userData.UpdatedAt).toLocaleDateString('en-US') : 'Unknown'}
           </div>
           <div>
-            <span className="font-medium">Rol:</span> {userData?.role?.roleName || 'User'}
+            <span className="font-medium">Role:</span> {userData?.role?.roleName || 'User'}
           </div>
           <div>
             <span className="font-medium">Menu Type:</span> {userData?.company?.menuType || 'Not Determined Yet'}
