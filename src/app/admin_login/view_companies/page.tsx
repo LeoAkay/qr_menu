@@ -50,6 +50,12 @@ export default async function ViewCompany() {
                 {company && (
                   <>
                     <p className="text-lg mt-2 font-semibold">Audit Info:</p>
+                    <p className='text-sm'>
+                      <span className="font-semibold">Company Name:</span> {company.C_Name || 'N/A'}
+                    </p>
+                    <p className='text-sm'>
+                      <span className="font-semibold">Menu Type:</span> {company.menuType || 'N/A'}
+                    </p>
                     <p className="text-sm">
                       <span className="font-semibold">Created By:</span> {company.creator?.userName || 'N/A'}
                     </p>

@@ -122,6 +122,10 @@ export async function PUT(req: Request) {
         })
       }
     }
+    await prisma.company.updateMany({
+      where: { userId: userId },
+      data: { updatedBy: userId }
+    })
 
     return NextResponse.json({
       success: true,
@@ -133,3 +137,56 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 } 
+export async function PATCH(req: Request) {
+  try {
+    const cookieStore = await cookies()
+    const userId = cookieStore.get('userId')?.value
+    const role = cookieStore.get('role')?.value
+
+    if (!userId || role !== 'User') {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const { oldPassword, newPassword, confirmPassword } = await req.json()
+
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      return NextResponse.json({ error: "Please provide all required fields" }, { status: 400 })
+    }
+
+    if (newPassword !== confirmPassword) {
+      return NextResponse.json({ error: "New password and confirmation do not match" }, { status: 400 })
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    })
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 })
+    }
+
+    // Compare old password with stored password (plain text)
+    if (user.password !== oldPassword) {
+      return NextResponse.json({ error: "Old password is incorrect" }, { status: 401 })
+    }
+
+    // Update user password (UpdatedAt updated automatically)
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: newPassword }
+    })
+
+    // Update company.updatedBy to current userId
+    await prisma.company.updateMany({
+      where: { userId: userId },
+      data: { updatedBy: userId }
+    })
+
+    return NextResponse.json({ success: true, message: "Password updated successfully" })
+
+  } catch (error) {
+    console.error("Password reset error:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}
+

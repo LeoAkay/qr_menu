@@ -1262,6 +1262,11 @@ function ProfileSection({ userData }: { userData: UserData | null }) {
     xUrl: ''
   })
   const [saving, setSaving] = useState(false)
+  const [oldPassword, setOldPassword] = useState('')
+const [newPassword, setNewPassword] = useState('')
+const [confirmPassword, setConfirmPassword] = useState('')
+const [loading, setLoading] = useState(false)
+const [showResetDropdown, setShowResetDropdown] = useState(false)
 
   useEffect(() => {
     if (userData) {
@@ -1274,6 +1279,41 @@ function ProfileSection({ userData }: { userData: UserData | null }) {
       })
     }
   }, [userData])
+
+ const handlePasswordReset = async () => {
+  setLoading(true)
+  try {
+    const res = await fetch('/api/QR_Panel/user/profile', {
+      method: 'PATCH',   // PATCH for password reset
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        oldPassword,
+        newPassword,
+        confirmPassword,
+      }),
+      credentials: 'include',
+    })
+
+    const data = await res.json()
+
+    if (res.ok) {
+      alert(data.message || 'Password updated successfully!')
+      // Optionally clear password fields here:
+      setOldPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+      setShowResetDropdown(false)
+    } else {
+      alert(data.error || 'Password update failed')
+    }
+  } catch (error) {
+    console.error('Password update error:', error)
+    alert('Network error. Please try again.')
+  } finally {
+    setLoading(false)
+  }
+}
+
 
   const handleSave = async () => {
     setSaving(true)
@@ -1292,6 +1332,7 @@ function ProfileSection({ userData }: { userData: UserData | null }) {
         }),
         credentials: 'include'
       })
+      
 
       if (res.ok) {
         alert('Profile updated successfully!')
@@ -1310,15 +1351,15 @@ function ProfileSection({ userData }: { userData: UserData | null }) {
 
   return (
     <div>
-      <h2 className="text-2xl font-semibold mb-6 text-gray-800">Profile Settings</h2>
+      <h2 className="text-2xl font-semibold mb-6 text-center text-gray-800">Profile Settings</h2>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Basic Information */}
         <div className="space-y-6">
-          <h3 className="text-lg font-medium text-gray-700">Basic Information</h3>
+          <h3 className="text-xl font-semibold text-black-700">Company Information</h3>
           
           <div>
-            <label className="block text-sm font-medium mb-2 text-gray-700">
+            <label className="block text-sm font-medium mb-2 text-black-700">
               Username
             </label>
             <input
@@ -1331,7 +1372,7 @@ function ProfileSection({ userData }: { userData: UserData | null }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2 text-gray-700">
+            <label className="block text-sm font-medium mb-2 text-black-700">
               Restaurant Name
             </label>
             <input
@@ -1344,7 +1385,7 @@ function ProfileSection({ userData }: { userData: UserData | null }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2 text-gray-700">
+            <label className="block text-sm font-medium mb-2 text-black-700">
               User ID
             </label>
             <input
@@ -1353,16 +1394,16 @@ function ProfileSection({ userData }: { userData: UserData | null }) {
               disabled
               className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
             />
-            <p className="text-xs text-gray-500 mt-1">This field cannot be changed</p>
+            <p className="text-xs text-gray-500 mt-1">*This field cannot be changed</p>
           </div>
         </div>
 
         {/* Social Media Links */}
         <div className="space-y-6">
-          <h3 className="text-lg font-medium text-gray-700">Social Media Links</h3>
+          <h3 className="text-xl font-semibold text-black-700">Social Media Links</h3>
           
           <div>
-            <label className="block text-sm font-medium mb-2 text-gray-700">
+            <label className="block text-sm font-medium mb-2 text-black-700">
               Facebook URL
             </label>
             <input
@@ -1375,7 +1416,7 @@ function ProfileSection({ userData }: { userData: UserData | null }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2 text-gray-700">
+            <label className="block text-sm font-medium mb-2 text-black-700">
               Instagram URL
             </label>
             <input
@@ -1388,7 +1429,7 @@ function ProfileSection({ userData }: { userData: UserData | null }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2 text-gray-700">
+            <label className="block text-sm font-medium mb-2 text-black-700">
               X (Twitter) URL
             </label>
             <input
@@ -1400,23 +1441,98 @@ function ProfileSection({ userData }: { userData: UserData | null }) {
             />
           </div>
         </div>
+        
+
       </div>
+<div className="mt-8 text-center">
+{!showResetDropdown && (
+  <button
+    className="bg-pink-400 hover:bg-purple-700 text-white px-8 py-3 rounded-lg font-medium text-lg disabled:bg-purple-400 transition-colors shadow-lg"
+    onClick={() => setShowResetDropdown(true)}
+  >
+    Reset Password
+  </button>
+)}
+  {showResetDropdown && (
+    <div className="mt-6 inline-block text-left w-full max-w-md">
+      <div className="bg-white border border-gray-200 rounded-xl shadow-md p-6 space-y-4 mx-auto">
+        <div>
+          <label htmlFor="oldPassword" className="block text-sm font-medium mb-1 text-gray-700">
+            Old Password
+          </label>
+          <input
+            id="oldPassword"
+            type="password"
+            value={oldPassword}
+            onChange={(e) => setOldPassword(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="newPassword" className="block text-sm font-medium mb-1 text-gray-700">
+            New Password
+          </label>
+          <input
+            id="newPassword"
+            type="password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="confirmPassword" className="block text-sm font-medium mb-1 text-gray-700">
+            Confirm Password
+          </label>
+          <input
+            id="confirmPassword"
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200"
+          />
+        </div>
+
+        <button
+          onClick={handlePasswordReset}
+          disabled={loading}
+          className={`w-full ${
+            loading ? 'bg-green-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'
+          } text-white py-2 px-4 rounded-lg transition font-semibold`}
+        >
+          {loading ? 'Updating...' : 'Submit Password Reset'}
+        </button>
+        <div className="flex justify-center">
+  <button
+    className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg font-medium text-lg transition-colors shadow-lg"
+    onClick={() => setShowResetDropdown(false)}
+  >
+    Discard
+  </button>
+</div>
+      </div>
+    </div>
+  )}
+</div>
+
 
       {/* Account Info */}
-      <div className="mt-8 p-6 bg-gray-50 rounded-xl">
-        <h3 className="text-lg font-medium text-black-700 mb-4">Account Information</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-black-600">
+      <div className="mt-8 p-6 bg-gray-50 text-center rounded-xl">
+        <h3 className="text-xl font-semibold text-black-700 mb-4">Account Information</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-l text-black-600">
           <div>
-            <span className="font-medium">Registration Date:</span> {userData?.CreatedAt ? new Date(userData.CreatedAt).toLocaleDateString('en-US') : 'Unknown'}
+            <span className="font-semibold">Registration Date:</span> {userData?.CreatedAt ? new Date(userData.CreatedAt).toLocaleDateString('en-US') : 'Unknown'}
           </div>
           <div>
-            <span className="font-medium">Last Update:</span> {userData?.UpdatedAt ? new Date(userData.UpdatedAt).toLocaleDateString('en-US') : 'Unknown'}
+            <span className="font-semibold">Last Update:</span> {userData?.UpdatedAt ? new Date(userData.UpdatedAt).toLocaleDateString('en-US') : 'Unknown'}
           </div>
           <div>
-            <span className="font-medium">Role:</span> {userData?.role?.roleName || 'User'}
+            <span className="font-semibold">Role:</span> {userData?.role?.roleName || 'User'}
           </div>
           <div>
-            <span className="font-medium">Menu Type:</span> {userData?.company?.menuType || 'Not Determined Yet'}
+            <span className="font-semibold">Menu Type:</span> {userData?.company?.menuType || 'Not Determined Yet'}
           </div>
         </div>
       </div>
