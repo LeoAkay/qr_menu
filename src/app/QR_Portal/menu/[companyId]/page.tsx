@@ -20,6 +20,8 @@ interface Company {
       id: string
       name: string
       orderNo: number
+      menuImage?: any
+      price?: number
     }>
   }>
   Themes?: Array<{
@@ -193,6 +195,18 @@ export default function MenuPage() {
 
   const restaurantName = company.C_Name || company.user?.userName ? `${company.user?.userName}'s Restaurant` : 'Restaurant Menu';
 
+  // Get effective menu type - URL parameter overrides company setting
+  const getEffectiveMenuType = () => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const typeFromUrl = urlParams.get('type')
+    
+    if (typeFromUrl && (typeFromUrl === 'pdf' || typeFromUrl === 'manual')) {
+      return typeFromUrl
+    }
+    
+    return company.menuType || 'none'
+  }
+
   // Welcoming screen - 3 saniye tam ekran
   if (company && company.Welcoming_Page && showWelcoming) {
     return (
@@ -248,7 +262,7 @@ export default function MenuPage() {
       }}
     >
       {/* Header */}
-      <header className="py-2 px-4 text-center border-b bg-opacity-90 backdrop-blur-sm">
+      <header className="py-2 px-4 text-center  bg-opacity-90 backdrop-blur-sm">
         <div className="max-w-4xl mx-auto">
           {/* Company Logo */}
           {company.C_Logo_Image && (
@@ -267,8 +281,8 @@ export default function MenuPage() {
         </div>
       </header>
 
-      <div className={`mx-auto ${company.menuType === 'pdf' ? 'max-w-none p-0 min-h-screen' : 'max-w-4xl px-4'}`}>
-        {company.menuType === 'pdf' && company.pdfMenuFile ? (
+      <div className={`mx-auto ${getEffectiveMenuType() === 'pdf' ? 'max-w-none p-0 min-h-screen' : 'max-w-4xl px-4'}`}>
+        {getEffectiveMenuType() === 'pdf' && company.pdfMenuFile ? (
           <div 
             className={`w-full min-h-[85vh] flex items-center justify-center transition-all duration-500 ${
               pdfDisplayMode === 'scroll' 
@@ -281,7 +295,7 @@ export default function MenuPage() {
               displayMode={pdfDisplayMode}
             />
           </div>
-        ) : company.menuType === 'manual' && company.Main_Categories ? (
+        ) : getEffectiveMenuType() === 'manual' && company.Main_Categories ? (
           <ManualMenu categories={company.Main_Categories} theme={theme} />
         ) : (
           <div className="text-center py-8">
@@ -585,45 +599,124 @@ function ManualMenu({
   categories: Company['Main_Categories']
   theme: { backgroundColor?: string; textColor?: string; logoAreaColor?: string; style?: string }
 }) {
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const sortedCategories = [...(categories || [])].sort((a, b) => a.categoryNo - b.categoryNo)
 
+  // Show first category by default
+  useEffect(() => {
+    if (sortedCategories.length > 0 && !selectedCategory) {
+      setSelectedCategory(sortedCategories[0].id)
+    }
+  }, [sortedCategories, selectedCategory])
+
+  const getCurrentCategory = () => {
+    return sortedCategories.find(cat => cat.id === selectedCategory) || sortedCategories[0]
+  }
+
+  const currentCategory = getCurrentCategory()
+
+  if (sortedCategories.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-4xl mb-4">📝</div>
+        <h2 className="text-2xl font-bold mb-2">No Categories Yet</h2>
+        <p className="opacity-70">The menu is being prepared.</p>
+      </div>
+    )
+  }
+
   return (
-    <div className="space-y-8">
-      {sortedCategories.map((category) => (
-        <div key={category.id} className="bg-white bg-opacity-10 rounded-lg p-6 backdrop-blur-sm">
-          <h2 className="text-3xl font-bold mb-6 text-center border-b pb-4">
-            {category.name}
-          </h2>
-          
-          {category.subCategories && category.subCategories.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[...category.subCategories]
+    <div className="min-h-screen">
+      {/* Category Selection Tabs */}
+      <div className="sticky top-0 z-10 bg-white bg-opacity-95 backdrop-blur-sm border-b border-gray-200 py-4 mb-6 rounded-full">
+        <div className="flex overflow-x-auto scrollbar-hide space-x-2 px-4">
+          {sortedCategories.map((category) => (
+            <button
+              key={category.id}
+              onClick={() => setSelectedCategory(category.id)}
+              className={`flex-shrink-0 px-6 py-3 rounded-full font-medium text-sm transition-all ${
+                selectedCategory === category.id
+                  ? 'bg-purple-600 text-white shadow-lg'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {category.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Selected Category Content */}
+      {currentCategory && (
+        <div className="px-4 pb-8">
+    {/* Category Header */}
+    <div className="text-center mb-8">
+      <h1
+        className="text-3xl font-bold mb-2"
+        style={{ color: theme?.textColor || '#1f2937' }} 
+      >
+        {currentCategory.name}
+      </h1>
+      <div className="w-20 h-1 bg-purple-600 mx-auto rounded"></div>
+    </div>
+
+          {/* Items Grid */}
+          {currentCategory.subCategories && currentCategory.subCategories.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {[...currentCategory.subCategories]
                 .sort((a, b) => a.orderNo - b.orderNo)
-                .map((subCategory) => (
+                .map((item) => (
                   <div 
-                    key={subCategory.id}
-                    className="bg-white bg-opacity-20 rounded-lg p-4 hover:bg-opacity-30 transition-all"
+                    key={item.id}
+                    className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group hover:-translate-y-1"
                   >
-                    <h3 className="text-lg font-semibold">
-                      {subCategory.name}
-                    </h3>
+                    {/* Product Image */}
+                    <div className="aspect-square w-full bg-gray-100 overflow-hidden">
+                      {item.menuImage ? (
+                        <img 
+                          src={`/api/QR_Panel/user/manual-menu/image/${item.id}`}
+                          alt={item.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+                          <div className="text-gray-400 text-center">
+                            <div className="text-4xl mb-2">🍽️</div>
+                            <div className="text-sm">No Image</div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                                         {/* Product Info */}
+                     <div className="p-4">
+                       <h3 className="font-bold text-lg text-gray-800 mb-2 line-clamp-2">
+                         {item.name}
+                       </h3>
+                       
+                       {/* Price and availability */}
+                       <div className="flex items-center justify-between">
+                         {item.price ? (
+                           <span className="text-lg font-bold text-green-600">
+                             ₺{item.price.toFixed(2)}
+                           </span>
+                         ) : (
+                           <span className="text-sm text-gray-500">Price not set</span>
+                         )}
+                         <div className="w-3 h-3 bg-green-500 rounded-full" title="Available"></div>
+                       </div>
+                     </div>
                   </div>
                 ))
               }
             </div>
           ) : (
-            <p className="text-center opacity-70">
-              No items in this category yet.
-            </p>
+            <div className="text-center py-16">
+              <div className="text-6xl mb-4">🍽️</div>
+              <h3 className="text-xl font-semibold text-gray-600 mb-2">No Items Yet</h3>
+              <p className="text-gray-500">Items will appear here once they are added to this category.</p>
+            </div>
           )}
-        </div>
-      ))}
-      
-      {sortedCategories.length === 0 && (
-        <div className="text-center py-12">
-          <div className="text-4xl mb-4">📝</div>
-          <h2 className="text-2xl font-bold mb-2">No Categories Yet</h2>
-          <p className="opacity-70">The menu is being prepared.</p>
         </div>
       )}
     </div>

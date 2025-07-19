@@ -28,11 +28,27 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Company not found" }, { status: 404 })
     }
 
-    // Update QR URL with display mode parameter
-    // Get the host from the request to use correct IP/domain
-    const requestUrl = new URL(req.url, `http://${req.headers.get('host')}`)
-    const baseUrl = `${requestUrl.protocol}//${req.headers.get('host')}`
-    const newQrUrl = `${baseUrl}/menu/${company.id}?mode=${displayMode}`
+    // Generate QR URL with network IP for external access
+    const getBaseUrl = () => {
+      if (process.env.NODE_ENV === 'production') {
+        return `https://${process.env.VERCEL_URL || 'localhost:3000'}`
+      }
+      
+      // For development, try to get the actual network IP from request headers
+      const host = req.headers.get('host')
+      if (host && !host.includes('localhost')) {
+        return `http://${host}`
+      }
+      
+      // Fallback to localhost for direct access
+      return `http://localhost:3000`
+    }
+    
+    // Include both menu type and display mode in QR URL
+    const menuTypeParam = company.menuType ? `type=${company.menuType}` : ''
+    const modeParam = displayMode ? `mode=${displayMode}` : ''
+    const params = [menuTypeParam, modeParam].filter(Boolean).join('&')
+    const newQrUrl = `${getBaseUrl()}/QR_Portal/menu/${company.id}${params ? `?${params}` : ''}`
 
     await prisma.company.update({
       where: { id: company.id },

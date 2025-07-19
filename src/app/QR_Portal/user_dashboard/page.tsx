@@ -22,6 +22,16 @@ interface UserData {
     menuType?: string
 
     Welcoming_Page?: any
+    Main_Categories?: Array<{
+      id: string
+      name: string
+      categoryNo: number
+      subCategories: Array<{
+        id: string
+        name: string
+        orderNo: number
+      }>
+    }>
     Themes?: Array<{
       style?: string
       backgroundColor?: string
@@ -731,23 +741,20 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
             </code>
             {userData?.company?.C_QR_URL?.includes('localhost') && (
               <div className="mt-2">
-                <p className="text-xs text-red-600 mb-2">⚠️ URL uses localhost instead of your IP</p>
+                <p className="text-xs text-red-600 mb-2">⚠️ URL uses localhost - other devices can't access</p>
                 <button
                   onClick={async () => {
                     try {
-                      const res = await fetch('/api/QR_Panel/user/update-qr-url', {
+                      const res = await fetch('/api/QR_Panel/user/fix-qr-urls', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          displayMode: pdfDisplayMode
-                        }),
                         credentials: 'include'
                       })
+                      const data = await res.json()
                       if (res.ok) {
-                        alert('QR URL fixed!')
+                        alert(`QR URL fixed!\nOld: ${data.oldUrl}\nNew: ${data.newUrl}`)
                         window.location.reload()
                       } else {
-                        alert('Failed to fix URL')
+                        alert(data.error || 'Failed to fix URL')
                       }
                     } catch (error) {
                       console.error('Fix URL error:', error)
@@ -756,7 +763,7 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
                   }}
                   className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition-colors"
                 >
-                  🔧 Fix URL
+                  🔧 Fix for Other Devices
                 </button>
               </div>
             )}
@@ -1100,15 +1107,556 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
 
 // Manual Menu Component
 function ManualMenuSection() {
+  const [categories, setCategories] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [editingCategory, setEditingCategory] = useState<any>(null)
+  const [editingItem, setEditingItem] = useState<any>(null)
+  const [showCategoryForm, setShowCategoryForm] = useState(false)
+  const [showItemForm, setShowItemForm] = useState<string | null>(null)
+  const [showEditCategoryForm, setShowEditCategoryForm] = useState(false)
+  const [showEditItemForm, setShowEditItemForm] = useState(false)
+
+  const [categoryForm, setCategoryForm] = useState({
+    name: '',
+    backgroundImage: null as File | null
+  })
+
+  const [itemForm, setItemForm] = useState({
+    name: '',
+    price: '',
+    menuImage: null as File | null
+  })
+
+  const [editCategoryForm, setEditCategoryForm] = useState({
+    name: '',
+    backgroundImage: null as File | null
+  })
+
+  const [editItemForm, setEditItemForm] = useState({
+    name: '',
+    price: '',
+    menuImage: null as File | null
+  })
+
+  useEffect(() => {
+    fetchCategories()
+  }, [])
+
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch('/api/QR_Panel/user/manual-menu', {
+        credentials: 'include'
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setCategories(data.categories || [])
+      }
+    } catch (error) {
+      console.error('Failed to fetch categories:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleAddCategory = async () => {
+    try {
+      const formData = new FormData()
+      formData.append('name', categoryForm.name)
+      if (categoryForm.backgroundImage) {
+        formData.append('backgroundImage', categoryForm.backgroundImage)
+      }
+
+      const res = await fetch('/api/QR_Panel/user/manual-menu/category', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
+      })
+
+      if (res.ok) {
+        alert('Category added successfully!')
+        setCategoryForm({ name: '', backgroundImage: null })
+        setShowCategoryForm(false)
+        fetchCategories()
+      } else {
+        const data = await res.json()
+        alert(data.error || 'Failed to add category')
+      }
+    } catch (error) {
+      console.error('Add category error:', error)
+      alert('Network error. Please try again.')
+    }
+  }
+
+  const handleAddItem = async (categoryId: string) => {
+    try {
+      const formData = new FormData()
+      formData.append('name', itemForm.name)
+      if (itemForm.price) {
+        formData.append('price', itemForm.price)
+      }
+      formData.append('mainCategoryId', categoryId)
+      if (itemForm.menuImage) {
+        formData.append('menuImage', itemForm.menuImage)
+      }
+
+      const res = await fetch('/api/QR_Panel/user/manual-menu/item', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
+      })
+
+      if (res.ok) {
+        alert('Item added successfully!')
+        setItemForm({
+          name: '', price: '', menuImage: null
+        })
+        setShowItemForm(null)
+        fetchCategories()
+      } else {
+        const data = await res.json()
+        alert(data.error || 'Failed to add item')
+      }
+    } catch (error) {
+      console.error('Add item error:', error)
+      alert('Network error. Please try again.')
+    }
+  }
+
+  const handleDeleteCategory = async (categoryId: string, categoryName: string) => {
+    if (!confirm(`Are you sure you want to delete "${categoryName}" category? This will also delete all items in this category.`)) {
+      return
+    }
+
+    try {
+      const res = await fetch(`/api/QR_Panel/user/manual-menu/category?categoryId=${categoryId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      })
+
+      if (res.ok) {
+        alert('Category deleted successfully!')
+        fetchCategories()
+      } else {
+        const data = await res.json()
+        alert(data.error || 'Failed to delete category')
+      }
+    } catch (error) {
+      console.error('Delete category error:', error)
+      alert('Network error. Please try again.')
+    }
+  }
+
+  const handleDeleteItem = async (itemId: string, itemName: string) => {
+    if (!confirm(`Are you sure you want to delete "${itemName}"?`)) {
+      return
+    }
+
+    try {
+      const res = await fetch(`/api/QR_Panel/user/manual-menu/item?itemId=${itemId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      })
+
+      if (res.ok) {
+        alert('Item deleted successfully!')
+        fetchCategories()
+      } else {
+        const data = await res.json()
+        alert(data.error || 'Failed to delete item')
+      }
+    } catch (error) {
+      console.error('Delete item error:', error)
+      alert('Network error. Please try again.')
+    }
+  }
+
+  const handleEditCategory = (category: any) => {
+    setEditingCategory(category)
+    setEditCategoryForm({
+      name: category.name,
+      backgroundImage: null
+    })
+    setShowEditCategoryForm(true)
+  }
+
+  const handleEditItem = (item: any) => {
+    setEditingItem(item)
+    setEditItemForm({
+      name: item.name,
+      price: item.price?.toString() || '',
+      menuImage: null
+    })
+    setShowEditItemForm(true)
+  }
+
+  const handleUpdateCategory = async () => {
+    if (!editingCategory) return
+
+    try {
+      const formData = new FormData()
+      formData.append('name', editCategoryForm.name)
+      if (editCategoryForm.backgroundImage) {
+        formData.append('backgroundImage', editCategoryForm.backgroundImage)
+      }
+
+      const res = await fetch(`/api/QR_Panel/user/manual-menu/category?categoryId=${editingCategory.id}`, {
+        method: 'PUT',
+        body: formData,
+        credentials: 'include'
+      })
+
+      if (res.ok) {
+        alert('Category updated successfully!')
+        setEditCategoryForm({ name: '', backgroundImage: null })
+        setShowEditCategoryForm(false)
+        setEditingCategory(null)
+        fetchCategories()
+      } else {
+        const data = await res.json()
+        alert(data.error || 'Failed to update category')
+      }
+    } catch (error) {
+      console.error('Update category error:', error)
+      alert('Network error. Please try again.')
+    }
+  }
+
+  const handleUpdateItem = async () => {
+    if (!editingItem) return
+
+    try {
+      const formData = new FormData()
+      formData.append('name', editItemForm.name)
+      if (editItemForm.price) {
+        formData.append('price', editItemForm.price)
+      }
+      if (editItemForm.menuImage) {
+        formData.append('menuImage', editItemForm.menuImage)
+      }
+
+      const res = await fetch(`/api/QR_Panel/user/manual-menu/item?itemId=${editingItem.id}`, {
+        method: 'PUT',
+        body: formData,
+        credentials: 'include'
+      })
+
+      if (res.ok) {
+        alert('Item updated successfully!')
+        setEditItemForm({ name: '', price: '', menuImage: null })
+        setShowEditItemForm(false)
+        setEditingItem(null)
+        fetchCategories()
+      } else {
+        const data = await res.json()
+        alert(data.error || 'Failed to update item')
+      }
+    } catch (error) {
+      console.error('Update item error:', error)
+      alert('Network error. Please try again.')
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      </div>
+    )
+  }
+
   return (
     <div>
-      <h2 className="text-2xl font-semibold mb-6 text-gray-800">Manual Menu Builder</h2>
-      <div className="text-center py-12 text-gray-500">
-        <div className="text-6xl mb-6">🚧</div>
-        <h3 className="text-xl font-medium mb-4">Coming Soon</h3>
-        <p className="text-lg">Manual menu builder is under development</p>
-        <p className="text-sm mt-2">Create categories and subcategories for your menu</p>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-semibold text-gray-800">Manual Menu Builder</h2>
+        <button
+          onClick={() => setShowCategoryForm(true)}
+          className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+        >
+          + Add Category
+        </button>
       </div>
+
+      {/* Add Category Form */}
+      {showCategoryForm && (
+        <div className="mb-6 p-6 bg-gray-50 border border-gray-200 rounded-xl">
+          <h3 className="text-lg font-semibold mb-4">Add New Category</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Category Name</label>
+              <input
+                type="text"
+                value={categoryForm.name}
+                onChange={(e) => setCategoryForm({...categoryForm, name: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
+                placeholder="e.g., Appetizers, Main Courses"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Background Image (Optional)</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setCategoryForm({...categoryForm, backgroundImage: e.target.files?.[0] || null})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
+              />
+            </div>
+          </div>
+          <div className="flex space-x-3 mt-4">
+            <button
+              onClick={handleAddCategory}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            >
+              Save Category
+            </button>
+            <button
+              onClick={() => setShowCategoryForm(false)}
+              className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+              )}
+
+        {/* Edit Category Modal */}
+        {showEditCategoryForm && (
+          <div className="mb-6 p-6 bg-yellow-50 border border-yellow-200 rounded-xl">
+            <h3 className="text-lg font-semibold mb-4">Edit Category: {editingCategory?.name}</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Category Name</label>
+                <input
+                  type="text"
+                  value={editCategoryForm.name}
+                  onChange={(e) => setEditCategoryForm({...editCategoryForm, name: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none"
+                  placeholder="e.g., Appetizers, Main Courses"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Background Image (Optional - Leave empty to keep current)</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setEditCategoryForm({...editCategoryForm, backgroundImage: e.target.files?.[0] || null})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none"
+                />
+              </div>
+            </div>
+            <div className="flex space-x-3 mt-4">
+              <button
+                onClick={handleUpdateCategory}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              >
+                Update Category
+              </button>
+              <button
+                onClick={() => {
+                  setShowEditCategoryForm(false)
+                  setEditingCategory(null)
+                  setEditCategoryForm({ name: '', backgroundImage: null })
+                }}
+                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Item Modal */}
+        {showEditItemForm && (
+          <div className="mb-6 p-6 bg-yellow-50 border border-yellow-200 rounded-xl">
+            <h3 className="text-lg font-semibold mb-4">Edit Item: {editingItem?.name}</h3>
+                         <div className="space-y-4">
+               <div>
+                 <label className="block text-sm font-medium mb-2">Item Name</label>
+                 <input
+                   type="text"
+                   value={editItemForm.name}
+                   onChange={(e) => setEditItemForm({...editItemForm, name: e.target.value})}
+                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none"
+                   placeholder="e.g., Grilled Chicken"
+                 />
+               </div>
+               <div>
+                 <label className="block text-sm font-medium mb-2">Price (₺)</label>
+                 <input
+                   type="number"
+                   step="0.01"
+                   value={editItemForm.price}
+                   onChange={(e) => setEditItemForm({...editItemForm, price: e.target.value})}
+                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none"
+                   placeholder="e.g., 19.99"
+                 />
+               </div>
+               <div>
+                 <label className="block text-sm font-medium mb-2">Item Image (Optional - Leave empty to keep current)</label>
+                 <input
+                   type="file"
+                   accept="image/*"
+                   onChange={(e) => setEditItemForm({...editItemForm, menuImage: e.target.files?.[0] || null})}
+                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none"
+                 />
+               </div>
+             </div>
+            <div className="flex space-x-3 mt-4">
+              <button
+                onClick={handleUpdateItem}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              >
+                Update Item
+              </button>
+              <button
+                onClick={() => {
+                  setShowEditItemForm(false)
+                  setEditingItem(null)
+                  setEditItemForm({ name: '', price: '', menuImage: null })
+                }}
+                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Categories List */}
+      {categories.length === 0 ? (
+        <div className="text-center py-12 text-gray-500">
+          <div className="text-6xl mb-4">🍽️</div>
+          <h3 className="text-xl font-medium mb-2">No Categories Yet</h3>
+          <p className="text-sm">Start by adding your first menu category</p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {categories.map((category) => (
+                         <div key={category.id} className="border border-gray-200 rounded-xl p-6 bg-white">
+               <div className="flex justify-between items-center mb-4">
+                 <h3 className="text-xl font-semibold text-gray-800">{category.name}</h3>
+                 <div className="flex space-x-2">
+                   <button
+                     onClick={() => setShowItemForm(showItemForm === category.id ? null : category.id)}
+                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm"
+                   >
+                     + Add Item
+                   </button>
+                   <button
+                     onClick={() => handleEditCategory(category)}
+                     className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm"
+                   >
+                     ✏️ Edit
+                   </button>
+                   <button
+                     onClick={() => handleDeleteCategory(category.id, category.name)}
+                     className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm"
+                   >
+                     🗑️ Delete
+                   </button>
+                 </div>
+               </div>
+
+              {/* Add Item Form */}
+              {showItemForm === category.id && (
+                <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <h4 className="text-lg font-medium mb-3">Add New Item to {category.name}</h4>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Item Name</label>
+                      <input
+                        type="text"
+                        value={itemForm.name}
+                        onChange={(e) => setItemForm({...itemForm, name: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                        placeholder="e.g., Grilled Chicken"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Price (₺)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={itemForm.price}
+                        onChange={(e) => setItemForm({...itemForm, price: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                        placeholder="e.g., 19.99"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Item Image (Optional)</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setItemForm({...itemForm, menuImage: e.target.files?.[0] || null})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex space-x-3 mt-4">
+                    <button
+                      onClick={() => handleAddItem(category.id)}
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                    >
+                      Save Item
+                    </button>
+                    <button
+                      onClick={() => setShowItemForm(null)}
+                      className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Items List */}
+              <div className="space-y-3">
+                                 {category.subCategories?.map((item: any) => (
+                   <div key={item.id} className="border border-gray-100 rounded-lg p-4 bg-gray-50">
+                     <div className="flex justify-between items-start">
+                       <div className="flex-1">
+                         <div className="flex items-center space-x-3">
+                           <h4 className="font-semibold text-gray-800">{item.name}</h4>
+                           {item.price && (
+                             <span className="text-green-600 font-bold">₺{item.price}</span>
+                           )}
+                         </div>
+                       </div>
+                       <div className="flex items-center space-x-3">
+                         {item.menuImage && (
+                           <div>
+                             <img 
+                               src={`/api/QR_Panel/user/manual-menu/image/${item.id}`}
+                               alt={item.name}
+                               className="w-16 h-16 object-cover rounded-lg"
+                             />
+                           </div>
+                         )}
+                         <button
+                           onClick={() => handleEditItem(item)}
+                           className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-md font-medium transition-colors text-sm"
+                         >
+                           ✏️
+                         </button>
+                         <button
+                           onClick={() => handleDeleteItem(item.id, item.name)}
+                           className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md font-medium transition-colors text-sm"
+                         >
+                           🗑️
+                         </button>
+                       </div>
+                     </div>
+                   </div>
+                 )) || (
+                  <p className="text-gray-500 text-sm text-center py-4">
+                    No items yet. Click "Add Item" to add your first menu item.
+                  </p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -1180,9 +1728,118 @@ function PreviewSection({
   qrUrl: string
   onDownloadQR: () => void
 }) {
+  const [selectedMenuType, setSelectedMenuType] = useState<'pdf' | 'manual' | null>(null)
+  const [updating, setUpdating] = useState(false)
+
+  useEffect(() => {
+    // Set initial menu type based on user data
+    if (userData?.company?.menuType === 'pdf') {
+      setSelectedMenuType('pdf')
+    } else if (userData?.company?.menuType === 'manual') {
+      setSelectedMenuType('manual')
+    }
+  }, [userData])
+
+  const handleMenuTypeChange = async (menuType: 'pdf' | 'manual') => {
+    if (!userData?.company?.id) return
+    
+    setUpdating(true)
+    try {
+      const res = await fetch('/api/QR_Panel/user/update-menu-type', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ menuType }),
+        credentials: 'include'
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        setSelectedMenuType(menuType)
+        alert(`Menu type updated to ${menuType}!\nNew QR URL: ${data.qrUrl}`)
+        // Refresh page to update QR code
+        window.location.reload()
+      } else {
+        const data = await res.json()
+        alert(data.error || 'Failed to update menu type')
+      }
+    } catch (error) {
+      console.error('Menu type update error:', error)
+      alert('Network error. Please try again.')
+    } finally {
+      setUpdating(false)
+    }
+  }
+
   return (
     <div>
-  <h2 className="text-2xl font-semibold mb-2 text-center text-gray-800">Preview & QR Code</h2>
+      <h2 className="text-2xl font-semibold mb-2 text-center text-gray-800">Preview & QR Code</h2>
+      
+      {/* Menu Type Selector */}
+      <div className="mb-6 p-4 bg-gray-50 rounded-xl">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4 text-center">Select Menu Type for QR Code</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+          {/* PDF Menu Option */}
+          <div 
+            onClick={() => !updating && handleMenuTypeChange('pdf')}
+            className={`border-2 rounded-lg p-4 cursor-pointer transition-all text-center ${
+              selectedMenuType === 'pdf' 
+                ? 'border-purple-500 bg-purple-50' 
+                : 'border-gray-300 hover:border-purple-300'
+            } ${updating ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            <div className="text-4xl mb-3">📄</div>
+            <h4 className="font-semibold text-gray-800 mb-2">PDF Menu</h4>
+            <p className="text-sm text-gray-600">
+              Show uploaded PDF menu
+            </p>
+            {selectedMenuType === 'pdf' && (
+              <div className="mt-3 text-purple-600 font-medium">
+                ✓ Active
+              </div>
+            )}
+            {!userData?.company?.pdfMenuFile && (
+              <div className="mt-2 text-red-500 text-xs">
+                No PDF uploaded yet
+              </div>
+            )}
+          </div>
+
+          {/* Manual Menu Option */}
+          <div 
+            onClick={() => !updating && handleMenuTypeChange('manual')}
+            className={`border-2 rounded-lg p-4 cursor-pointer transition-all text-center ${
+              selectedMenuType === 'manual' 
+                ? 'border-purple-500 bg-purple-50' 
+                : 'border-gray-300 hover:border-purple-300'
+            } ${updating ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            <div className="text-4xl mb-3">📝</div>
+            <h4 className="font-semibold text-gray-800 mb-2">Manual Menu</h4>
+            <p className="text-sm text-gray-600">
+              Show manually created menu
+            </p>
+            {selectedMenuType === 'manual' && (
+              <div className="mt-3 text-purple-600 font-medium">
+                ✓ Active
+              </div>
+            )}
+            {(!userData?.company?.Main_Categories || userData.company.Main_Categories.length === 0) && (
+              <div className="mt-2 text-red-500 text-xs">
+                No categories created yet
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {updating && (
+          <div className="text-center mt-4">
+            <div className="inline-flex items-center space-x-2 text-purple-600">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600"></div>
+              <span>Updating menu type...</span>
+            </div>
+          </div>
+        )}
+      </div>
 
   <div className="flex flex-col lg:flex-row gap-6">
     {/* Menu Preview Box */}
@@ -1463,6 +2120,7 @@ const [showResetDropdown, setShowResetDropdown] = useState(false)
           <input
             id="oldPassword"
             type="password"
+            placeholder="Enter old password"
             value={oldPassword}
             onChange={(e) => setOldPassword(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200"
@@ -1476,6 +2134,7 @@ const [showResetDropdown, setShowResetDropdown] = useState(false)
           <input
             id="newPassword"
             type="password"
+            placeholder="Enter new password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200"
@@ -1489,6 +2148,7 @@ const [showResetDropdown, setShowResetDropdown] = useState(false)
           <input
             id="confirmPassword"
             type="password"
+            placeholder="Re-enter new password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200"
