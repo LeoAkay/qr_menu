@@ -187,13 +187,16 @@ export default function UserDashboard() {
     <div className="min-h-screen bg-gray-50">
       {/* Modern Header */}
       <header className="bg-gradient-to-r from-purple-400 to-purple-600 shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            {/* Empty space for alignment */}
-            <div className="w-12"></div>
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="flex justify-between items-center h-16">
+      
+      {/* Company Name */}
+      <div className="absolute left-15 text-white font-bold text-3xl tracking-wide">
+        {userData?.company?.C_Name || 'Company Name'}
+      </div>
             
             {/* Search Bar */}
-            <div className="flex-1 max-w-md mx-8">
+            <div className="flex-1 absolute left-175 max-w-md mx-8 w-full">
               <div className="relative">
                 <input
                   type="text"
