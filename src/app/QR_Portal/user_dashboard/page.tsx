@@ -223,9 +223,17 @@ export default function UserDashboard() {
               </div>
             </div>
 
-            {/* Profile Icon */}
+           
 <div className=" flex items-center space-x-4">
   <div className="flex items-center space-x-2">
+    {/* Update Gelecek */}
+<button
+  onClick={() => router.push('get_started')}
+  aria-label="Go to Inbox"
+  className="bg-white absolute right-34 bg-opacity-20 hover:bg-opacity-30 rounded-full p-2.5 transition-all mr-2"
+>
+  📨
+</button>
     {/* Profile Button */}
 <button
   onClick={() => setActiveTab('profile')}
@@ -280,7 +288,7 @@ export default function UserDashboard() {
           <div className="flex justify-center">
             <button 
               onClick={() => setActiveTab('preview')}
-              className="bg-gradient-to-r from-purple-300 to-purple-400 hover:from-purple-400 hover:to-purple-500 text-gray-800 font-semibold py-4 px-12 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 text-xl"
+              className="bg-gradient-to-r from-purple-400 to-purple-400 hover:from-purple-400 hover:to-purple-500 text-gray-800 font-semibold py-4 px-12 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 text-xl"
             >
               Menu
             </button>
@@ -295,7 +303,7 @@ export default function UserDashboard() {
       setMenuType('pdf')
       setActiveTab('pdf')
     }}
-    className="bg-gradient-to-br from-pink-200 to-pink-300 hover:from-pink-300 hover:to-pink-400 rounded-xl p-8 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+    className="bg-gradient-to-br from-pink-400 to-pink-300 hover:from-pink-300 hover:to-pink-400 rounded-xl p-8 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
   >
     <div className="text-center">
       <div className="text-3xl mb-4">📄</div>
@@ -309,7 +317,7 @@ export default function UserDashboard() {
       setMenuType('manual')
       setActiveTab('manual')
     }}
-    className="bg-gradient-to-br from-pink-200 to-pink-300 hover:from-pink-300 hover:to-pink-400 rounded-xl p-8 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+    className="bg-gradient-to-br from-pink-400 to-pink-300 hover:from-pink-300 hover:to-pink-400 rounded-xl p-8 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
   >
     <div className="text-center">
       <div className="text-3xl mb-4">📝</div>
@@ -607,35 +615,36 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
       
       {/* Existing PDF Display */}
       {existingPDF && (
-        <div className="mb-8 p-6 bg-green-50 border border-green-200 rounded-xl">
-          <div className="flex items-center justify-between">
-            <div className="flex text-center items-center">
-              <div className="text-4xl mr-4">📄</div>
-              <div>
-                <h3 className="text-lg font-semibold  text-green-800">Current PDF Menu</h3>
-                <p className="text-green-600">Your PDF menu has been successfully uploaded</p>
-                {userData?.company?.pdfMenuFile && (
-                  <a 
-                    href={`/api/AdminPanel/company/pdf/${userData.company.id}?t=${Date.now()}`} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-purple-600 hover:text-purple-800 text-sm font-medium"
-                  >
-                    📁 View PDF
-                  </a>
-                )}
-              </div>
-            </div>
-            <button
-              onClick={handleDeletePDF}
-              disabled={deleting}
-              className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:bg-red-400"
-            >
-              {deleting ? 'Deleting...' : '🗑️ Delete'}
-            </button>
-          </div>
+        <div className="mb-8 p-6 flex justify-center bg-green-50 border border-green-200 rounded-xl">
+    <div className="flex items-center">
+      <div className="text-8xl absolute left-140 mr-4">📄</div>
+      <div className="flex-1 text-center">
+        <h3 className="text-lg text-center font-semibold text-green-800">Current PDF Menu</h3>
+        <p className="text-green-600 text-center">Your PDF menu has been successfully uploaded</p>
+        {userData?.company?.pdfMenuFile && (
+          <a 
+            href={`/api/AdminPanel/company/pdf/${userData.company.id}?t=${Date.now()}`} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-purple-600 hover:text-purple-800 text-sm font-medium"
+          >
+            📁 View PDF
+          </a>
+        )}
+        <div className="mt-6 flex justify-center">
+          <button
+            onClick={handleDeletePDF}
+            disabled={deleting}
+            className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:bg-red-400"
+          >
+            {deleting ? 'Deleting...' : '🗑️ Delete'}
+          </button>
         </div>
-      )}
+      </div>
+    </div>
+  </div>
+)}
+
       
       {/* PDF Upload Section */}
       <div className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center hover:border-purple-400 transition-colors">
@@ -655,7 +664,7 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
             {selectedFile ? selectedFile.name : existingPDF ? 'Select New PDF (Will Replace Current PDF)' : 'Select PDF File'}
           </div>
           <div className="text-gray-500">
-            {existingPDF ? 'You can replace your current PDF by selecting a new one' : 'Click to select your menu PDF'}
+            {existingPDF ? 'Replace your current PDF by selecting or uploading a new one' : 'Click to select your menu PDF'}
           </div>
         </label>
       </div>
@@ -823,7 +832,7 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
             onClick={() => setShowThemeOptions(!showThemeOptions)}
             className="bg-purple-100 hover:bg-purple-200 text-purple-700 px-4 py-2 rounded-lg transition-colors text-sm font-medium"
           >
-            {showThemeOptions ? '📐 Hide' : '🎨 Customize'}
+            {showThemeOptions ? '⬆️ Hide' : '🎨 Customize'}
           </button>
         </div>
 
@@ -960,14 +969,14 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
             onClick={() => setShowImageOptions(!showImageOptions)}
             className="bg-purple-100 hover:bg-purple-200 text-purple-700 px-4 py-2 rounded-lg transition-colors text-sm font-medium"
           >
-            {showImageOptions ? '📷 Hide' : '🖼️ Upload Images'}
+            {showImageOptions ? '⬆️ Hide' : '🖼️ Upload Images'}
           </button>
         </div>
 
         {/* Current Images Display */}
         {(userData?.company?.C_Logo_Image || userData?.company?.Welcoming_Page) && (
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
-            <h4 className="text-sm font-medium text-green-800 mb-3">Mevcut Resimler</h4>
+            <h4 className="text-sm font-medium text-green-800 mb-3">Uploaded Images</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {userData?.company?.C_Logo_Image && (
                 <div className="text-center">
@@ -1022,7 +1031,7 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
                     id="logo-upload"
                   />
                   <label htmlFor="logo-upload" className="cursor-pointer block">
-                    <div className="text-4xl mb-3">🏢</div>
+                    
                     <div className="text-sm font-medium mb-2 text-gray-800">
                       {selectedLogo ? selectedLogo.name : 'Select Logo'}
                     </div>
@@ -1062,7 +1071,7 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
                     id="welcoming-upload"
                   />
                   <label htmlFor="welcoming-upload" className="cursor-pointer block">
-                    <div className="text-4xl mb-3">🎉</div>
+              
                     <div className="text-sm font-medium mb-2 text-gray-800">
                       {selectedWelcoming ? selectedWelcoming.name : 'Select Welcome Image'}
                     </div>
@@ -1546,7 +1555,7 @@ function ManualMenuSection() {
                    </button>
                    <button
                      onClick={() => handleEditCategory(category)}
-                     className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm"
+                     className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm"
                    >
                      ✏️ Edit
                    </button>

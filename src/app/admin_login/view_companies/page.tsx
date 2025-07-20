@@ -5,6 +5,7 @@ import UpdateCompanyButton from '@/app/components/AdminComponents/UpdateCompanyB
 import ViewAdminsButton from '@/app/components/AdminComponents/viewAdminButton'
 
 
+
 export default async function ViewCompany() {
   const users = await prisma.user.findMany({
     where: { role: { roleName: 'User' } },

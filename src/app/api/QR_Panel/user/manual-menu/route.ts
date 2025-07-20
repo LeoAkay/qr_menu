@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     const userId = request.cookies.get('userId')?.value
     const role = request.cookies.get('role')?.value
 
-    if (!userId || role !== 'User') {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     

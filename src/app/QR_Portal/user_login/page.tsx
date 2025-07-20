@@ -101,6 +101,7 @@ export default function UserLoginPage() {
             {/* Sign In Button */}
             <button
               onClick={handleLogin}
+              onKeyPress={handleKeyPress}
               disabled={loading || !userName || !password}
               className="w-full bg-blue-600 hover:bg-purple-700 text-white py-3 px-4 rounded-lg font-medium text-lg transition-all duration-200 disabled:bg-blue-600 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >

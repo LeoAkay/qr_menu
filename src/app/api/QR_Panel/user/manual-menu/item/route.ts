@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
     const userId = request.cookies.get('userId')?.value
     const role = request.cookies.get('role')?.value
 
-    if (!userId || role !== 'User') {
+    if (!userId ) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     
@@ -84,7 +84,7 @@ export async function DELETE(request: NextRequest) {
     const userId = request.cookies.get('userId')?.value
     const role = request.cookies.get('role')?.value
 
-    if (!userId || role !== 'User') {
+    if (!userId ) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -140,7 +140,7 @@ export async function PUT(request: NextRequest) {
     const userId = request.cookies.get('userId')?.value
     const role = request.cookies.get('role')?.value
 
-    if (!userId || role !== 'User') {
+    if (!userId ) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
