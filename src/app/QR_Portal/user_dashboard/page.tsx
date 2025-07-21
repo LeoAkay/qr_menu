@@ -54,7 +54,7 @@ export default function UserDashboard() {
   const router = useRouter()
   const [userData, setUserData] = useState<UserData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'pdf' | 'manual' | 'theme' | 'preview' | 'profile' | ''>('')
+  const [activeTab, setActiveTab] = useState<'pdf' | 'manual' | 'theme' | 'preview' | 'profile'| 'contactUs' | ''>('')
   const [menuType, setMenuType] = useState<'pdf' | 'manual' | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [theme, setTheme] = useState<Theme>({
@@ -205,101 +205,92 @@ export default function UserDashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Modern Header */}
-      <header className="bg-gradient-to-r from-purple-400 to-purple-600 shadow-lg">
+     <header className="bg-gradient-to-r from-purple-400 to-purple-600 shadow-lg">
   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div className="flex justify-between items-center h-16">
-      
-      {/* Company Name */}
-      <div className="absolute left-15 text-white font-bold text-3xl tracking-wide">
+    <div className="flex items-center justify-between h-16 space-x-6">
+
+      {/* Left: Company Name */}
+      <div className="text-white font-bold text-2xl sm:text-3xl tracking-wide whitespace-nowrap">
         {userData?.company?.C_Name || 'Company Name'}
       </div>
-            
-            {/* Search Bar */}
-            <div className="flex-1 absolute left-175 max-w-md mx-8 w-full">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-10 py-2 bg-white bg-opacity-90 border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:bg-white transition-all"
-                />
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  >
-                    <svg className="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                )}
-              </div>
-            </div>
 
-           
-<div className=" flex items-center space-x-4">
-  <div className="flex items-center space-x-2">
-    {/* Update Gelecek */}
-<button
-  onClick={() => router.push('get_started')}
-  aria-label="Go to Inbox"
-  className="bg-white absolute right-34 bg-opacity-20 hover:bg-opacity-30 rounded-full p-2.5 transition-all mr-2"
->
-  📨
-</button>
-    {/* Profile Button */}
-<button
-  onClick={() => setActiveTab('profile')}
-  aria-label="Go to profile"
-  className="bg-white absolute right-18 bg-opacity-20 hover:bg-opacity-30 rounded-full p-1.5 transition-all mr-2"
-  title="Profile"
+      {/* Center: Search Bar */}
+      <div className="flex-1 max-w-xl">
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-10 py-2 bg-white bg-opacity-90 border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:bg-white transition-all"
+          />
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute inset-y-0 right-0 pr-3 flex items-center"
+            >
+              <svg className="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Right: Buttons */}
+      <div className="flex items-center space-x-3">
+        {/* Contact */}
+        <button
+  onClick={() => setActiveTab('contactUs')}
+  aria-label="Contact Us"
+  className="bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full p-1.5 transition-all"
 >
   <img
-    src={
-      userData?.company?.C_Logo_Image
-        ? `/api/AdminPanel/company/image/${userData.company.id}/logo`
-        : '/user-icon-on-transparent-background-free-png.webp' // ✅ Corrected fallback path
-    }
-    alt="Company Logo"
+    src="/6ed29fc85c4dad83456b89637af7df.webp"
+    alt="Contact"
     className="w-8 h-8 object-cover rounded-full ring-1 ring-white hover:ring-2 transition duration-200"
-    loading="lazy"
   />
 </button>
 
+        {/* Profile */}
+        <button
+          onClick={() => setActiveTab('profile')}
+          aria-label="Profile"
+          className="bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full p-1.5 transition-all"
+        >
+          <img
+            src={
+              userData?.company?.C_Logo_Image
+                ? `/api/AdminPanel/company/image/${userData.company.id}/logo`
+                : '/user-icon-on-transparent-background-free-png.webp'
+            }
+            alt="Company Logo"
+            className="w-8 h-8 object-cover rounded-full ring-1 ring-white hover:ring-2 transition duration-200"
+            loading="lazy"
+          />
+        </button>
 
-    {/* Logout Button */}
-    <button
-      onClick={handleLogout}
-      aria-label="Logout"
-      className="bg-red-500 bg-opacity-80 absolute right-5 hover:bg-opacity-100 rounded-full p-2.5 transition-all"
-      title="Logout"
-    >
-      <svg
-        className="h-6 w-6 text-white transition-transform duration-200"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2"
-          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-        />
-      </svg>
-    </button>
+        {/* Logout */}
+        <button
+          onClick={handleLogout}
+          aria-label="Logout"
+          className="bg-red-500 bg-opacity-80 hover:bg-opacity-100 rounded-full p-2.5 transition-all"
+          title="Logout"
+        >
+          <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+        </button>
+      </div>
+
+    </div>
   </div>
-</div>
-
-          </div>
-        </div>
-      </header>
+</header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Menu Section */}
@@ -378,7 +369,7 @@ export default function UserDashboard() {
                 />
               )}
           {activeTab === 'profile' && <ProfileSection userData={userData} />}
-          
+          {activeTab === 'contactUs' && <GetStartedPage userData={userData} />}
           {/* Default Welcome Screen */}
           {!activeTab && (
             <div className="text-center py-12">
@@ -650,34 +641,36 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
       
       {/* Existing PDF Display */}
       {existingPDF && (
-        <div className="mb-8 p-6 flex justify-center bg-green-50 border border-green-200 rounded-xl">
-    <div className="flex items-center">
-      <div className="text-8xl absolute left-140 mr-4">📄</div>
-      <div className="flex-1 text-center">
-        <h3 className="text-lg text-center font-semibold text-green-800">Current PDF Menu</h3>
-        <p className="text-green-600 text-center">Your PDF menu has been successfully uploaded</p>
-        {userData?.company?.pdfMenuFile && (
-          <a 
-            href={`/api/AdminPanel/company/pdf/${userData.company.id}?t=${Date.now()}`} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-purple-600 hover:text-purple-800 text-sm font-medium"
-          >
-            📁 View PDF
-          </a>
-        )}
-        <div className="mt-6 flex justify-center">
-          <button
-            onClick={handleDeletePDF}
-            disabled={deleting}
-            className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:bg-red-400"
-          >
-            {deleting ? 'Deleting...' : '🗑️ Delete'}
-          </button>
-        </div>
-      </div>
+       <div className="mb-8 p-6 bg-green-50 border border-green-200 rounded-xl flex items-center space-x-6">
+  
+
+  {/* Text and actions */}
+  <div className="flex-1 text-center">
+    <h3 className="text-lg font-semibold text-green-800">Current PDF Menu</h3>
+    <p className="text-green-600">Your PDF menu has been successfully uploaded</p>
+    
+    {userData?.company?.pdfMenuFile && (
+      <a 
+        href={`/api/AdminPanel/company/pdf/${userData.company.id}?t=${Date.now()}`} 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="text-purple-600 hover:text-purple-800 text-sm font-medium inline-block mt-2"
+      >
+        📁 View PDF
+      </a>
+    )}
+
+    <div className="mt-4">
+      <button
+        onClick={handleDeletePDF}
+        disabled={deleting}
+        className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:bg-red-400"
+      >
+        {deleting ? 'Deleting...' : '🗑️ Delete'}
+      </button>
     </div>
   </div>
+    </div>
 )}
 
       
@@ -1985,6 +1978,95 @@ function PreviewSection({
   )
 }
 
+function GetStartedPage({ userData }: { userData: UserData | null }) {
+  const [form, setForm] = useState({
+    c_Id:  userData?.cId || '',
+    restaurant: userData?.company?.C_Name || '',
+    message: '',
+  })
+
+  const [submitted, setSubmitted] = useState(false)
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value })
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    const res = await fetch('/api/QR_Panel/message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form),
+    })
+
+    if (res.ok) {
+      setSubmitted(true)
+      setForm({
+        c_Id:'',
+        restaurant: '',
+        message: '',
+      })
+    } else {
+      alert('Error sending message.')
+    }
+  }
+    return (
+    <div className="min-h-screen bg-white flex items-center justify-center px-4 py-16 relative overflow-hidden">
+       {submitted ? (
+          <>
+    <div className="min-h-screen flex flex-col items-center justify-center space-y-6">
+    
+    <div className="text-green-600 font-semibold text-4xl text-center">
+      Thank you! We'll contact you soon.
+    </div><div className="text-green-600 font-semibold text-4xl">
+      ✅
+    </div>
+  </div>
+
+</>
+        ) : (
+        <div className="max-w-4xl w-full space-y-6 relative z-10">
+        <h1 className="text-6xl font-bold text-center text-gray-900">Contact Us</h1>
+        <p className="text-center text-gray-700 mb-6">Fill out the form below and we’ll get back to you shortly.</p>
+          <form onSubmit={handleSubmit} className="space-y-6 bg-white p-8 rounded-2xl shadow-lg border border-gray-200">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[
+                { name: 'c_Id', placeholder: 'Restaurant ID' },
+                { name: 'restaurant', placeholder: 'Restaurant Name' },
+              ].map(({ name, placeholder }) => (
+                <input
+                  key={name}
+                  name={name}
+                  value={form[name as keyof typeof form]}
+                  onChange={handleChange}
+                  required
+                  placeholder={placeholder}
+                  className="w-full px-5 py-3 rounded-xl bg-white border border-gray-300 placeholder-gray-400 text-gray-900 text-lg transition focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent shadow-sm"
+                />
+              ))}
+            </div>
+            <textarea
+              name="message"
+              value={form.message}
+              onChange={handleChange}
+              placeholder="Optional message or request..."
+              rows={5}
+              className="w-full px-5 py-4 rounded-xl bg-white border border-gray-300 placeholder-gray-400 text-gray-900 text-lg resize-none transition focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent shadow-sm"
+            />
+            <button
+              type="submit"
+              className="w-full py-4 bg-purple-600 text-white text-lg font-semibold rounded-xl hover:bg-purple-700 transition shadow-md"
+            >
+              Send Message
+            </button>
+          </form>
+          </div>
+        )}
+      </div>
+  )
+}
+
 // Profile Component
 function ProfileSection({ userData }: { userData: UserData | null }) {
   const [formData, setFormData] = useState({
@@ -2252,8 +2334,6 @@ const [showResetDropdown, setShowResetDropdown] = useState(false)
     </div>
   )}
 </div>
-
-
       {/* Account Info */}
       <div className="mt-8 p-6 bg-gray-50 text-center rounded-xl">
         <h3 className="text-xl font-semibold text-black-700 mb-4">Account Information</h3>
