@@ -9,6 +9,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
    const [loading, setLoading] = useState(false)
+     const [showPassword, setShowPassword] = useState(false);
+
 
   const handleLogin = async () => {
     setError('')
@@ -51,14 +53,30 @@ export default function LoginPage() {
           onChange={(e) => setUsername(e.target.value)}
           className="w-full mb-4 p-3 rounded border border-black-800 text-black "
         />
+        <div className="relative">
         <input
-          type="password"
+          type={showPassword ? 'text' : 'password'}
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           onKeyPress={handleKeyPress}
-          className="w-full mb-4 p-3 rounded border border-black-800 text-black"
+          className="w-full mb-4 p-3 pr-12 rounded border border-black-800 text-black"
         />
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700 focus:outline-none"
+          tabIndex={-1}
+          aria-label="Toggle password visibility"
+        >
+          <img
+            src="/show-password-icon-18.jpg"
+            alt="Toggle password visibility"
+            className="w-8 h-8"
+          />
+        </button>
+      </div>
+      
         <button
           onClick={handleLogin}
           onKeyPress={handleKeyPress}

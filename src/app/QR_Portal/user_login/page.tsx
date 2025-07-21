@@ -9,6 +9,8 @@ export default function UserLoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false);
+
 
   const handleLogin = async () => {
     setError('')
@@ -62,10 +64,10 @@ export default function UserLoginPage() {
       </div>
 
       {/* Login Form */}
-      <div className="relative z-10 w-full max-w-md mx-auto px-6 ">
-        <h1 className="text-5xl font-bold text-center text-gray-900 mb-12">QR Menu System</h1>
-        <div className="bg-white/20 backdrop-blur-md border border-white/30 rounded-2xl p-8 shadow-2xl">
-          <div className="space-y-6">
+      <div className="relative z-10 w-full max-w-xl mx-auto px-6">
+  <h1 className="text-6xl font-bold text-center text-gray-900 mb-12">QR Menu System</h1>
+  <div className="bg-white/20 backdrop-blur-md border border-white/30 rounded-2xl p-8 shadow-2xl">
+    <div className="space-y-6">
             {/* Username Input */}
             <div>
               <label className="block text-black-700 text-sm font-medium mb-2">
@@ -83,20 +85,40 @@ export default function UserLoginPage() {
             </div>
             
             {/* Password Input */}
-            <div>
-              <label className="block text-black-700 text-sm font-medium mb-2">
-                Password
-              </label>
-              <input
-                type="Password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onKeyPress={handleKeyPress}
-                className="w-full px-4 py-3 bg-white/80 border border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200 text-gray-800 placeholder-gray-400 transition-all"
-                disabled={loading}
-              />
-            </div>
+            <div className="relative">
+  <label className="block text-black-700 text-sm font-medium mb-2">
+    Password
+  </label>
+  
+  <div className="relative">
+  <input
+    type={showPassword ? 'text' : 'password'}
+    placeholder="Password"
+    value={password}
+    onChange={(e) => setPassword(e.target.value)}
+    onKeyPress={handleKeyPress}
+    className="w-full px-4 py-3 pr-12 bg-white/80 border border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200 text-gray-800 placeholder-gray-400 transition-all"
+    disabled={loading}
+  />
+
+  {/* Toggle Button */}
+  <button
+    type="button"
+    onClick={() => setShowPassword(!showPassword)}
+    className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700 focus:outline-none"
+    tabIndex={-1}
+  >
+    <img
+      src="/show-password-icon-18.jpg"
+      alt="Toggle password visibility"
+      className="w-6 h-6"
+    />
+  </button>
+</div>
+
+
+</div>
+
             
             {/* Sign In Button */}
             <button

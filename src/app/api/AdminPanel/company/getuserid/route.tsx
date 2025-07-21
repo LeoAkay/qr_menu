@@ -1,4 +1,3 @@
-// /api/AdminPanel/company/getUserId/route.ts
 import { prisma } from "@/app/lib/prisma"
 import { NextResponse } from "next/server"
 
