@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import HTMLFlipBook from 'react-pageflip';
 
@@ -239,9 +239,9 @@ export default function MenuPage() {
               Welcome
             </p>
                          <div className="mt-8">
-               <div className="inline-flex items-center space-x-2 text-lg">
-                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-                 <span>Loading menu...</span>
+               <div className="inline-flex items-center space-x-3">
+                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+                 <span className="text-lg font-medium text-gray-600">Loading menu...</span>
                </div>
                <p className="text-sm opacity-75 mt-4 animate-pulse">
                  Click to skip
@@ -368,38 +368,47 @@ export default function MenuPage() {
   )
 }
 
-// Flipbook PDF Viewer Component (Next.js uyumlu, workerSrc elle ayarlı)
+// Flipbook PDF Viewer Component
 function PDFFlipbook({ pdfUrl }: { pdfUrl: string }) {
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [dimensions, setDimensions] = useState({ width: 800, height: 1000 });
+  const [dimensions, setDimensions] = useState({ width: 800, height: 1200 });
+  const containerRef = useRef<HTMLDivElement>(null);
 
+  // Responsive boyutlandırma
   useEffect(() => {
-    // Responsive boyutlar ayarla - tam ekran boyutlar
     const updateDimensions = () => {
-      const screenWidth = window.innerWidth;
-      const screenHeight = window.innerHeight;
+      if (!containerRef.current) return;
       
-      // Optimal boyutlar - büyük ama uygun
-      if (screenWidth >= 1024) {
-        // Desktop - optimal boyut
-        setDimensions({ 
-          width: 1200, 
-          height: 1500
-        });
-      } else if (screenWidth >= 768) {
-        // Tablet - optimal boyut
-        setDimensions({ 
-          width: 900, 
-          height: 1200
-        });
-      } else {
-        // Mobile - optimal boyut
-        setDimensions({ 
-          width: 550, 
-          height: 800
-        });
-      }
+      const container = containerRef.current;
+      const screenWidth = window.innerWidth;
+      const containerWidth = container.clientWidth;
+      const containerHeight = window.innerHeight * 0.8;
+      
+      // Aspect ratio - A4 page ratio (1:√2)
+      const aspectRatio = 1 / Math.sqrt(2); // Approximately 0.707
+      
+      // Initial size based on container width
+      let targetWidth = containerWidth * (
+        screenWidth >= 1024 ? 0.8 : // Desktop
+        screenWidth >= 768 ? 0.9 :  // Tablet
+        0.95                        // Mobile
+      );
+      
+      let targetHeight = containerHeight * 0.9; // Keep some margin
+      
+      // Calculate dimensions while maintaining aspect ratio
+      let newWidth = Math.min(targetWidth, targetHeight * aspectRatio);
+      let newHeight = Math.min(targetHeight, targetWidth / aspectRatio);
+      
+      // Ensure minimum dimensions
+      newWidth = Math.max(newWidth, 320); // min width
+      newHeight = Math.max(newHeight, 400); // min height
+      
+      setDimensions({
+        width: Math.round(newWidth), // Required by HTMLFlipBook component
+        height: Math.round(newHeight) // Required by HTMLFlipBook component
+      });
     };
 
     updateDimensions();
@@ -407,13 +416,13 @@ function PDFFlipbook({ pdfUrl }: { pdfUrl: string }) {
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
+  // PDF'i yükle ve sayfalara dönüştür
   useEffect(() => {
     let cancelled = false;
     const renderPDF = async () => {
       setLoading(true);
       try {
-        // pdfjs globali layout.tsx ile yüklendi
-        const pdfjsLib: any = (window as any).pdfjsLib;
+        const pdfjsLib = (window as any).pdfjsLib;
         if (!pdfjsLib) {
           console.error('pdfjsLib global not found');
           setLoading(false);
@@ -426,14 +435,29 @@ function PDFFlipbook({ pdfUrl }: { pdfUrl: string }) {
         const imgs: string[] = [];
         for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i);
-          // Yüksek kalite - büyük boyut
-          const viewport = page.getViewport({ scale: 6 });
+          const viewport = page.getViewport({ scale: 4 }); // Higher scale for better quality
           const canvas = document.createElement('canvas');
           const context = canvas.getContext('2d');
+          
+          if (!context) {
+            console.error('Canvas context creation failed');
+            continue;
+          }
+          
           canvas.width = viewport.width;
           canvas.height = viewport.height;
-          await page.render({ canvasContext: context!, viewport }).promise;
-          imgs.push(canvas.toDataURL());
+          
+          try {
+            await page.render({
+              canvasContext: context,
+              viewport: viewport,
+              intent: 'print' // Better quality for text
+            }).promise;
+            
+            imgs.push(canvas.toDataURL('image/jpeg', 0.85)); // Better compression ratio
+          } catch (err) {
+            console.error(`Failed to render page ${i}:`, err);
+          }
         }
 
         if (!cancelled) {
@@ -451,54 +475,56 @@ function PDFFlipbook({ pdfUrl }: { pdfUrl: string }) {
 
   if (loading) {
     return (
-      <div className="text-center py-12">
-        <div className="inline-flex items-center space-x-3">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-          <span className="text-lg font-medium text-gray-600">Loading menu...</span>
-        </div>
+      <div className="flex justify-center items-center min-h-[50vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="flex justify-center w-full overflow-hidden">
-      <div className="w-full" style={{ transform: 'scale(1.15)', transformOrigin: 'center' }}>
-        <HTMLFlipBook
-          width={dimensions.width}
-          height={dimensions.height}
-          minWidth={400}
-          maxWidth={1800}
-          minHeight={500}
-          maxHeight={2200}
-          showCover={true}
-          className="shadow-2xl rounded-lg mx-auto"
-          style={{ margin: '0 auto', minWidth: '90%', minHeight: '80vh' }}
-          size="stretch"
-          drawShadow={true}
-          flippingTime={800}
-          useMouseEvents={true}
-          usePortrait={true}
-          startPage={0}
-          disableFlipByClick={false}
-          startZIndex={0}
-          autoSize={true}
-          maxShadowOpacity={0.6}
-          mobileScrollSupport={true}
-          clickEventForward={true}
-          showPageCorners={true}
-          swipeDistance={50}
-        >
-          {images.map((src, idx) => (
-            <div key={idx} className="bg-white flex items-center justify-center h-full overflow-hidden">
-              <img 
-                src={src} 
-                alt={`Page ${idx + 1}`} 
-                className="w-full h-full object-contain"
-                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-              />
-            </div>
-          ))}
-        </HTMLFlipBook>
+    <div className="flex justify-center items-center w-full min-h-screen bg-gray-100 py-8">
+      <div ref={containerRef} className="w-full max-w-6xl mx-auto px-4">
+        <div className="relative bg-white rounded-lg shadow-xl">
+          <HTMLFlipBook
+            width={dimensions.width}
+            height={dimensions.height}
+            size="stretch"
+            minWidth={320}
+            maxWidth={1600}
+            minHeight={400}
+            maxHeight={2000}
+            showCover={true}
+            drawShadow={true}
+            flippingTime={1000}
+            usePortrait={true}
+            startPage={0}
+            useMouseEvents={true}
+            disableFlipByClick={false}
+            mobileScrollSupport={true}
+            clickEventForward={false}
+            showPageCorners={true}
+            swipeDistance={30}
+            maxShadowOpacity={0.5}
+            startZIndex={20}
+            autoSize={true}
+            style={{ padding: '20px' }}
+            className="shadow-2xl mx-auto"
+          >
+            {images.map((src, idx) => (
+              <div key={idx} className="bg-white flex items-center justify-center h-full overflow-hidden shadow-inner">
+                <div className="relative w-full h-full">
+                  <img 
+                    src={src} 
+                    alt={`Page ${idx + 1}`} 
+                    className="absolute inset-0 w-full h-full object-contain select-none"
+                    draggable="false"
+                    loading={idx < 2 ? "eager" : "lazy"} // Preload first two pages
+                  />
+                </div>
+              </div>
+            ))}
+          </HTMLFlipBook>
+        </div>
       </div>
     </div>
   );
@@ -554,7 +580,7 @@ function ScrollPDFViewer({ pdfUrl }: { pdfUrl: string }) {
     return (
       <div className="text-center py-12">
         <div className="inline-flex items-center space-x-3">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
           <span className="text-lg font-medium text-gray-600">Loading menu...</span>
         </div>
       </div>
@@ -563,10 +589,9 @@ function ScrollPDFViewer({ pdfUrl }: { pdfUrl: string }) {
 
   return (
     <div 
-      className="w-full max-w-4xl mx-auto px-4 py-6 space-y-4"
+      className="w-full max-w-4xl mx-auto px-4 py-6 space-y-4 overflow-auto"
       style={{ 
-        height: `${Math.max(window.innerHeight - 120, 600)}px`,
-        overflow: 'auto'
+        blockSize: `${Math.max(window.innerHeight - 120, 600)}px`
       }}
     >
       {images.map((src, idx) => (
@@ -575,7 +600,7 @@ function ScrollPDFViewer({ pdfUrl }: { pdfUrl: string }) {
             src={src} 
             alt={`Page ${idx + 1}`} 
             className="max-w-full h-auto shadow-lg rounded-lg border border-gray-200"
-            style={{ maxHeight: '95vh' }}
+            style={{ blockSize: 'max(95vh)' }}
           />
         </div>
       ))}
@@ -636,7 +661,7 @@ function ManualMenu({
               onClick={() => setSelectedCategory(category.id)}
               className={`flex-shrink-0 px-6 py-3 rounded-full font-medium text-sm transition-all ${
                 selectedCategory === category.id
-                  ? 'bg-purple-600 text-white shadow-lg'
+                  ? 'bg-black text-white shadow-lg'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -657,7 +682,7 @@ function ManualMenu({
       >
         {currentCategory.name}
       </h1>
-      <div className="w-20 h-1 bg-purple-600 mx-auto rounded"></div>
+      <div className="w-20 h-1 bg-black mx-auto rounded"></div>
     </div>
 
           {/* Items Grid */}
@@ -721,4 +746,4 @@ function ManualMenu({
       )}
     </div>
   )
-} 
+}

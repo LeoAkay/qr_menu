@@ -120,12 +120,31 @@ export default function UserDashboard() {
   }
 
   const generateQRUrl = () => {
-    if (!userData?.company?.id) return ''
-    // Use the stored C_QR_URL if available, otherwise generate basic URL
-    if (userData.company.C_QR_URL) {
-      return userData.company.C_QR_URL
+    if (!userData?.company?.id) return '';
+    
+    let baseUrl = userData.company.C_QR_URL || `${window.location.origin}/QR_Portal/menu/${userData.company.id}`;
+    
+    // Add the display mode parameter for PDF menus
+    if (menuType === 'pdf') {
+      try {
+        const url = new URL(baseUrl);
+        if (userData?.company?.menuType === 'pdf') {
+          const displayMode = localStorage.getItem('pdfDisplayMode') || 'flipbook';
+          url.searchParams.set('mode', displayMode);
+        }
+        return url.toString();
+      } catch {
+        // Fallback for invalid URL
+        const separator = baseUrl.includes('?') ? '&' : '?';
+        if (userData?.company?.menuType === 'pdf') {
+          const displayMode = localStorage.getItem('pdfDisplayMode') || 'flipbook';
+          return `${baseUrl}${separator}mode=${displayMode}`;
+        }
+        return baseUrl;
+      }
     }
-    return `${window.location.origin}/QR_Portal/menu/${userData.company.id}`
+    
+    return baseUrl;
   }
 
   const downloadQR = () => {
@@ -432,6 +451,22 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
     }
   }
 
+  const generateQRUrl = () => {
+    if (!userData?.company?.id) return '';
+    
+    let baseUrl = userData.company.C_QR_URL || `${window.location.origin}/QR_Portal/menu/${userData.company.id}`;
+    
+    try {
+      const url = new URL(baseUrl);
+      url.searchParams.set('mode', pdfDisplayMode);
+      return url.toString();
+    } catch {
+      // Fallback for invalid URL
+      const separator = baseUrl.includes('?') ? '&' : '?';
+      return `${baseUrl}${separator}mode=${pdfDisplayMode}`;
+    }
+  }
+
   const handleUpload = async () => {
     if (!selectedFile) return
 
@@ -694,7 +729,21 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Flipbook Mode */}
             <div 
-              onClick={() => setPdfDisplayMode('flipbook')}
+              onClick={() => {
+                setPdfDisplayMode('flipbook');
+                localStorage.setItem('pdfDisplayMode', 'flipbook');
+                // QR URL'i sessizce güncelle
+                const newQrUrl = generateQRUrl();
+                fetch('/api/QR_Panel/user/update-qr-url', {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ qrUrl: newQrUrl }),
+                  credentials: 'include'
+                }).catch(error => {
+                  console.error('Update QR URL error:', error);
+                  // Hata durumunda sessizce devam et
+                });
+              }}
               className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
                 pdfDisplayMode === 'flipbook' 
                   ? 'border-purple-500 bg-purple-50' 
@@ -720,7 +769,21 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
 
             {/* Scroll Mode */}
             <div 
-              onClick={() => setPdfDisplayMode('scroll')}
+              onClick={() => {
+                setPdfDisplayMode('scroll');
+                localStorage.setItem('pdfDisplayMode', 'scroll');
+                // QR URL'i sessizce güncelle
+                const newQrUrl = generateQRUrl();
+                fetch('/api/QR_Panel/user/update-qr-url', {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ qrUrl: newQrUrl }),
+                  credentials: 'include'
+                }).catch(error => {
+                  console.error('Update QR URL error:', error);
+                  // Hata durumunda sessizce devam et
+                });
+              }}
               className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
                 pdfDisplayMode === 'scroll' 
                   ? 'border-purple-500 bg-purple-50' 
@@ -749,6 +812,7 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
           <div className="text-center mt-4 p-3 bg-white border border-gray-200 rounded-lg">
             <p className="text-sm text-gray-600 mb-2">Current QR URL:</p>
             <code className="text-xs bg-gray-100 px-2 py-1 rounded break-all">
+              {generateQRUrl()}
               {userData?.company?.C_QR_URL || 'No QR URL generated yet'}
             </code>
             {userData?.company?.C_QR_URL?.includes('localhost') && (
