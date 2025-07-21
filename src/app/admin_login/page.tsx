@@ -8,15 +8,17 @@ export default function LoginPage() {
   const [userName, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+   const [loading, setLoading] = useState(false)
 
   const handleLogin = async () => {
     setError('')
+    setLoading(true)
     try {
-      const res = await fetch('/api/admin/login', {
+      const res = await fetch('/api/AdminPanel/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userName, password }),
-        credentials: 'include', // Important to send cookies
+        credentials: 'include',
       })
 
       if (!res.ok) throw new Error('Login failed')
@@ -25,10 +27,15 @@ export default function LoginPage() {
       localStorage.setItem('adminId', data.admin.id);
       localStorage.setItem('User_Name', data.admin.userName);
 
-      router.push('/admin_login/home')
+      router.push('/admin_login/view_companies')
     } catch (err) {
       setError('Invalid credentials')
       console.error('Login error:', err)
+    }
+  }
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleLogin()
     }
   }
 
@@ -40,6 +47,7 @@ export default function LoginPage() {
           type="text"
           placeholder="Username"
           value={userName}
+          onKeyPress={handleKeyPress}
           onChange={(e) => setUsername(e.target.value)}
           className="w-full mb-4 p-3 rounded border border-black-800 text-black "
         />
@@ -48,13 +56,16 @@ export default function LoginPage() {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          onKeyPress={handleKeyPress}
           className="w-full mb-4 p-3 rounded border border-black-800 text-black"
         />
         <button
           onClick={handleLogin}
+          onKeyPress={handleKeyPress}
+          disabled={loading || !userName || !password}
           className="w-full bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 transition font-semibold text-lg"
         >
-          LogIn
+         {loading ? 'Signing In...' : 'Sign In'}
         </button>
         {error && <p className="mt-4 text-red-500 text-center">{error}</p>}
       </div>

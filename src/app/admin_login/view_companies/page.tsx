@@ -1,5 +1,10 @@
-import ReturnButton from '@/app/components/returnButton'
+import LogoutButton from '@/app/components/AdminComponents/LogoutButtonForAdminPanel'
 import { prisma } from "@/app/lib/prisma"
+import CreateCompanyButton from '@/app/components/AdminComponents/CreateCompanyButton'
+import UpdateCompanyButton from '@/app/components/AdminComponents/UpdateCompanyButton'
+import ViewAdminsButton from '@/app/components/AdminComponents/viewAdminButton'
+
+
 
 export default async function ViewCompany() {
   const users = await prisma.user.findMany({
@@ -19,11 +24,13 @@ export default async function ViewCompany() {
     <>
       <div className="relative max-h-screen px-6 text-black">
         <main className="max-w-xl mx-auto pt-12 ">
-          <h1 className="text-6xl font-bold mb-4 text-center">View Companies</h1>
-          <ReturnButton />
+          <h1 className="text-6xl font-bold mb-4 text-center">Admin Dashboard</h1>
+          <LogoutButton/>
+    <CreateCompanyButton />
+    <ViewAdminsButton/>
         </main>
       </div>
-      <main className="max-h-screen flex flex-col items-center justify-start gap-8 p-8 ">
+      <main className="max-h-screen flex flex-col items-center  justify-start gap-8 p-8 pt-22 ">
         <section className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {users.map((user) => {
             const { company } = user
@@ -44,6 +51,12 @@ export default async function ViewCompany() {
                 {company && (
                   <>
                     <p className="text-lg mt-2 font-semibold">Audit Info:</p>
+                    <p className='text-sm'>
+                      <span className="font-semibold">Company Name:</span> {company.C_Name || 'N/A'}
+                    </p>
+                    <p className='text-sm'>
+                      <span className="font-semibold">Menu Type:</span> {company.menuType || 'N/A'}
+                    </p>
                     <p className="text-sm">
                       <span className="font-semibold">Created By:</span> {company.creator?.userName || 'N/A'}
                     </p>
@@ -58,6 +71,7 @@ export default async function ViewCompany() {
                     </p>
                   </>
                 )}
+                <UpdateCompanyButton cId={user.cId} userName={user.userName} password={user.password}/>
               </div>
             )
           })}

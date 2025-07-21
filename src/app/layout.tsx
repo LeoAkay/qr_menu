@@ -1,5 +1,6 @@
-import './globals.css'
+import './global.css'
 import type { Metadata } from 'next'
+import Script from 'next/script'
 
 export const metadata: Metadata = {
   title: 'Admin Panel',
@@ -13,7 +14,18 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="dashboard-mode">
+      <head>
+        {/* PDF.js global library */}
+        <Script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" strategy="beforeInteractive" />
+        <Script id="pdfjs-worker-setup" strategy="beforeInteractive">
+          {`
+            if (window && window['pdfjsLib']) {
+              window['pdfjsLib'].GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+            }
+          `}
+        </Script>
+      </head>
+      <body className="dashboard-mode bubble-bg">
         {children}
       </body>
     </html>

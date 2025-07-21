@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #000000;
+  --background-image: url("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRFdR5duGXRu6NBtxIy6R2Y7SWAJOdAOJgBuw&s");
+}
+
+body.dashboard-mode {
+  --background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRFdR5duGXRu6NBtxIy6R2Y7SWAJOdAOJgBuw&s');
+}
+
+body.dashboard-mode::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  pointer-events: none;
+
+  background-image:
+    linear-gradient(rgba(132, 132, 132, 0), rgb(255, 255, 255)),
+    var(--background-image);
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}

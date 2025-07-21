@@ -8,99 +8,93 @@ datasource db {
 }
 
 model Role {
-  id        String  @id @default(uuid())
-  roleName  String  @unique @default("User")
-  users     User[]
+  id       String @id @default(uuid())
+  roleName String @unique @default("User")
+  users    User[]
 }
 
 model User {
-  id        String   @id @default(uuid())
-  cId       Int      @unique
-  userName  String   @unique
-  password  String
-  roleId    String
-  CreatedAt DateTime @default(now())
-  UpdatedAt DateTime @updatedAt
-
-  role     Role     @relation(fields: [roleId], references: [id])
-  company  Company? 
-
+  id               String    @id @default(uuid())
+  password         String
+  roleId           String
+  cId              Int       @unique
+  userName         String    @unique
+  CreatedAt        DateTime  @default(now())
+  UpdatedAt        DateTime  @updatedAt
   createdCompanies Company[] @relation("CreatedCompanies")
   updatedCompanies Company[] @relation("UpdatedCompanies")
+  company          Company?
+  role             Role      @relation(fields: [roleId], references: [id])
 }
 
 model Company {
-  id              String   @id @default(uuid())
-  userId          String   @unique
-  user            User     @relation(fields: [userId], references: [id])
-  C_Name          String?
+  id              String          @id @default(uuid())
+  userId          String          @unique
   C_Logo_Image    Bytes?
+  C_Name          String?
   C_QR_URL        String?
+  CreatedAt       DateTime        @default(now())
+  UpdatedAt       DateTime        @updatedAt
   Welcoming_Page  Bytes?
-  CreatedAt       DateTime @default(now())
-  UpdatedAt       DateTime @updatedAt
-
+  createdBy       String?
+  updatedBy       String?
+  menuType        String?         @default("none")
+  pdfMenuFile     Bytes?
+  pdfMenuUrl      String?
+  creator         User?           @relation("CreatedCompanies", fields: [createdBy], references: [id])
+  updater         User?           @relation("UpdatedCompanies", fields: [updatedBy], references: [id])
+  user            User            @relation(fields: [userId], references: [id])
   Main_Categories MainCategory[]
   Password_resets PasswordReset[]
   Themes          Theme[]
-
-  createdBy       String?
-  updatedBy       String?
-
-  creator         User? @relation("CreatedCompanies", fields: [createdBy], references: [id])
-  updater         User? @relation("UpdatedCompanies", fields: [updatedBy], references: [id])
 }
 
-
 model MainCategory {
-  id              String         @id @default(uuid())
+  id              String        @id @default(uuid())
   companyId       String
   name            String
   categoryNo      Int
   backgroundImage Bytes?
-
-  company         Company        @relation(fields: [companyId], references: [id])
+  company         Company       @relation(fields: [companyId], references: [id])
   subCategories   SubCategory[]
-  
+
   @@index([companyId])
 }
 
 model PasswordReset {
-  id                 String    @id @default(uuid())
-  previousPassword   String
-  newPassword        String
-  resetTime          DateTime @default(now())
-  companyId          String
-
-  company            Company   @relation(fields: [companyId], references: [id])
+  id               String   @id @default(uuid())
+  previousPassword String
+  newPassword      String
+  resetTime        DateTime @default(now())
+  companyId        String
+  company          Company  @relation(fields: [companyId], references: [id])
 
   @@index([companyId])
 }
 
 model SubCategory {
-  id                String        @id @default(uuid())
-  name              String
-  orderNo           Int
-  mainCategoryId    String
-  menuImage         Bytes?
-
-  mainCategory      MainCategory @relation(fields: [mainCategoryId], references: [id])
+  id             String       @id @default(uuid())
+  name           String
+  orderNo        Int
+  mainCategoryId String
+  menuImage      Bytes?
+  price          Float?
+  mainCategory   MainCategory @relation(fields: [mainCategoryId], references: [id])
 
   @@index([mainCategoryId])
 }
 
 model Theme {
-  id                String   @id @default(uuid())
-  style             String
-  backgroundColor   String?
-  logoAreaColor     String?
-  textColor         String?
-  facebookUrl       String?
-  instagramUrl      String?
-  xUrl              String?
-  companyId         String
-
-  company           Company  @relation(fields: [companyId], references: [id])
+  backgroundColor String?
+  companyId       String
+  facebookUrl     String?
+  id              String  @id @default(uuid())
+  instagramUrl    String?
+  logoAreaColor   String?
+  style           String
+  textColor       String?
+  xUrl            String?
+  company         Company @relation(fields: [companyId], references: [id])
 
   @@index([companyId])
 }
