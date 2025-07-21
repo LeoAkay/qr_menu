@@ -1,23 +1,21 @@
 'use client'
 
 import Link from 'next/link'
+import { Upload, Paintbrush, QrCode, Eye } from 'lucide-react'
 
 export default function HomePage() {
   return (
-   <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-    <div className="bg-gradient-to-br from-gray-50 to-white">
-        {/* Purple circles */}
-        <div className="absolute top-0 left-0 w-48 h-48 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full mix-blend-multiply opacity-70 animate-blob"></div>
-        <div className="absolute top-0 right-0 w-56 h-56 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-full mix-blend-multiply opacity-70 animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-8 left-20 w-52 h-52 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full mix-blend-multiply opacity-70 animate-blob animation-delay-4000"></div>
-        
-        {/* Pink circles */}
-        <div className="absolute top-1/4 right-1/4 w-44 h-44 bg-gradient-to-br from-pink-300 to-pink-500 rounded-full mix-blend-multiply opacity-70 animate-blob animation-delay-1000"></div>
-        <div className="absolute bottom-1/4 left-1/3 w-40 h-40 bg-gradient-to-br from-pink-400 to-rose-400 rounded-full mix-blend-multiply opacity-70 animate-blob animation-delay-3000"></div>
-        <div className="absolute bottom-0 right-0 w-60 h-60 bg-gradient-to-br from-pink-300 to-pink-500 rounded-full mix-blend-multiply opacity-70 animate-blob animation-delay-5000"></div>
-      </div>
-  {/* Header */}
-  <header className="py-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 relative overflow-hidden">
+      {/* Animated Blobs */}
+      <div className="absolute top-0 left-0 w-48 h-48 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full mix-blend-multiply opacity-70 animate-blob"></div>
+      <div className="absolute top-0 right-0 w-56 h-56 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-full mix-blend-multiply opacity-70 animate-blob animation-delay-2000"></div>
+      <div className="absolute -bottom-8 left-20 w-52 h-52 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full mix-blend-multiply opacity-70 animate-blob animation-delay-4000"></div>
+      <div className="absolute top-1/4 right-1/4 w-44 h-44 bg-gradient-to-br from-pink-300 to-pink-500 rounded-full mix-blend-multiply opacity-70 animate-blob animation-delay-1000"></div>
+      <div className="absolute bottom-1/4 left-1/3 w-40 h-40 bg-gradient-to-br from-pink-400 to-rose-400 rounded-full mix-blend-multiply opacity-70 animate-blob animation-delay-3000"></div>
+      <div className="absolute bottom-0 right-0 w-60 h-60 bg-gradient-to-br from-pink-300 to-pink-500 rounded-full mix-blend-multiply opacity-70 animate-blob animation-delay-5000"></div>
+
+      {/* Header */}
+       <header className="py-8">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="text-center">
         <h1 className="text-5xl font-bold text-gray-900 mb-4">QR Menu System</h1>
@@ -36,12 +34,12 @@ export default function HomePage() {
     </div>
   </header>
 
-  {/* Main Content */}
-  <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 ">
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-
-      {/* Restaurant Owner Login Card */}
-      <div className="bg-white/20 backdrop-blur-md border border-white/30 rounded-2xl p-8 shadow-2xl">
+      {/* Main Content */}
+      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Login Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          {/* Restaurant Owner */}
+          <div className="bg-white/20 backdrop-blur-md border border-white/30 rounded-2xl p-8 shadow-2xl">
         <div className="text-center">
           <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
             <span className="text-3xl ">
@@ -65,8 +63,8 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* System Admin Login Card */}
-      <div className="bg-white/20 backdrop-blur-md border border-white/30 rounded-2xl p-8 shadow-2xl">
+          {/* Admin */}
+          <div className="bg-white/20 backdrop-blur-md border border-white/30 rounded-2xl p-8 shadow-2xl">
         <div className="text-center">
           <div className="w-16 h-16 bg-pink-300 rounded-full flex items-center justify-center mx-auto mb-6">
             <span className="text-3xl">⚙️</span>
@@ -84,68 +82,57 @@ export default function HomePage() {
         </div>
       </div>
     </div>
-
-    {/* How It Works Section */}
-    <div className="mt-16 text-center ">
-      <h2 className="text-3xl font-bold text-gray-900 mb-8">How It Works</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-        <div>
-          <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-2xl">1️⃣</span>
-          </div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">Create Account</h3>
-          <p className="text-gray-600">Contact us to get your restaurant account set up.</p>
-        </div>
-        <div>
-          <div className="w-12 h-12 bg-purple-700 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-2xl">2️⃣</span>
-          </div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">Upload Menu</h3>
-          <p className="text-gray-600">Add your menu as a PDF or create a custom digital menu with categories and items.</p>
-        </div>
-        <div>
-          <div className="w-12 h-12 bg-pink-300 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-2xl">3️⃣</span>
-          </div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">Generate QR</h3>
-          <p className="text-gray-600">Download or upload a unique QR code for your restaurant tables.</p>
-        </div>
-      </div>
-
-      {/* Features List */}
-      <div className="mt-12 pt-8  text-center">
-  <h3 className="font-semibold text-black-900 mb-4 text-2xl">Features</h3>
-  <ul className="space-y-4 text-xl text-black-600 flex flex-col items-center">
-    <li className="flex items-center">
-      <span className="w-2 h-2 bg-purple-600 rounded-full mr-3"></span>
-      <span>Upload PDF menus or create interactive menus manually</span>
-    </li>
-    <li className="flex items-center">
-      <span className="w-2 h-2 bg-blue-600 rounded-full mr-3"></span>
-      <span>Customize menu appearance with themes and colors</span>
-    </li>
-    <li className="flex items-center">
-      <span className="w-2 h-2 bg-pink-400 rounded-full mr-3"></span>
-      <span>Generate downloadable QR codes</span>
-    </li>
-    <li className="flex items-center">
-      <span className="w-2 h-2 bg-blue-600 rounded-full mr-3"></span>
-      <span>Real-time menu preview</span>
-    </li>
-  </ul>
+        {/* How It Works */}
+        <div className="mt-16 text-center">
+          <h2 className="text-3xl font-bold text-gray-900 mb-8">How It Works</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            {[
+              { step: '1️⃣', title: 'Create Account', desc: 'Contact us to get your restaurant account set up.', color:'bg-blue-600'},
+              { step: '2️⃣', title: 'Upload Menu', desc: 'Add your menu as a PDF or create a custom digital menu.', color:'bg-pink-400' },
+              { step: '3️⃣', title: 'Generate QR', desc: 'Download or upload a unique QR code for your tables.', color:'bg-purple-600' },
+            ].map((item, i) => (
+              <div key={i}>
+                <div className={`w-12 h-12 ${item.color} rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl`}>
+  {item.step}
 </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">{item.title}</h3>
+                <p className="text-gray-600">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
 
+        {/* Features */}
+        <div className="mt-20 text-center">
+          <h3 className="text-3xl font-bold text-gray-900 mb-10">Key Features</h3>
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto text-left">
+            <FeatureCard icon={<Upload className="text-purple-600 w-6 h-6 " />} title="Upload or Create Menus" description="Upload PDF menus or build interactive ones manually." />
+            <FeatureCard icon={<Paintbrush className="text-blue-600 w-6 h-6" />} title="Customize Appearance" description="Personalize your menus with themes and colors." />
+            <FeatureCard icon={<QrCode className="text-pink-500 w-6 h-6" />} title="QR Code Generation" description="Generate and download QR codes for your menus." />
+            <FeatureCard icon={<Eye className="text-blue-500 w-6 h-6" />} title="Live Menu Preview" description="Instantly preview your digital menu before publishing." />
+          </div>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-gray-100 py-12 mt-20 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <p className="text-gray-700 text-sm">© 2024 QR Menu System. All rights reserved.</p>
+          <p className="text-gray-500 mt-2">Digital menus made simple for restaurants and cafes.</p>
+        </div>
+      </footer>
     </div>
-  </main>
+  )
+}
 
-  {/* Footer */}
-  <footer className="py-12  mt-16">
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="text-center text-gray-600">
-        <p>© 2024 QR Menu System. Digital menus made simple.</p>
+function FeatureCard({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) {
+  return (
+    <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition flex gap-4 items-start">
+      <div>{icon}</div>
+      <div>
+        <h4 className="font-semibold text-lg mb-1">{title}</h4>
+        <p className="text-gray-600 text-sm">{description}</p>
       </div>
     </div>
-  </footer>
-</div>
   )
 }
