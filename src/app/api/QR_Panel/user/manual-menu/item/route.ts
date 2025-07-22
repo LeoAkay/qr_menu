@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '../../../../../lib/prisma'
-
+import { createClient } from '@supabase/supabase-js'
+const supabase = createClient(process.env.DB_URL!,
+     process.env.ROLE_KEY!)
 // Add new menu item (subcategory)
 export async function POST(request: NextRequest) {
+let imageUrl: string | null = null
   try {
     const userId = request.cookies.get('userId')?.value
     const role = request.cookies.get('role')?.value
@@ -50,22 +53,47 @@ export async function POST(request: NextRequest) {
     const orderNo = existingItemsCount + 1
 
     // Convert image to buffer if provided
-    let imageBuffer: Buffer | undefined
-    if (menuImage && menuImage.size > 0) {
-      const arrayBuffer = await menuImage.arrayBuffer()
-      imageBuffer = Buffer.from(arrayBuffer)
-    }
+if (menuImage && menuImage.size > 0) {
+  const arrayBuffer = await menuImage.arrayBuffer()
+  const buffer = Buffer.from(arrayBuffer)
+
+  // Upload image to Supabase Storage
+  const fileName = `items/${Date.now()}-${menuImage.name}`
+  try {
+  const { data, error } = await supabase.storage
+    .from('qrmenu')
+    .upload(fileName, buffer, {
+      contentType: menuImage.type || 'image/jpeg' // fallback
+    })
+
+  if (error) {
+    console.error('Supabase upload error:', error)
+    return NextResponse.json({ error: error.message || 'Image upload failed' }, { status: 500 })
+  }
+
+  const { data: publicUrlData } = supabase
+    .storage
+    .from('qrmenu')
+    .getPublicUrl(fileName)
+
+  imageUrl = publicUrlData?.publicUrl || null
+} catch (uploadError) {
+  console.error('Unexpected Supabase error:', uploadError)
+  return NextResponse.json({ error: 'Unexpected error uploading image' }, { status: 500 })
+}
+}
+
 
     // Create new menu item
     const newItem = await prisma.subCategory.create({
-      data: {
-        name,
-        price: price ? parseFloat(price) : null,
-        orderNo,
-        mainCategoryId,
-        menuImage: imageBuffer
-      }
-    })
+  data: {
+    name,
+    price: price ? parseFloat(price) : null,
+    orderNo,
+    mainCategoryId,
+    menuImageUrl: imageUrl
+  }
+})
 
     return NextResponse.json({
       success: true,
@@ -140,7 +168,7 @@ export async function PUT(request: NextRequest) {
     const userId = request.cookies.get('userId')?.value
     const role = request.cookies.get('role')?.value
 
-    if (!userId ) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -184,20 +212,40 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Name is required' }, { status: 400 })
     }
 
-    // Convert image to buffer if provided
-    let imageBuffer: Buffer | undefined
-    if (menuImage && menuImage.size > 0) {
-      const arrayBuffer = await menuImage.arrayBuffer()
-      imageBuffer = Buffer.from(arrayBuffer)
-    }
-
-    // Update the item
     const updateData: any = { name }
     if (price) {
       updateData.price = parseFloat(price)
     }
-    if (imageBuffer) {
-      updateData.menuImage = imageBuffer
+
+    // Upload image to Supabase if provided
+    if (menuImage && menuImage.size > 0) {
+      const supabase = createClient(process.env.DB_URL!, process.env.ROLE_KEY!)
+
+      const arrayBuffer = await menuImage.arrayBuffer()
+      const buffer = Buffer.from(arrayBuffer)
+
+      const fileName = `items/${Date.now()}-${menuImage.name}`
+      const { data, error } = await supabase.storage
+        .from('qrmenu')
+        .upload(fileName, buffer, {
+          contentType: menuImage.type,
+          upsert: true // overwrite if name clashes
+        })
+
+      if (error) {
+        console.error('Image upload error:', error)
+        return NextResponse.json({ error: 'Failed to upload image' }, { status: 500 })
+      }
+
+      const { data: publicUrlData } = supabase
+        .storage
+        .from('qrmenu')
+        .getPublicUrl(fileName)
+
+      const imageUrl = publicUrlData?.publicUrl
+      if (imageUrl) {
+        updateData.menuImageUrl = imageUrl
+      }
     }
 
     const updatedItem = await prisma.subCategory.update({
@@ -214,4 +262,4 @@ export async function PUT(request: NextRequest) {
     console.error('Update item error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-} 
+}

@@ -20,7 +20,7 @@ interface Company {
       id: string
       name: string
       orderNo: number
-      menuImage?: any
+      menuImageUrl?: any
       price?: number
     }>
   }>
@@ -697,7 +697,7 @@ function ManualMenu({
                   >
                     {/* Product Image */}
                     <div className="aspect-square w-full bg-gray-100 overflow-hidden">
-                      {item.menuImage ? (
+                      {item.menuImageUrl ? (
                         <img 
                           src={`/api/QR_Panel/user/manual-menu/image/${item.id}`}
                           alt={item.name}

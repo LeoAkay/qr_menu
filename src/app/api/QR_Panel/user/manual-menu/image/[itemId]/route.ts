@@ -11,20 +11,16 @@ export async function GET(
     // Get the subcategory with image
     const item = await prisma.subCategory.findUnique({
       where: { id: itemId },
-      select: { menuImage: true }
+      select: { menuImageUrl: true }
     })
 
-    if (!item || !item.menuImage) {
+    if (!item || !item.menuImageUrl) {
       return new NextResponse('Image not found', { status: 404 })
     }
 
     // Return the image
-    return new NextResponse(item.menuImage, {
-      headers: {
-        'Content-Type': 'image/jpeg',
-        'Cache-Control': 'public, max-age=31536000'
-      }
-    })
+    return NextResponse.redirect(item.menuImageUrl)
+
   } catch (error) {
     console.error('Get image error:', error)
     return new NextResponse('Internal server error', { status: 500 })

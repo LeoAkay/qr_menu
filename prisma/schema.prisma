@@ -77,7 +77,7 @@ model SubCategory {
   name           String
   orderNo        Int
   mainCategoryId String
-  menuImage      Bytes?
+  menuImageUrl  String?
   price          Float?
   mainCategory   MainCategory @relation(fields: [mainCategoryId], references: [id])
 

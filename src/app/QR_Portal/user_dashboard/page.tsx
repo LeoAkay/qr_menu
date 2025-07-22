@@ -1692,7 +1692,7 @@ function ManualMenuSection() {
                          </div>
                        </div>
                        <div className="flex items-center space-x-3">
-                         {item.menuImage && (
+                         {item.menuImageUrl && (
                            <div>
                              <img 
                                src={`/api/QR_Panel/user/manual-menu/image/${item.id}`}

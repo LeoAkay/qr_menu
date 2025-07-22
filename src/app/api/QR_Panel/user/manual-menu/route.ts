@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
                     name: true,
                     orderNo: true,
                     price: true,
-                    menuImage: true
+                    menuImageUrl: true
                   }
                 }
               },
