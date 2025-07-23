@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData()
     const name = formData.get('name') as string
-    const backgroundImage = formData.get('backgroundImage') as File | null
+    
 
     if (!name) {
       return NextResponse.json({ error: 'Name is required' }, { status: 400 })
@@ -38,20 +38,13 @@ export async function POST(request: NextRequest) {
 
     
 
-    // Convert image to buffer if provided
-    let imageBuffer: Buffer | undefined
-    if (backgroundImage && backgroundImage.size > 0) {
-      const arrayBuffer = await backgroundImage.arrayBuffer()
-      imageBuffer = Buffer.from(arrayBuffer)
-    }
-
     // Create new category
     const newCategory = await prisma.mainCategory.create({
       data: {
         name,
         categoryNo,
         companyId: user.company.id,
-        backgroundImage: imageBuffer
+       
       }
     })
 
@@ -174,24 +167,17 @@ export async function PUT(request: NextRequest) {
 
     const formData = await request.formData()
     const name = formData.get('name') as string
-    const backgroundImage = formData.get('backgroundImage') as File | null
+    
 
     if (!name) {
       return NextResponse.json({ error: 'Name is required' }, { status: 400 })
     }
 
-    // Convert image to buffer if provided
-    let imageBuffer: Buffer | undefined
-    if (backgroundImage && backgroundImage.size > 0) {
-      const arrayBuffer = await backgroundImage.arrayBuffer()
-      imageBuffer = Buffer.from(arrayBuffer)
-    }
+ 
 
     // Update the category
     const updateData: any = { name }
-    if (imageBuffer) {
-      updateData.backgroundImage = imageBuffer
-    }
+ 
 
     const updatedCategory = await prisma.mainCategory.update({
       where: { id: categoryId },

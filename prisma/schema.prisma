@@ -46,6 +46,8 @@ model Company {
   Main_Categories MainCategory[]
   Password_resets PasswordReset[]
   Themes          Theme[]
+
+  orders Order[]
 }
 
 model MainCategory {
@@ -53,7 +55,6 @@ model MainCategory {
   companyId       String
   name            String
   categoryNo      Int
-  backgroundImage Bytes?
   company         Company       @relation(fields: [companyId], references: [id])
   subCategories   SubCategory[]
 
@@ -81,6 +82,7 @@ model SubCategory {
   mainCategory   MainCategory @relation(fields: [mainCategoryId], references: [id])
 
   @@index([mainCategoryId])
+  orderItems OrderItem[]
 }
 
 model Theme {
@@ -96,4 +98,31 @@ model Theme {
   company         Company @relation(fields: [companyId], references: [id])
 
   @@index([companyId])
+}
+model Order {
+  id             String        @id @default(uuid())
+  tableNumber    Int
+  companyId      String
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  status         String        @default("pending") // pending, completed, etc.
+  totalAmount    Float
+  company        Company       @relation(fields: [companyId], references: [id])
+  orderItems     OrderItem[]
+
+  @@index([companyId])
+  @@index([tableNumber])
+}
+
+model OrderItem {
+  id             String        @id @default(uuid())
+  orderId        String
+  subCategoryId  String
+  quantity       Int
+  price          Float         // price at the time of order
+  subCategory    SubCategory   @relation(fields: [subCategoryId], references: [id])
+  order          Order         @relation(fields: [orderId], references: [id])
+
+  @@index([orderId])
+  @@index([subCategoryId])
 }

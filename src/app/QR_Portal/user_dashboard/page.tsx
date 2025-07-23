@@ -897,7 +897,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
   // Restore missing state
   const [categoryForm, setCategoryForm] = useState({
     name: '',
-    backgroundImage: null as File | null
+    
   });
   const [itemForm, setItemForm] = useState({
     name: '',
@@ -906,7 +906,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
   });
   const [editCategoryForm, setEditCategoryForm] = useState({
     name: '',
-    backgroundImage: null as File | null
+    
   });
   const [editItemForm, setEditItemForm] = useState({
     name: '',
@@ -938,9 +938,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
     try {
       const formData = new FormData()
       formData.append('name', categoryForm.name)
-      if (categoryForm.backgroundImage) {
-        formData.append('backgroundImage', categoryForm.backgroundImage)
-      }
+      
 
       const res = await fetch('/api/QR_Panel/user/manual-menu/category', {
         method: 'POST',
@@ -950,7 +948,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
 
       if (res.ok) {
         alert('Category added successfully!')
-        setCategoryForm({ name: '', backgroundImage: null })
+        setCategoryForm({ name: '',})
         setShowCategoryForm(false)
         fetchCategories()
       } else {
@@ -1049,8 +1047,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
   const handleEditCategory = (category: any) => {
     setEditingCategory(category)
     setEditCategoryForm({
-      name: category.name,
-      backgroundImage: null
+      name: category.name
     })
     setShowEditCategoryForm(true)
   }
@@ -1070,10 +1067,8 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
 
     try {
       const formData = new FormData()
-      formData.append('name', editCategoryForm.name)
-      if (editCategoryForm.backgroundImage) {
-        formData.append('backgroundImage', editCategoryForm.backgroundImage)
-      }
+      formData.append('name','')
+      
 
       const res = await fetch(`/api/QR_Panel/user/manual-menu/category?categoryId=${editingCategory.id}`, {
         method: 'PUT',
@@ -1083,7 +1078,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
 
       if (res.ok) {
         alert('Category updated successfully!')
-        setEditCategoryForm({ name: '', backgroundImage: null })
+        setEditCategoryForm({ name: ''})
         setShowEditCategoryForm(false)
         setEditingCategory(null)
         fetchCategories()
@@ -1194,15 +1189,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
                 placeholder="e.g., Appetizers, Main Courses"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Background Image (Optional)</label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setCategoryForm({...categoryForm, backgroundImage: e.target.files?.[0] || null})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
-              />
-            </div>
+            
           </div>
           <div className="flex space-x-3 mt-4">
             <button
@@ -1271,15 +1258,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
                         placeholder="e.g., Appetizers, Main Courses"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Background Image (Optional - Leave empty to keep current)</label>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => setEditCategoryForm({...editCategoryForm, backgroundImage: e.target.files?.[0] || null})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none"
-                      />
-                    </div>
+                    
                   </div>
                   <div className="flex space-x-3 mt-4">
                     <button
@@ -1292,7 +1271,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
                       onClick={() => {
                         setShowEditCategoryForm(false)
                         setEditingCategory(null)
-                        setEditCategoryForm({ name: '', backgroundImage: null })
+                    
                       }}
                       className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                     >
