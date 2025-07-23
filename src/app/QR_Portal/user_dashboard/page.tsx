@@ -331,7 +331,7 @@ export default function UserDashboard() {
   >
     <div className="text-center">
       <div className="text-3xl mb-4">📝</div>
-      <h3 className="text-xl font-semibold text-gray-800">Manual Upload</h3>
+      <h3 className="text-xl font-semibold text-gray-800"> Order system</h3>
     </div>
   </div>
 </div>
