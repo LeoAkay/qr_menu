@@ -87,7 +87,7 @@ export default function UserDashboard() {
       setUserData(data.user)
       
       // Determine menu type based on existing data
-      if (data.user.company?.pdfMenuFile) {
+              if (data.user.company?.pdfMenuUrl) {
         setMenuType('pdf')
       } else if (data.user.company?.Main_Categories?.length > 0) {
         setMenuType('manual')
@@ -655,16 +655,16 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
           <div className="flex-1 text-center">
             <h3 className="text-lg font-semibold text-green-800">Current PDF Menu</h3>
             <p className="text-green-600">Your PDF menu has been successfully uploaded</p>
-            {userData?.company?.pdfMenuFile && (
-              <a 
-                href={`/api/AdminPanel/company/pdf/${userData.company.id}?t=${Date.now()}`} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-purple-600 hover:text-purple-800 text-sm font-medium inline-block mt-2"
-              >
-                📁 View PDF
-              </a>
-            )}
+                {userData?.company?.pdfMenuUrl && (
+      <a 
+        href={userData.company.pdfMenuUrl} 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="text-purple-600 hover:text-purple-800 text-sm font-medium inline-block mt-2"
+      >
+        📁 View PDF
+      </a>
+    )}
             <div className="mt-4">
               <button
                 onClick={handleDeletePDF}
