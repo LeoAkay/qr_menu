@@ -39,7 +39,11 @@ export async function POST(req: Request) {
     // Find or create user's company
     console.log("Looking for company for user:", userId)
     let company = await prisma.company.findFirst({
-      where: { userId: userId }
+      where: { userId: userId },
+      select: {
+        id: true,
+        pdfMenuUrl: true
+      }
     })
 
     if (!company) {
@@ -54,6 +58,32 @@ export async function POST(req: Request) {
       console.log("Company created:", company.id)
     } else {
       console.log("Company found:", company.id)
+      
+      // Delete old PDF from Supabase storage if exists
+      if (company.pdfMenuUrl) {
+        try {
+          const oldUrl = new URL(company.pdfMenuUrl)
+          const oldFileName = oldUrl.pathname.split('/').pop()
+          
+          if (oldFileName && oldFileName.startsWith('menu-')) {
+            console.log("Deleting old PDF from Supabase storage:", oldFileName)
+            
+            const { error: deleteError } = await supabase.storage
+              .from('qrmenu')
+              .remove([`pdf/${oldFileName}`])
+
+            if (deleteError) {
+              console.error('Old PDF delete error:', deleteError)
+              // Continue with upload even if old file deletion fails
+            } else {
+              console.log("Old PDF deleted successfully from Supabase storage")
+            }
+          }
+        } catch (urlError) {
+          console.error('Error parsing old PDF URL:', urlError)
+          // Continue with upload even if URL parsing fails
+        }
+      }
     }
 
     // Convert file to buffer for Supabase upload

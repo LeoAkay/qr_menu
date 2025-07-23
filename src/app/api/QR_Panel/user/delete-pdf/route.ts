@@ -43,7 +43,7 @@ export async function DELETE(req: Request) {
         const url = new URL(company.pdfMenuUrl)
         const fileName = url.pathname.split('/').pop()
         
-        if (fileName && fileName.startsWith('pdf/menu-')) {
+        if (fileName && fileName.startsWith('menu-')) {
           console.log("Deleting PDF from Supabase storage:", fileName)
           
           const { error } = await supabase.storage

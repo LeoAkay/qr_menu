@@ -262,7 +262,13 @@ export default function MenuPage() {
       }}
     >
       {/* Header */}
-      <header className="py-2 px-4 text-center  bg-opacity-90 backdrop-blur-sm">
+      <header 
+        className="py-2 px-4 text-center bg-opacity-90 backdrop-blur-sm border-b"
+        style={{ 
+          backgroundColor: theme.logoAreaColor,
+          borderBottomColor: theme.textColor + '20' // 20% opacity
+        }}
+      >
         <div className="max-w-4xl mx-auto">
           {/* Company Logo */}
           {company.C_Logo_Image && (
@@ -275,7 +281,10 @@ export default function MenuPage() {
             </div>
           )}
           
-          <h1 className="text-2xl font-bold">
+          <h1 
+            className="text-2xl font-bold"
+            style={{ color: theme.textColor }}
+          >
             {restaurantName}
           </h1>
         </div>
@@ -293,6 +302,7 @@ export default function MenuPage() {
             <PDFViewer 
               pdfUrl={`/api/AdminPanel/company/pdf/${company.id}?t=${Date.now()}`}
               displayMode={pdfDisplayMode}
+              theme={theme}
             />
           </div>
         ) : getEffectiveMenuType() === 'manual' && company.Main_Categories ? (
@@ -300,8 +310,16 @@ export default function MenuPage() {
         ) : (
           <div className="text-center py-8">
             <div className="text-6xl mb-4">🍽️</div>
-            <h2 className="text-2xl font-bold mb-4">Menu Coming Soon</h2>
-            <p className="text-lg opacity-80">
+            <h2 
+              className="text-2xl font-bold mb-4"
+              style={{ color: theme.textColor }}
+            >
+              Menu Coming Soon
+            </h2>
+            <p 
+              className="text-lg opacity-80"
+              style={{ color: theme.textColor }}
+            >
               This restaurant is still setting up their menu. Please check back later!
             </p>
           </div>
@@ -309,11 +327,22 @@ export default function MenuPage() {
       </div>
 
       {/* Footer */}
-      <footer className="text-center py-1 px-4 border-t mt-1">
+      <footer 
+        className="text-center py-1 px-4 border-t mt-1"
+        style={{ 
+          backgroundColor: theme.logoAreaColor,
+          borderTopColor: theme.textColor + '20' // 20% opacity
+        }}
+      >
         {/* Social Media Links */}
         {(theme.facebookUrl || theme.instagramUrl || theme.xUrl) && (
           <div className="mb-1">
-            <h3 className="text-xs font-medium mb-1 opacity-80">Follow Us</h3>
+            <h3 
+              className="text-xs font-medium mb-1 opacity-80"
+              style={{ color: theme.textColor }}
+            >
+              Follow Us
+            </h3>
             <div className="flex justify-center space-x-2">
               {theme.facebookUrl && (
                 <a
@@ -360,7 +389,10 @@ export default function MenuPage() {
           </div>
         )}
         
-        <p className="text-xs opacity-60 leading-tight">
+        <p 
+          className="text-xs opacity-60 leading-tight"
+          style={{ color: theme.textColor }}
+        >
           Powered by QR Menu System
         </p>
       </footer>
@@ -369,7 +401,7 @@ export default function MenuPage() {
 }
 
 // Flipbook PDF Viewer Component
-function PDFFlipbook({ pdfUrl }: { pdfUrl: string }) {
+function PDFFlipbook({ pdfUrl, theme }: { pdfUrl: string; theme: any }) {
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [dimensions, setDimensions] = useState({ width: 800, height: 1200 });
@@ -383,27 +415,27 @@ function PDFFlipbook({ pdfUrl }: { pdfUrl: string }) {
       const container = containerRef.current;
       const screenWidth = window.innerWidth;
       const containerWidth = container.clientWidth;
-      const containerHeight = window.innerHeight * 0.8;
+      const containerHeight = window.innerHeight * 0.95;
       
       // Aspect ratio - A4 page ratio (1:√2)
       const aspectRatio = 1 / Math.sqrt(2); // Approximately 0.707
       
       // Initial size based on container width
       let targetWidth = containerWidth * (
-        screenWidth >= 1024 ? 0.8 : // Desktop
-        screenWidth >= 768 ? 0.9 :  // Tablet
-        0.95                        // Mobile
+        screenWidth >= 1024 ? 0.95 : // Desktop - büyütüldü
+        screenWidth >= 768 ? 0.98 :  // Tablet - büyütüldü
+        0.98                         // Mobile - büyütüldü
       );
       
-      let targetHeight = containerHeight * 0.9; // Keep some margin
+      let targetHeight = containerHeight * 0.98; // Daha az margin
       
       // Calculate dimensions while maintaining aspect ratio
       let newWidth = Math.min(targetWidth, targetHeight * aspectRatio);
       let newHeight = Math.min(targetHeight, targetWidth / aspectRatio);
       
       // Ensure minimum dimensions
-      newWidth = Math.max(newWidth, 320); // min width
-      newHeight = Math.max(newHeight, 400); // min height
+      newWidth = Math.max(newWidth, 400); // min width - büyütüldü
+      newHeight = Math.max(newHeight, 500); // min height - büyütüldü
       
       setDimensions({
         width: Math.round(newWidth), // Required by HTMLFlipBook component
@@ -475,55 +507,95 @@ function PDFFlipbook({ pdfUrl }: { pdfUrl: string }) {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+      <div 
+        className="flex justify-center items-center min-h-screen"
+        style={{ 
+          backgroundColor: theme?.backgroundColor || '#fef7ed',
+          background: `linear-gradient(135deg, ${theme?.backgroundColor || '#fef7ed'}, ${theme?.logoAreaColor || '#fed7aa'})`
+        }}
+      >
+        <div className="text-center">
+          <div 
+            className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4"
+            style={{ borderColor: theme?.logoAreaColor || '#92400e' }}
+          ></div>
+          <span 
+            className="text-lg font-medium"
+            style={{ color: theme?.textColor || '#92400e' }}
+          >
+            Loading menu...
+          </span>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex justify-center items-center w-full min-h-screen bg-gray-100 py-8">
-      <div ref={containerRef} className="w-full max-w-6xl mx-auto px-4">
-        <div className="relative bg-white rounded-lg shadow-xl">
-          <HTMLFlipBook
-            width={dimensions.width}
-            height={dimensions.height}
-            size="stretch"
-            minWidth={320}
-            maxWidth={1600}
-            minHeight={400}
-            maxHeight={2000}
-            showCover={true}
-            drawShadow={true}
-            flippingTime={1000}
-            usePortrait={true}
-            startPage={0}
-            useMouseEvents={true}
-            disableFlipByClick={false}
-            mobileScrollSupport={true}
-            clickEventForward={false}
-            showPageCorners={true}
-            swipeDistance={30}
-            maxShadowOpacity={0.5}
-            startZIndex={20}
-            autoSize={true}
-            style={{ padding: '20px' }}
-            className="shadow-2xl mx-auto"
+    <div 
+      className="flex justify-center items-center w-full min-h-screen py-2"
+      style={{ 
+        backgroundColor: theme?.backgroundColor || '#fef7ed',
+        background: `linear-gradient(135deg, ${theme?.backgroundColor || '#fef7ed'}, ${theme?.logoAreaColor || '#fed7aa'})`
+      }}
+    >
+      <div ref={containerRef} className="w-full max-w-full mx-auto px-1">
+        <div className="relative flex justify-center items-center">
+          <div 
+            className="relative rounded-lg shadow-2xl p-2 border" 
+            style={{ 
+              backgroundColor: 'white',
+              borderColor: theme?.logoAreaColor || '#fed7aa'
+            }}
           >
-            {images.map((src, idx) => (
-              <div key={idx} className="bg-white flex items-center justify-center h-full overflow-hidden shadow-inner">
-                <div className="relative w-full h-full">
-                  <img 
-                    src={src} 
-                    alt={`Page ${idx + 1}`} 
-                    className="absolute inset-0 w-full h-full object-contain select-none"
-                    draggable="false"
-                    loading={idx < 2 ? "eager" : "lazy"} // Preload first two pages
-                  />
+            <HTMLFlipBook
+              width={dimensions.width}
+              height={dimensions.height}
+              size="stretch"
+              minWidth={400}
+              maxWidth={1800}
+              minHeight={500}
+              maxHeight={2200}
+              showCover={true}
+              drawShadow={true}
+              flippingTime={800}
+              usePortrait={true}
+              startPage={0}
+              useMouseEvents={true}
+              disableFlipByClick={false}
+              mobileScrollSupport={true}
+              clickEventForward={false}
+              showPageCorners={true}
+              swipeDistance={30}
+              maxShadowOpacity={0.4}
+              startZIndex={20}
+              autoSize={true}
+              style={{ 
+                margin: '0 auto',
+                borderRadius: '8px',
+                overflow: 'hidden'
+              }}
+              className="mx-auto"
+            >
+              {images.map((src, idx) => (
+                <div key={idx} className="bg-white flex items-center justify-center h-full overflow-hidden">
+                  <div className="relative w-full h-full">
+                    <img 
+                      src={src} 
+                      alt={`Page ${idx + 1}`} 
+                      className="w-full h-full object-contain select-none"
+                      draggable="false"
+                      loading={idx < 2 ? "eager" : "lazy"}
+                      style={{ 
+                        imageRendering: 'auto',
+                        WebkitUserSelect: 'none',
+                        userSelect: 'none'
+                      }}
+                    />
+                  </div>
                 </div>
-              </div>
-            ))}
-          </HTMLFlipBook>
+              ))}
+            </HTMLFlipBook>
+          </div>
         </div>
       </div>
     </div>
@@ -531,7 +603,7 @@ function PDFFlipbook({ pdfUrl }: { pdfUrl: string }) {
 }
 
 // Scroll PDF Viewer Component
-function ScrollPDFViewer({ pdfUrl }: { pdfUrl: string }) {
+function ScrollPDFViewer({ pdfUrl, theme }: { pdfUrl: string; theme: any }) {
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -578,10 +650,21 @@ function ScrollPDFViewer({ pdfUrl }: { pdfUrl: string }) {
 
   if (loading) {
     return (
-      <div className="text-center py-12">
+      <div 
+        className="text-center py-12 min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: theme?.backgroundColor || '#f8fafc' }}
+      >
         <div className="inline-flex items-center space-x-3">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
-          <span className="text-lg font-medium text-gray-600">Loading menu...</span>
+          <div 
+            className="animate-spin rounded-full h-8 w-8 border-b-2"
+            style={{ borderColor: theme?.logoAreaColor || '#1e293b' }}
+          ></div>
+          <span 
+            className="text-lg font-medium"
+            style={{ color: theme?.textColor || '#1e293b' }}
+          >
+            Loading menu...
+          </span>
         </div>
       </div>
     );
@@ -591,7 +674,8 @@ function ScrollPDFViewer({ pdfUrl }: { pdfUrl: string }) {
     <div 
       className="w-full max-w-4xl mx-auto px-4 py-6 space-y-4 overflow-auto"
       style={{ 
-        blockSize: `${Math.max(window.innerHeight - 120, 600)}px`
+        blockSize: `${Math.max(window.innerHeight - 120, 600)}px`,
+        backgroundColor: theme?.backgroundColor || '#f8fafc'
       }}
     >
       {images.map((src, idx) => (
@@ -599,8 +683,11 @@ function ScrollPDFViewer({ pdfUrl }: { pdfUrl: string }) {
           <img 
             src={src} 
             alt={`Page ${idx + 1}`} 
-            className="max-w-full h-auto shadow-lg rounded-lg border border-gray-200"
-            style={{ blockSize: 'max(95vh)' }}
+            className="max-w-full h-auto shadow-lg rounded-lg border"
+            style={{ 
+              blockSize: 'max(95vh)',
+              borderColor: theme?.logoAreaColor || '#e2e8f0'
+            }}
           />
         </div>
       ))}
@@ -609,11 +696,11 @@ function ScrollPDFViewer({ pdfUrl }: { pdfUrl: string }) {
 }
 
 // PDFViewer fonksiyonu:
-function PDFViewer({ pdfUrl, displayMode }: { pdfUrl: string; displayMode: string }) {
+function PDFViewer({ pdfUrl, displayMode, theme }: { pdfUrl: string; displayMode: string; theme: any }) {
   if (displayMode === 'scroll') {
-    return <ScrollPDFViewer pdfUrl={pdfUrl} />;
+    return <ScrollPDFViewer pdfUrl={pdfUrl} theme={theme} />;
   }
-  return <PDFFlipbook pdfUrl={pdfUrl} />;
+  return <PDFFlipbook pdfUrl={pdfUrl} theme={theme} />;
 }
 
 // Manual Menu Component
