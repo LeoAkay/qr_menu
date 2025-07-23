@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { QRCodeSVG } from 'qrcode.react'
 
@@ -57,6 +57,7 @@ export default function UserDashboard() {
   const [activeTab, setActiveTab] = useState<'pdf' | 'manual' | 'theme' | 'preview' | 'profile'| 'contactUs' | ''>('')
   const [menuType, setMenuType] = useState<'pdf' | 'manual' | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [orderSystemSearch, setOrderSystemSearch] = useState('');
   const [theme, setTheme] = useState<Theme>({
     backgroundColor: '#ffffff',
     textColor: '#000000',
@@ -87,7 +88,12 @@ export default function UserDashboard() {
       setUserData(data.user)
       
       // Determine menu type based on existing data
-              if (data.user.company?.pdfMenuUrl) {
+      // Prefer explicit menuType if available, otherwise infer from data
+      if (data.user.company?.menuType === 'pdf') {
+        setMenuType('pdf')
+      } else if (data.user.company?.menuType === 'manual') {
+        setMenuType('manual')
+            } else if (data.user.company?.pdfMenuUrl) {
         setMenuType('pdf')
       } else if (data.user.company?.Main_Categories?.length > 0) {
         setMenuType('manual')
@@ -194,6 +200,14 @@ export default function UserDashboard() {
     }
   }
 
+  const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && searchQuery.trim() && userData?.company?.Main_Categories) {
+      setActiveTab('manual');
+      setMenuType('manual');
+      setOrderSystemSearch(searchQuery.trim());
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -222,6 +236,7 @@ export default function UserDashboard() {
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={handleSearch}
             className="w-full pl-10 pr-10 py-2 bg-white bg-opacity-90 border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:bg-white transition-all"
           />
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -369,7 +384,7 @@ export default function UserDashboard() {
             </div>
           )}
 
-              {activeTab === 'manual' && <ManualMenuSection />}
+              {activeTab === 'manual' && <ManualMenuSection searchQuery={orderSystemSearch} onSearchHandled={() => setOrderSystemSearch('')} />}
               {activeTab === 'theme' && <ThemeSettingsSection userData={userData} />}
               {activeTab === 'preview' && (
                 <PreviewSection 
@@ -655,16 +670,16 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
           <div className="flex-1 text-center">
             <h3 className="text-lg font-semibold text-green-800">Current PDF Menu</h3>
             <p className="text-green-600">Your PDF menu has been successfully uploaded</p>
-                {userData?.company?.pdfMenuUrl && (
-      <a 
-        href={userData.company.pdfMenuUrl} 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className="text-purple-600 hover:text-purple-800 text-sm font-medium inline-block mt-2"
-      >
-        📁 View PDF
-      </a>
-    )}
+            {userData?.company?.pdfMenuUrl && (
+              <a 
+                href={`/api/AdminPanel/company/pdf/${userData.company.id}?t=${Date.now()}`} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-purple-600 hover:text-purple-800 text-sm font-medium inline-block mt-2"
+              >
+                📁 View PDF
+              </a>
+            )}
             <div className="mt-4">
               <button
                 onClick={handleDeletePDF}
@@ -867,7 +882,7 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
 }
 
 // Manual Menu Component
-function ManualMenuSection() {
+function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: string, onSearchHandled?: () => void }) {
   const [categories, setCategories] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [editingCategory, setEditingCategory] = useState<any>(null)
@@ -876,28 +891,28 @@ function ManualMenuSection() {
   const [showItemForm, setShowItemForm] = useState<string | null>(null)
   const [showEditCategoryForm, setShowEditCategoryForm] = useState(false)
   const [showEditItemForm, setShowEditItemForm] = useState(false)
-
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [highlightedItemId, setHighlightedItemId] = useState<string | null>(null);
+  const itemRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+  // Restore missing state
   const [categoryForm, setCategoryForm] = useState({
     name: '',
     backgroundImage: null as File | null
-  })
-
+  });
   const [itemForm, setItemForm] = useState({
     name: '',
     price: '',
     menuImage: null as File | null
-  })
-
+  });
   const [editCategoryForm, setEditCategoryForm] = useState({
     name: '',
     backgroundImage: null as File | null
-  })
-
+  });
   const [editItemForm, setEditItemForm] = useState({
     name: '',
     price: '',
     menuImage: null as File | null
-  })
+  });
 
   useEffect(() => {
     fetchCategories()
@@ -1117,6 +1132,33 @@ function ManualMenuSection() {
     }
   }
 
+  useEffect(() => {
+    if (searchQuery && categories.length > 0) {
+      let foundCat = null;
+      let foundItem = null;
+      for (const cat of categories) {
+        for (const item of cat.subCategories) {
+          if (item.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+            foundCat = cat;
+            foundItem = item;
+            break;
+          }
+        }
+        if (foundCat) break;
+      }
+      if (foundCat && foundItem) {
+        setSelectedCategoryId(foundCat.id);
+        setHighlightedItemId(foundItem.id);
+        setTimeout(() => {
+          if (itemRefs.current[foundItem.id]) {
+            itemRefs.current[foundItem.id]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 500);
+      }
+      if (onSearchHandled) onSearchHandled();
+    }
+  }, [searchQuery, categories]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -1189,7 +1231,7 @@ function ManualMenuSection() {
       ) : (
         <div className="space-y-6">
           {categories.map((category) => (
-                         <div key={category.id} className="border border-gray-200 rounded-xl p-6 bg-white">
+                         <div key={category.id} className={`border border-gray-200 rounded-xl p-6 bg-white ${selectedCategoryId === category.id ? 'ring-2 ring-purple-400' : ''}`}>
                <div className="flex justify-between items-center mb-4">
                  <h3 className="text-xl font-semibold text-gray-800">{category.name}</h3>
                  <div className="flex space-x-2">
@@ -1316,7 +1358,7 @@ function ManualMenuSection() {
               {/* Items List */}
               <div className="space-y-3">
                                  {category.subCategories?.map((item: any) => (
-                   <div key={item.id} className="border border-gray-100 rounded-lg p-4 bg-gray-50">
+                   <div key={item.id} ref={el => { itemRefs.current[item.id] = el; }} className={`border border-gray-100 rounded-lg p-4 bg-gray-50 ${highlightedItemId === item.id ? 'ring-4 ring-purple-400' : ''}`}>
                      <div className="flex justify-between items-start">
                        <div className="flex-1">
                          <div className="flex items-center space-x-3">

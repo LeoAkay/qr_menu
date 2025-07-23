@@ -427,7 +427,7 @@ return (
     </div>
     {/* Menu Builder Section (moved here below the form) */}
       <div className="flex items-center justify-between mt-6 bg-gray bg-opacity-90 py-6 backdrop-blur-md rounded-2xl shadow-2xl">
-          <h3 className="text-2xl font-semibold text-gray-800">Manual Menu Builder</h3>
+          <h3 className="text-2xl font-semibold text-gray-800">Order System Builder</h3>
           <button
             onClick={() => setShowThemeOptions(!showThemeOptions)}
             className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">

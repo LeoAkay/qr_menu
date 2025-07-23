@@ -6,7 +6,7 @@
 */
 -- AlterTable
 ALTER TABLE "Company" ADD COLUMN     "menuType" TEXT DEFAULT 'none',
-ADD COLUMN     "pdfMenuFile" BYTEA,
+ADD COLUMN     "" BYTEA,
 ADD COLUMN     "pdfMenuUrl" TEXT;
 
 -- AlterTable

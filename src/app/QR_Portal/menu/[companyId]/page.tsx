@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import HTMLFlipBook from 'react-pageflip';
+import { useSearchParams } from 'next/navigation';
 
 interface Company {
   id: string
@@ -711,7 +712,11 @@ function ManualMenu({
   theme: { backgroundColor?: string; textColor?: string; logoAreaColor?: string; style?: string }
 }) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [highlightedItemId, setHighlightedItemId] = useState<string | null>(null);
   const sortedCategories = [...(categories || [])].sort((a, b) => a.categoryNo - b.categoryNo)
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const searchQuery = searchParams ? searchParams.get('search') : null;
+  const itemRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   // Show first category by default
   useEffect(() => {
@@ -719,6 +724,33 @@ function ManualMenu({
       setSelectedCategory(sortedCategories[0].id)
     }
   }, [sortedCategories, selectedCategory])
+
+  // On mount, if search param is present, select category and scroll to item
+  useEffect(() => {
+    if (searchQuery && sortedCategories.length > 0) {
+      let foundCat = null;
+      let foundItem = null;
+      for (const cat of sortedCategories) {
+        for (const item of cat.subCategories) {
+          if (item.name.toLowerCase() === searchQuery.toLowerCase()) {
+            foundCat = cat;
+            foundItem = item;
+            break;
+          }
+        }
+        if (foundCat) break;
+      }
+      if (foundCat && foundItem) {
+        setSelectedCategory(foundCat.id);
+        setHighlightedItemId(foundItem.id);
+        setTimeout(() => {
+          if (itemRefs.current[foundItem.id]) {
+            itemRefs.current[foundItem.id]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 500);
+      }
+    }
+  }, [searchQuery, sortedCategories]);
 
   const getCurrentCategory = () => {
     return sortedCategories.find(cat => cat.id === selectedCategory) || sortedCategories[0]
@@ -779,7 +811,8 @@ function ManualMenu({
                 .map((item) => (
                   <div 
                     key={item.id}
-                    className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group hover:-translate-y-1"
+                    ref={el => { itemRefs.current[item.id] = el; }}
+                    className={`bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group hover:-translate-y-1 ${highlightedItemId === item.id ? 'ring-4 ring-purple-400' : ''}`}
                   >
                     {/* Product Image */}
                     <div className="aspect-square w-full bg-gray-100 overflow-hidden">
@@ -804,7 +837,6 @@ function ManualMenu({
                        <h3 className="font-bold text-lg text-gray-800 mb-2 line-clamp-2">
                          {item.name}
                        </h3>
-                       
                        {/* Price and availability */}
                        <div className="flex items-center justify-between">
                          {item.price ? (
