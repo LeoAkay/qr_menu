@@ -1,6 +1,9 @@
 import { prisma } from "@/app/lib/prisma"
 import { NextResponse } from "next/server"
 import { cookies } from 'next/headers'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(process.env.DB_URL!, process.env.ROLE_KEY!)
 
 export async function DELETE(req: Request) {
   console.log("PDF delete started")
@@ -28,9 +31,36 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: "Company not found" }, { status: 404 })
     }
 
-    if (!company.pdfMenuFile) {
+    if (!company.pdfMenuUrl) {
       console.log("No PDF found for company")
       return NextResponse.json({ error: "No PDF found to delete" }, { status: 404 })
+    }
+
+    // If there's a Supabase URL, delete from Supabase storage
+    if (company.pdfMenuUrl) {
+      try {
+        // Extract filename from URL
+        const url = new URL(company.pdfMenuUrl)
+        const fileName = url.pathname.split('/').pop()
+        
+        if (fileName && fileName.startsWith('pdf/menu-')) {
+          console.log("Deleting PDF from Supabase storage:", fileName)
+          
+          const { error } = await supabase.storage
+            .from('qrmenu')
+            .remove([`pdf/${fileName}`])
+
+          if (error) {
+            console.error('Supabase delete error:', error)
+            // Continue with database update even if Supabase delete fails
+          } else {
+            console.log("PDF deleted successfully from Supabase storage")
+          }
+        }
+      } catch (urlError) {
+        console.error('Error parsing PDF URL:', urlError)
+        // Continue with database update even if URL parsing fails
+      }
     }
 
     // Update company to remove PDF data from database
@@ -38,7 +68,6 @@ export async function DELETE(req: Request) {
     await prisma.company.update({
       where: { id: company.id },
       data: {
-        pdfMenuFile: null,
         pdfMenuUrl: null,
         menuType: null
       }

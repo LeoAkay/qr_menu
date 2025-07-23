@@ -18,7 +18,7 @@ interface UserData {
     C_Name?: string
     C_Logo_Image?: any
     C_QR_URL?: string
-    pdfMenuFile?: any
+    pdfMenuUrl?: string
     menuType?: string
 
     Welcoming_Page?: any
@@ -633,7 +633,7 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
     }
   }
 
-  const existingPDF = userData?.company?.pdfMenuFile
+  const existingPDF = userData?.company?.pdfMenuUrl
 
   return (
     <div>
@@ -649,9 +649,9 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
     <h3 className="text-lg font-semibold text-green-800">Current PDF Menu</h3>
     <p className="text-green-600">Your PDF menu has been successfully uploaded</p>
     
-    {userData?.company?.pdfMenuFile && (
+    {userData?.company?.pdfMenuUrl && (
       <a 
-        href={`/api/AdminPanel/company/pdf/${userData.company.id}?t=${Date.now()}`} 
+        href={userData.company.pdfMenuUrl} 
         target="_blank" 
         rel="noopener noreferrer"
         className="text-purple-600 hover:text-purple-800 text-sm font-medium inline-block mt-2"
@@ -1866,7 +1866,7 @@ function PreviewSection({
                 ✓ Active
               </div>
             )}
-            {!userData?.company?.pdfMenuFile && (
+            {!userData?.company?.pdfMenuUrl && (
               <div className="mt-2 text-red-500 text-xs">
                 No PDF uploaded yet
               </div>

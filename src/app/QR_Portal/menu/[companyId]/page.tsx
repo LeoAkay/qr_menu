@@ -9,7 +9,7 @@ interface Company {
   C_Name: string
   C_Logo_Image?: any
   Welcoming_Page?: any
-  pdfMenuFile?: any
+  pdfMenuUrl?: string
   menuType?: string
 
   Main_Categories?: Array<{
@@ -282,7 +282,7 @@ export default function MenuPage() {
       </header>
 
       <div className={`mx-auto ${getEffectiveMenuType() === 'pdf' ? 'max-w-none p-0 min-h-screen' : 'max-w-4xl px-4'}`}>
-        {getEffectiveMenuType() === 'pdf' && company.pdfMenuFile ? (
+        {getEffectiveMenuType() === 'pdf' && company.pdfMenuUrl ? (
           <div 
             className={`w-full min-h-[85vh] flex items-center justify-center transition-all duration-500 ${
               pdfDisplayMode === 'scroll' 

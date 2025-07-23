@@ -1,7 +1,5 @@
 import { prisma } from "@/app/lib/prisma"
 import { NextResponse } from "next/server"
-import { readFile } from 'fs/promises'
-import { join } from 'path'
 
 export async function GET(
   req: Request,
@@ -18,31 +16,16 @@ export async function GET(
       }
     })
 
-    if (!company || !company.pdfMenuUrl) {
+    if (!company) {
+      return NextResponse.json({ error: "Company not found" }, { status: 404 })
+    }
+
+    if (!company.pdfMenuUrl) {
       return NextResponse.json({ error: "PDF not found" }, { status: 404 })
     }
 
-    // Extract filename from URL path
-    const fileName = company.pdfMenuUrl.split('/').pop()
-    if (!fileName) {
-      return NextResponse.json({ error: "Invalid PDF path" }, { status: 404 })
-    }
-
-    // Read file from disk
-    const filePath = join(process.cwd(), 'public', 'uploads', 'pdf', fileName)
-    const fileBuffer = await readFile(filePath)
-
-    // Return the PDF file with proper headers
-    const response = new NextResponse(fileBuffer, {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `inline; filename="${company.C_Name || 'menu'}.pdf"`,
-        'Cache-Control': 'public, max-age=3600' // Cache for 1 hour
-      }
-    })
-
-    return response
+    // Redirect to Supabase storage URL
+    return NextResponse.redirect(company.pdfMenuUrl)
 
   } catch (error) {
     console.error("PDF serve error:", error)

@@ -16,7 +16,8 @@ export async function GET(
     const company = await prisma.company.findUnique({
       where: { id: companyId },
       select: {
-        pdfMenuFile: true
+        pdfMenuUrl: true,
+        C_Name: true
       }
     })
 
@@ -24,20 +25,12 @@ export async function GET(
       return NextResponse.json({ error: "Company not found" }, { status: 404 })
     }
 
-    if (!company.pdfMenuFile) {
+    if (!company.pdfMenuUrl) {
       return NextResponse.json({ error: "PDF not found" }, { status: 404 })
     }
 
-    // Return the PDF as a response
-    return new NextResponse(company.pdfMenuFile, {
-      headers: {
-        'Content-Type': 'application/pdf',
-        'Cache-Control': 'no-cache, no-store, must-revalidate', // No caching for fresh updates
-        'Pragma': 'no-cache',
-        'Expires': '0',
-        'Content-Disposition': 'inline; filename="menu.pdf"'
-      }
-    })
+    // Redirect to Supabase storage URL
+    return NextResponse.redirect(company.pdfMenuUrl)
 
   } catch (error) {
     console.error("PDF retrieve error:", error)

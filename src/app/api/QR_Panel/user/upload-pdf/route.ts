@@ -1,6 +1,9 @@
 import { prisma } from "@/app/lib/prisma"
 import { NextResponse } from "next/server"
 import { cookies } from 'next/headers'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(process.env.DB_URL!, process.env.ROLE_KEY!)
 
 export async function POST(req: Request) {
   console.log("PDF upload started")
@@ -33,10 +36,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "File too large. Maximum size is 10MB" }, { status: 400 })
     }
 
-    // Convert file to buffer
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-
     // Find or create user's company
     console.log("Looking for company for user:", userId)
     let company = await prisma.company.findFirst({
@@ -57,24 +56,67 @@ export async function POST(req: Request) {
       console.log("Company found:", company.id)
     }
 
-    // Update company with PDF data (save to database as BLOB)
-    console.log("Updating company with PDF data in database")
-    await prisma.company.update({
-      where: { id: company.id },
-      data: {
-        pdfMenuFile: buffer,
-        pdfMenuUrl: null, // Clear old file path
-        menuType: "pdf",
-        C_QR_URL: `http://${req.headers.get('host')}/menu/${company.id}?mode=flipbook`
-      }
-    })
-    console.log("Company updated successfully")
+    // Convert file to buffer for Supabase upload
+    const bytes = await file.arrayBuffer()
+    const buffer = Buffer.from(bytes)
 
-    return NextResponse.json({
-      success: true,
-      message: "PDF uploaded successfully",
-      menuUrl: `/menu/${company.id}`
-    })
+    // Upload PDF to Supabase Storage
+    const fileName = `pdf/menu-${company.id}-${Date.now()}.pdf`
+    console.log("Uploading PDF to Supabase storage:", fileName)
+    
+    try {
+      const { data, error } = await supabase.storage
+        .from('qrmenu')
+        .upload(fileName, buffer, {
+          contentType: 'application/pdf',
+          upsert: true // Replace if file with same name exists
+        })
+
+      if (error) {
+        console.error('Supabase upload error:', error)
+        return NextResponse.json({ error: error.message || 'PDF upload failed' }, { status: 500 })
+      }
+
+      console.log("PDF uploaded successfully to Supabase:", data)
+
+      // Get public URL for the uploaded PDF
+      const { data: publicUrlData } = supabase
+        .storage
+        .from('qrmenu')
+        .getPublicUrl(fileName)
+
+      const pdfUrl = publicUrlData?.publicUrl
+
+      if (!pdfUrl) {
+        console.error("Failed to get public URL for uploaded PDF")
+        return NextResponse.json({ error: "Failed to get PDF URL" }, { status: 500 })
+      }
+
+      console.log("PDF public URL:", pdfUrl)
+
+      // Update company with PDF URL in database
+      console.log("Updating company with PDF URL in database")
+      await prisma.company.update({
+        where: { id: company.id },
+        data: {
+          pdfMenuUrl: pdfUrl, // Store Supabase URL
+          menuType: "pdf",
+          C_QR_URL: `http://${req.headers.get('host')}/QR_Portal/menu/${company.id}?mode=flipbook`
+        }
+      })
+      console.log("Company updated successfully")
+
+      return NextResponse.json({
+        success: true,
+        message: "PDF uploaded successfully to Supabase storage",
+        menuUrl: `/QR_Portal/menu/${company.id}`,
+        pdfUrl: pdfUrl
+      })
+
+    } catch (uploadError) {
+      console.error('Unexpected Supabase error:', uploadError)
+      return NextResponse.json({ error: 'Unexpected error uploading PDF' }, { status: 500 })
+    }
 
   } catch (error) {
     console.error("PDF upload error:", error)

@@ -39,7 +39,6 @@ model Company {
   createdBy       String?
   updatedBy       String?
   menuType        String?         @default("none")
-  pdfMenuFile     Bytes?
   pdfMenuUrl      String?
   creator         User?           @relation("CreatedCompanies", fields: [createdBy], references: [id])
   updater         User?           @relation("UpdatedCompanies", fields: [updatedBy], references: [id])
