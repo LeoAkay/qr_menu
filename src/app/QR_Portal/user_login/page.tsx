@@ -64,10 +64,10 @@ export default function UserLoginPage() {
       </div>
 
       {/* Login Form */}
-      <div className="relative z-10 w-full max-w-xl mx-auto px-6">
-  <h1 className="text-6xl font-bold text-center text-gray-900 mb-12">QR Menu System</h1>
-  <div className="bg-white/20 backdrop-blur-md border border-white/30 rounded-2xl p-8 shadow-2xl">
-    <div className="space-y-6">
+      <div className="relative z-10 w-full max-w-md sm:max-w-xl mx-auto px-3 sm:px-6">
+  <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-center text-gray-900 mb-8 sm:mb-12">QR Menu System</h1>
+  <div className="bg-white/20 backdrop-blur-md border border-white/30 rounded-2xl p-4 sm:p-8 shadow-2xl">
+    <div className="space-y-4 sm:space-y-6">
             {/* Username Input */}
             <div>
               <label className="block text-black-700 text-sm font-medium mb-2">
@@ -79,7 +79,7 @@ export default function UserLoginPage() {
                 value={userName}
                 onChange={(e) => setUsername(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="w-full px-4 py-3 bg-white/80 border border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200 text-gray-800 placeholder-gray-400 transition-all"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white/80 border border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200 text-gray-800 placeholder-gray-400 transition-all text-base sm:text-lg"
                 disabled={loading}
               />
             </div>
@@ -97,7 +97,7 @@ export default function UserLoginPage() {
     value={password}
     onChange={(e) => setPassword(e.target.value)}
     onKeyPress={handleKeyPress}
-    className="w-full px-4 py-3 pr-12 bg-white/80 border border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200 text-gray-800 placeholder-gray-400 transition-all"
+    className="w-full px-3 sm:px-4 py-2 sm:py-3 pr-8 sm:pr-12 bg-white/80 border border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200 text-gray-800 placeholder-gray-400 transition-all text-base sm:text-lg"
     disabled={loading}
   />
 

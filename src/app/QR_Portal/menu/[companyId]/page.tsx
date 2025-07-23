@@ -276,13 +276,12 @@ export default function MenuPage() {
               <img 
                 src={`/api/AdminPanel/company/image/${company.id}/logo`}
                 alt="Company Logo"
-                className="max-w-16 max-h-16 mx-auto rounded-lg shadow-lg"
+                className="max-w-12 sm:max-w-16 max-h-12 sm:max-h-16 mx-auto rounded-lg shadow-lg"
               />
             </div>
           )}
-          
           <h1 
-            className="text-2xl font-bold"
+            className="text-xl sm:text-2xl md:text-3xl font-bold"
             style={{ color: theme.textColor }}
           >
             {restaurantName}
@@ -290,8 +289,8 @@ export default function MenuPage() {
         </div>
       </header>
 
-      <div className={`mx-auto ${getEffectiveMenuType() === 'pdf' ? 'max-w-none p-0 min-h-screen' : 'max-w-4xl px-4'}`}>
-        {getEffectiveMenuType() === 'pdf' && company.pdfMenuUrl ? (
+      <div className={`mx-auto ${getEffectiveMenuType() === 'pdf' ? 'max-w-none p-0 min-h-screen' : 'max-w-4xl px-2 sm:px-4'}`}>
+        {getEffectiveMenuType() === 'pdf' && company.pdfMenuFile ? (
           <div 
             className={`w-full min-h-[85vh] flex items-center justify-center transition-all duration-500 ${
               pdfDisplayMode === 'scroll' 
@@ -740,8 +739,8 @@ function ManualMenu({
   return (
     <div className="min-h-screen">
       {/* Category Selection Tabs */}
-      <div className="sticky top-0 z-10 bg-white bg-opacity-95 backdrop-blur-sm border-b border-gray-200 py-4 mb-6 rounded-full">
-        <div className="flex overflow-x-auto scrollbar-hide space-x-2 px-4">
+      <div className="sticky top-0 z-10 bg-white bg-opacity-95 backdrop-blur-sm border-b border-gray-200 py-2 sm:py-4 mb-4 sm:mb-6 rounded-full">
+        <div className="flex overflow-x-auto scrollbar-hide space-x-1 sm:space-x-2 px-2 sm:px-4">
           {sortedCategories.map((category) => (
             <button
               key={category.id}
@@ -760,21 +759,21 @@ function ManualMenu({
 
       {/* Selected Category Content */}
       {currentCategory && (
-        <div className="px-4 pb-8">
+        <div className="px-2 sm:px-4 pb-6 sm:pb-8">
     {/* Category Header */}
-    <div className="text-center mb-8">
+    <div className="text-center mb-4 sm:mb-8">
       <h1
-        className="text-3xl font-bold mb-2"
+        className="text-xl sm:text-3xl font-bold mb-1 sm:mb-2"
         style={{ color: theme?.textColor || '#1f2937' }} 
       >
         {currentCategory.name}
       </h1>
-      <div className="w-20 h-1 bg-black mx-auto rounded"></div>
+      <div className="w-12 sm:w-20 h-1 bg-black mx-auto rounded"></div>
     </div>
 
           {/* Items Grid */}
           {currentCategory.subCategories && currentCategory.subCategories.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
               {[...currentCategory.subCategories]
                 .sort((a, b) => a.orderNo - b.orderNo)
                 .map((item) => (

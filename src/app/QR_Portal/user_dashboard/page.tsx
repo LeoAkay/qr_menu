@@ -306,35 +306,46 @@ export default function UserDashboard() {
         </div>
 
         {/* Main Dashboard Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 justify-center max-w-4xl mx-auto">
-  {/* PDF Upload Card */}
-  <div
-    onClick={() => {
-      setMenuType('pdf')
-      setActiveTab('pdf')
-    }}
-    className="bg-gradient-to-br from-pink-400 to-pink-300 hover:from-pink-300 hover:to-pink-400 rounded-xl p-8 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-  >
-    <div className="text-center">
-      <div className="text-3xl mb-4">📄</div>
-      <h3 className="text-xl font-semibold text-gray-800">PDF Upload</h3>
-    </div>
-  </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 justify-center max-w-4xl mx-auto">
+          {/* PDF Upload Card */}
+          <div
+            onClick={() => {
+              setMenuType('pdf')
+              setActiveTab('pdf')
+            }}
+            className="bg-gradient-to-br from-pink-400 to-pink-300 hover:from-pink-300 hover:to-pink-400 rounded-xl p-8 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+          >
+            <div className="text-center">
+              <div className="text-3xl mb-4">📄</div>
+              <h3 className="text-xl font-semibold text-gray-800">PDF Upload</h3>
+            </div>
+          </div>
 
-  {/* Manual Upload Card */}
-  <div
-    onClick={() => {
-      setMenuType('manual')
-      setActiveTab('manual')
-    }}
-    className="bg-gradient-to-br from-pink-400 to-pink-300 hover:from-pink-300 hover:to-pink-400 rounded-xl p-8 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-  >
-    <div className="text-center">
-      <div className="text-3xl mb-4">📝</div>
-      <h3 className="text-xl font-semibold text-gray-800"> Order system</h3>
-    </div>
-  </div>
-</div>
+          {/* Manual Upload Card */}
+          <div
+            onClick={() => {
+              setMenuType('manual')
+              setActiveTab('manual')
+            }}
+            className="bg-gradient-to-br from-pink-400 to-pink-300 hover:from-pink-300 hover:to-pink-400 rounded-xl p-8 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+          >
+            <div className="text-center">
+              <div className="text-3xl mb-4">📝</div>
+              <h3 className="text-xl font-semibold text-gray-800"> Order system</h3>
+            </div>
+          </div>
+
+          {/* Theme Settings Card */}
+          <div
+            onClick={() => setActiveTab('theme')}
+            className="bg-gradient-to-br from-pink-400 to-pink-300 hover:from-pink-300 hover:to-pink-400 rounded-xl p-8 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+          >
+            <div className="text-center">
+              <div className="text-3xl mb-4">🎨</div>
+              <h3 className="text-xl font-semibold text-gray-800">Theme Settings</h3>
+            </div>
+          </div>
+        </div>
 
 
         {/* Content Area */}
@@ -359,7 +370,7 @@ export default function UserDashboard() {
           )}
 
               {activeTab === 'manual' && <ManualMenuSection />}
-              {activeTab === 'theme' && <ThemeSection theme={theme} setTheme={setTheme} />}
+              {activeTab === 'theme' && <ThemeSettingsSection userData={userData} />}
               {activeTab === 'preview' && (
                 <PreviewSection 
                   userData={userData} 
@@ -638,42 +649,34 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
   return (
     <div>
       <h2 className="text-2xl font-semibold text-center mb-6 text-gray-800">PDF Menu Management</h2>
-      
       {/* Existing PDF Display */}
       {existingPDF && (
-       <div className="mb-8 p-6 bg-green-50 border border-green-200 rounded-xl flex items-center space-x-6">
-  
-
-  {/* Text and actions */}
-  <div className="flex-1 text-center">
-    <h3 className="text-lg font-semibold text-green-800">Current PDF Menu</h3>
-    <p className="text-green-600">Your PDF menu has been successfully uploaded</p>
-    
-    {userData?.company?.pdfMenuUrl && (
-      <a 
-        href={userData.company.pdfMenuUrl} 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className="text-purple-600 hover:text-purple-800 text-sm font-medium inline-block mt-2"
-      >
-        📁 View PDF
-      </a>
-    )}
-
-    <div className="mt-4">
-      <button
-        onClick={handleDeletePDF}
-        disabled={deleting}
-        className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:bg-red-400"
-      >
-        {deleting ? 'Deleting...' : '🗑️ Delete'}
-      </button>
-    </div>
-  </div>
-    </div>
-)}
-
-      
+        <div className="mb-8 p-6 bg-green-50 border border-green-200 rounded-xl flex items-center space-x-6">
+          <div className="flex-1 text-center">
+            <h3 className="text-lg font-semibold text-green-800">Current PDF Menu</h3>
+            <p className="text-green-600">Your PDF menu has been successfully uploaded</p>
+            {userData?.company?.pdfMenuFile && (
+              <a 
+                href={`/api/AdminPanel/company/pdf/${userData.company.id}?t=${Date.now()}`} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-purple-600 hover:text-purple-800 text-sm font-medium inline-block mt-2"
+              >
+                📁 View PDF
+              </a>
+            )}
+            <div className="mt-4">
+              <button
+                onClick={handleDeletePDF}
+                disabled={deleting}
+                className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:bg-red-400"
+              >
+                {deleting ? 'Deleting...' : '🗑️ Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* PDF Upload Section */}
       <div className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center hover:border-purple-400 transition-colors">
         <input
@@ -696,7 +699,6 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
           </div>
         </label>
       </div>
-
       {selectedFile && (
         <div className="mt-8 text-center">
           <button
@@ -714,7 +716,6 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
           </button>
         </div>
       )}
-
       {/* PDF Display Mode Selection */}
       <div className="mt-8">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">PDF Display Mode</h3>
@@ -725,7 +726,6 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
               onClick={() => {
                 setPdfDisplayMode('flipbook');
                 localStorage.setItem('pdfDisplayMode', 'flipbook');
-                // QR URL'i sessizce güncelle
                 const newQrUrl = generateQRUrl();
                 fetch('/api/QR_Panel/user/update-qr-url', {
                   method: 'PUT',
@@ -734,7 +734,6 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
                   credentials: 'include'
                 }).catch(error => {
                   console.error('Update QR URL error:', error);
-                  // Hata durumunda sessizce devam et
                 });
               }}
               className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
@@ -743,29 +742,27 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
                   : 'border-gray-300 hover:border-purple-300'
               }`}
             >
-                          <div className="text-center">
-              <div className="text-4xl mb-3">📖</div>
-              <h4 className="font-semibold text-gray-800 mb-2">Flipbook Style</h4>
-              <p className="text-sm text-gray-600">
-                Interactive page-turning experience like a real book
-              </p>
-              <div className="mt-2 p-2 bg-orange-50 border border-orange-200 rounded text-xs">
-                🎨
-              </div>
-              {pdfDisplayMode === 'flipbook' && (
-                <div className="mt-3 text-purple-600 font-medium">
-                  ✓ Selected
+              <div className="text-center">
+                <div className="text-4xl mb-3">📖</div>
+                <h4 className="font-semibold text-gray-800 mb-2">Flipbook Style</h4>
+                <p className="text-sm text-gray-600">
+                  Interactive page-turning experience like a real book
+                </p>
+                <div className="mt-2 p-2 bg-orange-50 border border-orange-200 rounded text-xs">
+                  🎨
                 </div>
-              )}
+                {pdfDisplayMode === 'flipbook' && (
+                  <div className="mt-3 text-purple-600 font-medium">
+                    ✓ Selected
+                  </div>
+                )}
+              </div>
             </div>
-            </div>
-
             {/* Scroll Mode */}
             <div 
               onClick={() => {
                 setPdfDisplayMode('scroll');
                 localStorage.setItem('pdfDisplayMode', 'scroll');
-                // QR URL'i sessizce güncelle
                 const newQrUrl = generateQRUrl();
                 fetch('/api/QR_Panel/user/update-qr-url', {
                   method: 'PUT',
@@ -774,7 +771,6 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
                   credentials: 'include'
                 }).catch(error => {
                   console.error('Update QR URL error:', error);
-                  // Hata durumunda sessizce devam et
                 });
               }}
               className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
@@ -783,24 +779,23 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
                   : 'border-gray-300 hover:border-purple-300'
               }`}
             >
-                          <div className="text-center">
-              <div className="text-4xl mb-3">📜</div>
-              <h4 className="font-semibold text-gray-800 mb-2">Scroll Style</h4>
-              <p className="text-sm text-gray-600">
-                Traditional continuous scrolling view
-              </p>
-              <div className="mt-2 p-2 bg-slate-50 border border-slate-200 rounded text-xs">
-                🎨 
-              </div>
-              {pdfDisplayMode === 'scroll' && (
-                <div className="mt-3 text-purple-600 font-medium">
-                  ✓ Selected
+              <div className="text-center">
+                <div className="text-4xl mb-3">📜</div>
+                <h4 className="font-semibold text-gray-800 mb-2">Scroll Style</h4>
+                <p className="text-sm text-gray-600">
+                  Traditional continuous scrolling view
+                </p>
+                <div className="mt-2 p-2 bg-slate-50 border border-slate-200 rounded text-xs">
+                  🎨 
                 </div>
-              )}
-            </div>
+                {pdfDisplayMode === 'scroll' && (
+                  <div className="mt-3 text-purple-600 font-medium">
+                    ✓ Selected
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-
           {/* Current QR URL Display */}
           <div className="text-center mt-4 p-3 bg-white border border-gray-200 rounded-lg">
             <p className="text-sm text-gray-600 mb-2">Current QR URL:</p>
@@ -837,39 +832,26 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
               </div>
             )}
           </div>
-
           {/* Save Display Mode Button */}
           <div className="text-center mt-6">
             <button
               onClick={async () => {
                 try {
-                  console.log('Updating display mode to:', pdfDisplayMode)
-                  
-                  // Save to localStorage for session persistence
                   localStorage.setItem('pdfDisplayMode', pdfDisplayMode)
-                  
-                  // Update QR URL with display mode parameter
                   const res = await fetch('/api/QR_Panel/user/update-qr-url', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      displayMode: pdfDisplayMode
-                    }),
+                    body: JSON.stringify({ displayMode: pdfDisplayMode }),
                     credentials: 'include'
                   })
-
                   const data = await res.json()
-                  console.log('API Response:', data)
-
                   if (res.ok) {
                     alert(`PDF display mode saved!\nNew QR URL: ${data.qrUrl}`)
-                    // Reload page to show updated QR URL
                     window.location.reload()
                   } else {
                     alert(data.error || 'Failed to update QR code')
                   }
                 } catch (error) {
-                  console.error('Display mode save error:', error)
                   alert('Network error. Please try again.')
                 }
               }}
@@ -879,296 +861,6 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
             </button>
           </div>
         </div>
-      </div>
-
-      {/* Theme Customization Section */}
-      <div className="mt-8">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-800">Menu Appearance Settings</h3>
-          <button
-            onClick={() => setShowThemeOptions(!showThemeOptions)}
-            className="bg-purple-100 hover:bg-purple-200 text-purple-700 px-4 py-2 rounded-lg transition-colors text-sm font-medium"
-          >
-            {showThemeOptions ? '⬆️ Hide' : '🎨 Customize'}
-          </button>
-        </div>
-
-        {showThemeOptions && (
-          <div className="bg-gray-50 rounded-xl p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Background Color */}
-              <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">
-                  Background Color
-                </label>
-                <div className="flex items-center space-x-3">
-                  <input
-                    type="color"
-                    value={themeSettings.backgroundColor}
-                    onChange={(e) => setThemeSettings({...themeSettings, backgroundColor: e.target.value})}
-                    className="w-12 h-12 rounded-lg border-2 border-gray-200 cursor-pointer"
-                  />
-                  <input
-                    type="text"
-                    value={themeSettings.backgroundColor}
-                    onChange={(e) => setThemeSettings({...themeSettings, backgroundColor: e.target.value})}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
-                    placeholder="#ffffff"
-                  />
-                </div>
-              </div>
-
-              {/* Text Color */}
-              <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">
-                  Text Color
-                </label>
-                <div className="flex items-center space-x-3">
-                  <input
-                    type="color"
-                    value={themeSettings.textColor}
-                    onChange={(e) => setThemeSettings({...themeSettings, textColor: e.target.value})}
-                    className="w-12 h-12 rounded-lg border-2 border-gray-200 cursor-pointer"
-                  />
-                  <input
-                    type="text"
-                    value={themeSettings.textColor}
-                    onChange={(e) => setThemeSettings({...themeSettings, textColor: e.target.value})}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
-                    placeholder="#000000"
-                  />
-                </div>
-              </div>
-
-              {/* Logo Area Color */}
-              <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">
-                  Logo Area Color
-                </label>
-                <div className="flex items-center space-x-3">
-                  <input
-                    type="color"
-                    value={themeSettings.logoAreaColor}
-                    onChange={(e) => setThemeSettings({...themeSettings, logoAreaColor: e.target.value})}
-                    className="w-12 h-12 rounded-lg border-2 border-gray-200 cursor-pointer"
-                  />
-                  <input
-                    type="text"
-                    value={themeSettings.logoAreaColor}
-                    onChange={(e) => setThemeSettings({...themeSettings, logoAreaColor: e.target.value})}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
-                    placeholder="#f8f9fa"
-                  />
-                </div>
-              </div>
-
-              {/* Style Selection */}
-              <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">
-                  Theme Style
-                </label>
-                <select
-                  value={themeSettings.style}
-                  onChange={(e) => setThemeSettings({...themeSettings, style: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
-                >
-                  <option value="modern">Modern</option>
-                  <option value="classic">Klasik</option>
-                  <option value="elegant">Şık</option>
-                  <option value="minimal">Minimal</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Preview */}
-            <div className="mt-6">
-              <h4 className="text-sm font-medium mb-3 text-gray-700">Preview</h4>
-              <div 
-                className="border-2 border-gray-300 rounded-lg p-6 text-center"
-                style={{
-                  backgroundColor: themeSettings.backgroundColor,
-                  color: themeSettings.textColor
-                }}
-              >
-                <div 
-                  className="inline-block px-4 py-2 rounded-lg mb-4"
-                  style={{ backgroundColor: themeSettings.logoAreaColor }}
-                >
-                  <span className="font-bold text-sm">Logo Area</span>
-                </div>
-                <h3 className="text-xl font-bold mb-2">
-                  {userData?.company?.C_Name || 'Restaurant Name'}
-                </h3>
-                <p className="text-sm opacity-75">
-                  Your PDF menu will be displayed with this theme
-                </p>
-              </div>
-            </div>
-
-            {/* Save Theme Button */}
-            <div className="text-center pt-4">
-              <button
-                onClick={handleSaveTheme}
-                className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium transition-colors shadow-lg"
-              >
-                🎨 Save Theme Settings
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Image Upload Section */}
-      <div className="mt-8">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-800">Logo and Welcome Image</h3>
-          <button
-            onClick={() => setShowImageOptions(!showImageOptions)}
-            className="bg-purple-100 hover:bg-purple-200 text-purple-700 px-4 py-2 rounded-lg transition-colors text-sm font-medium"
-          >
-            {showImageOptions ? '⬆️ Hide' : '🖼️ Upload Images'}
-          </button>
-        </div>
-
-        {/* Current Images Display */}
-        {(userData?.company?.C_Logo_Image || userData?.company?.Welcoming_Page) && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
-            <h4 className="text-sm font-medium text-green-800 mb-3">Uploaded Images</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {userData?.company?.C_Logo_Image && (
-                <div className="text-center">
-                  <p className="text-sm text-green-600 mb-2">Company Logo</p>
-                  <img 
-                    src={`/api/AdminPanel/company/image/${userData.company.id}/logo`}
-                    alt="Company Logo"
-                    className="max-w-32 max-h-32 mx-auto rounded-lg border shadow-sm mb-2"
-                  />
-                  <button
-                    onClick={() => handleDeleteImage('logo')}
-                    className="text-xs bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md transition-colors"
-                  >
-                    🗑️ Delete
-                  </button>
-                </div>
-              )}
-              {userData?.company?.Welcoming_Page && (
-                <div className="text-center">
-                  <p className="text-sm text-green-600 mb-2">Welcome Image</p>
-                  <img 
-                    src={`/api/AdminPanel/company/image/${userData.company.id}/welcoming`}
-                    alt="Welcoming Page"
-                    className="max-w-32 max-h-32 mx-auto rounded-lg border shadow-sm mb-2"
-                  />
-                  <button
-                    onClick={() => handleDeleteImage('welcoming')}
-                    className="text-xs bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md transition-colors"
-                  >
-                    🗑️ Delete
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {showImageOptions && (
-          <div className="bg-gray-50 rounded-xl p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Logo Upload */}
-              <div>
-                <label className="block text-sm font-medium mb-3 text-gray-700">
-                  Company Logo
-                </label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleLogoSelect}
-                    className="hidden"
-                    id="logo-upload"
-                  />
-                  <label htmlFor="logo-upload" className="cursor-pointer block">
-                    
-                    <div className="text-sm font-medium mb-2 text-gray-800">
-                      {selectedLogo ? selectedLogo.name : 'Select Logo'}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      JPEG, PNG, WebP (Max 5MB)
-                    </div>
-                  </label>
-                </div>
-                {selectedLogo && (
-                  <div className="mt-3 text-center">
-                    <img 
-                      src={URL.createObjectURL(selectedLogo)}
-                      alt="Logo Preview"
-                      className="max-w-24 max-h-24 mx-auto rounded-lg border"
-                    />
-                    <button
-                      onClick={() => setSelectedLogo(null)}
-                      className="mt-2 text-xs text-red-600 hover:text-red-800"
-                    >
-                      Kaldır
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Welcoming Page Upload */}
-              <div>
-                <label className="block text-sm font-medium mb-3 text-gray-700">
-                  Welcome Image
-                </label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleWelcomingSelect}
-                    className="hidden"
-                    id="welcoming-upload"
-                  />
-                  <label htmlFor="welcoming-upload" className="cursor-pointer block">
-              
-                    <div className="text-sm font-medium mb-2 text-gray-800">
-                      {selectedWelcoming ? selectedWelcoming.name : 'Select Welcome Image'}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      JPEG, PNG, WebP (Max 5MB)
-                    </div>
-                  </label>
-                </div>
-                {selectedWelcoming && (
-                  <div className="mt-3 text-center">
-                    <img 
-                      src={URL.createObjectURL(selectedWelcoming)}
-                      alt="Welcoming Preview"
-                      className="max-w-24 max-h-24 mx-auto rounded-lg border"
-                    />
-                    <button
-                      onClick={() => setSelectedWelcoming(null)}
-                      className="mt-2 text-xs text-red-600 hover:text-red-800"
-                    >
-                      Kaldır
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Upload Button */}
-            {(selectedLogo || selectedWelcoming) && (
-              <div className="text-center pt-4">
-                <button
-                  onClick={handleImageUpload}
-                  disabled={uploadingImages}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-lg disabled:bg-purple-400"
-                >
-                  {uploadingImages ? 'Uploading...' : '🖼️ Upload Images'}
-                </button>
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </div>
   )
@@ -1436,7 +1128,7 @@ function ManualMenuSection() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-semibold text-gray-800">Manual Menu Builder</h2>
+        <h2 className="text-2xl font-semibold text-gray-800"> Builder</h2>
         <button
           onClick={() => setShowCategoryForm(true)}
           className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
@@ -1487,109 +1179,6 @@ function ManualMenuSection() {
         </div>
               )}
 
-        {/* Edit Category Modal */}
-        {showEditCategoryForm && (
-          <div className="mb-6 p-6 bg-yellow-50 border border-yellow-200 rounded-xl">
-            <h3 className="text-lg font-semibold mb-4">Edit Category: {editingCategory?.name}</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Category Name</label>
-                <input
-                  type="text"
-                  value={editCategoryForm.name}
-                  onChange={(e) => setEditCategoryForm({...editCategoryForm, name: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none"
-                  placeholder="e.g., Appetizers, Main Courses"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Background Image (Optional - Leave empty to keep current)</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setEditCategoryForm({...editCategoryForm, backgroundImage: e.target.files?.[0] || null})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none"
-                />
-              </div>
-            </div>
-            <div className="flex space-x-3 mt-4">
-              <button
-                onClick={handleUpdateCategory}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-              >
-                Update Category
-              </button>
-              <button
-                onClick={() => {
-                  setShowEditCategoryForm(false)
-                  setEditingCategory(null)
-                  setEditCategoryForm({ name: '', backgroundImage: null })
-                }}
-                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Edit Item Modal */}
-        {showEditItemForm && (
-          <div className="mb-6 p-6 bg-yellow-50 border border-yellow-200 rounded-xl">
-            <h3 className="text-lg font-semibold mb-4">Edit Item: {editingItem?.name}</h3>
-                         <div className="space-y-4">
-               <div>
-                 <label className="block text-sm font-medium mb-2">Item Name</label>
-                 <input
-                   type="text"
-                   value={editItemForm.name}
-                   onChange={(e) => setEditItemForm({...editItemForm, name: e.target.value})}
-                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none"
-                   placeholder="e.g., Grilled Chicken"
-                 />
-               </div>
-               <div>
-                 <label className="block text-sm font-medium mb-2">Price (₺)</label>
-                 <input
-                   type="number"
-                   step="0.01"
-                   value={editItemForm.price}
-                   onChange={(e) => setEditItemForm({...editItemForm, price: e.target.value})}
-                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none"
-                   placeholder="e.g., 19.99"
-                 />
-               </div>
-               <div>
-                 <label className="block text-sm font-medium mb-2">Item Image (Optional - Leave empty to keep current)</label>
-                 <input
-                   type="file"
-                   accept="image/*"
-                   onChange={(e) => setEditItemForm({...editItemForm, menuImage: e.target.files?.[0] || null})}
-                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none"
-                 />
-               </div>
-             </div>
-            <div className="flex space-x-3 mt-4">
-              <button
-                onClick={handleUpdateItem}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-              >
-                Update Item
-              </button>
-              <button
-                onClick={() => {
-                  setShowEditItemForm(false)
-                  setEditingItem(null)
-                  setEditItemForm({ name: '', price: '', menuImage: null })
-                }}
-                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Categories List */}
       {categories.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
@@ -1624,6 +1213,52 @@ function ManualMenuSection() {
                    </button>
                  </div>
                </div>
+
+              {/* Inline Edit Category Form */}
+              {editingCategory?.id === category.id && showEditCategoryForm && (
+                <div className="mb-6 p-6 bg-yellow-50 border border-yellow-200 rounded-xl">
+                  <h3 className="text-lg font-semibold mb-4">Edit Category: {editingCategory?.name}</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Category Name</label>
+                      <input
+                        type="text"
+                        value={editCategoryForm.name}
+                        onChange={(e) => setEditCategoryForm({...editCategoryForm, name: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none"
+                        placeholder="e.g., Appetizers, Main Courses"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Background Image (Optional - Leave empty to keep current)</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setEditCategoryForm({...editCategoryForm, backgroundImage: e.target.files?.[0] || null})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex space-x-3 mt-4">
+                    <button
+                      onClick={handleUpdateCategory}
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                    >
+                      Update Category
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowEditCategoryForm(false)
+                        setEditingCategory(null)
+                        setEditCategoryForm({ name: '', backgroundImage: null })
+                      }}
+                      className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Add Item Form */}
               {showItemForm === category.id && (
@@ -1715,6 +1350,62 @@ function ManualMenuSection() {
                          </button>
                        </div>
                      </div>
+                     {/* Inline Edit Item Form */}
+                     {editingItem?.id === item.id && (
+                       <div className="mt-4 mb-2 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+                         <h3 className="text-lg font-semibold mb-4">Edit Item: {editingItem?.name}</h3>
+                         <div className="space-y-4">
+                           <div>
+                             <label className="block text-sm font-medium mb-2">Item Name</label>
+                             <input
+                               type="text"
+                               value={editItemForm.name}
+                               onChange={(e) => setEditItemForm({...editItemForm, name: e.target.value})}
+                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none"
+                               placeholder="e.g., Grilled Chicken"
+                             />
+                           </div>
+                           <div>
+                             <label className="block text-sm font-medium mb-2">Price (₺)</label>
+                             <input
+                               type="number"
+                               step="0.01"
+                               value={editItemForm.price}
+                               onChange={(e) => setEditItemForm({...editItemForm, price: e.target.value})}
+                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none"
+                               placeholder="e.g., 19.99"
+                             />
+                           </div>
+                           <div>
+                             <label className="block text-sm font-medium mb-2">Item Image (Optional - Leave empty to keep current)</label>
+                             <input
+                               type="file"
+                               accept="image/*"
+                               onChange={(e) => setEditItemForm({...editItemForm, menuImage: e.target.files?.[0] || null})}
+                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none"
+                             />
+                           </div>
+                         </div>
+                         <div className="flex space-x-3 mt-4">
+                           <button
+                             onClick={handleUpdateItem}
+                             className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                           >
+                             Update Item
+                           </button>
+                           <button
+                             onClick={() => {
+                               setShowEditItemForm(false)
+                               setEditingItem(null)
+                               setEditItemForm({ name: '', price: '', menuImage: null })
+                             }}
+                             className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                           >
+                             Cancel
+                           </button>
+                         </div>
+                       </div>
+                     )}
                    </div>
                  )) || (
                   <p className="text-gray-500 text-sm text-center py-4">
@@ -1883,7 +1574,7 @@ function PreviewSection({
             } ${updating ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             <div className="text-4xl mb-3">📝</div>
-            <h4 className="font-semibold text-gray-800 mb-2">Manual Menu</h4>
+            <h4 className="font-semibold text-gray-800 mb-2">Order System</h4>
             <p className="text-sm text-gray-600">
               Show manually created menu
             </p>
@@ -2028,7 +1719,7 @@ function GetStartedPage({ userData }: { userData: UserData | null }) {
         ) : (
         <div className="max-w-4xl w-full space-y-6 relative z-10">
         <h1 className="text-6xl font-bold text-center text-gray-900">Contact Us</h1>
-        <p className="text-center text-gray-700 mb-6">Fill out the form below and we’ll get back to you shortly.</p>
+        <p className="text-center text-gray-700 mb-6">Fill out the form below and we'll get back to you shortly.</p>
           <form onSubmit={handleSubmit} className="space-y-6 bg-white p-8 rounded-2xl shadow-lg border border-gray-200">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[
@@ -2366,3 +2057,379 @@ const [showResetDropdown, setShowResetDropdown] = useState(false)
     </div>
   )
 } 
+
+// Theme Settings Section
+function ThemeSettingsSection({ userData }: { userData: UserData | null }) {
+  const [showThemeOptions, setShowThemeOptions] = useState(false)
+  const [showImageOptions, setShowImageOptions] = useState(false)
+  const [selectedLogo, setSelectedLogo] = useState<File | null>(null)
+  const [selectedWelcoming, setSelectedWelcoming] = useState<File | null>(null)
+  const [uploadingImages, setUploadingImages] = useState(false)
+  const [themeSettings, setThemeSettings] = useState({
+    backgroundColor: userData?.company?.Themes?.[0]?.backgroundColor || '#ffffff',
+    textColor: userData?.company?.Themes?.[0]?.textColor || '#000000',
+    logoAreaColor: userData?.company?.Themes?.[0]?.logoAreaColor || '#f8f9fa',
+    style: userData?.company?.Themes?.[0]?.style || 'modern'
+  })
+
+  useEffect(() => {
+    if (userData?.company?.Themes?.[0]) {
+      const theme = userData.company.Themes[0]
+      setThemeSettings({
+        backgroundColor: theme.backgroundColor || '#ffffff',
+        textColor: theme.textColor || '#000000',
+        logoAreaColor: theme.logoAreaColor || '#f8f9fa',
+        style: theme.style || 'modern'
+      })
+    }
+  }, [userData])
+
+  const handleSaveTheme = async () => {
+    try {
+      const res = await fetch('/api/QR_Panel/user/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ themeData: themeSettings }),
+        credentials: 'include'
+      })
+      if (res.ok) {
+        alert('Theme settings saved!')
+        window.location.reload()
+      } else {
+        const data = await res.json()
+        alert(data.error || 'Failed to save theme')
+      }
+    } catch (error) {
+      alert('Network error. Please try again.')
+    }
+  }
+
+  const handleLogoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp']
+      if (allowedTypes.includes(file.type)) {
+        setSelectedLogo(file)
+      } else {
+        alert('Please select a valid image file (JPEG, PNG, WebP)')
+      }
+    }
+  }
+
+  const handleWelcomingSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp']
+      if (allowedTypes.includes(file.type)) {
+        setSelectedWelcoming(file)
+      } else {
+        alert('Please select a valid image file (JPEG, PNG, WebP)')
+      }
+    }
+  }
+
+  const handleImageUpload = async () => {
+    if (!selectedLogo && !selectedWelcoming) {
+      alert('Please select at least one image')
+      return
+    }
+    setUploadingImages(true)
+    const formData = new FormData()
+    if (selectedLogo) formData.append('logo', selectedLogo)
+    if (selectedWelcoming) formData.append('welcomingPage', selectedWelcoming)
+    try {
+      const res = await fetch('/api/QR_Panel/user/upload-images', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
+      })
+      const data = await res.json()
+      if (res.ok) {
+        alert('Images uploaded successfully!')
+        setSelectedLogo(null)
+        setSelectedWelcoming(null)
+        window.location.reload()
+      } else {
+        alert(data.error || 'Image upload failed')
+      }
+    } catch (error) {
+      alert('Network error. Please try again.')
+    } finally {
+      setUploadingImages(false)
+    }
+  }
+
+  const handleDeleteImage = async (imageType: 'logo' | 'welcoming') => {
+    if (!confirm(`Are you sure you want to delete the ${imageType === 'logo' ? 'logo' : 'welcome image'}?`)) return
+    try {
+      const res = await fetch(`/api/QR_Panel/user/delete-image?type=${imageType}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      })
+      const data = await res.json()
+      if (res.ok) {
+        alert(data.message)
+        window.location.reload()
+      } else {
+        alert(data.error || 'Failed to delete image')
+      }
+    } catch (error) {
+      alert('Network error. Please try again.')
+    }
+  }
+
+  return (
+    <div>
+      <h2 className="text-2xl font-semibold text-center mb-6 text-gray-800">Theme, Logo & Welcome Settings</h2>
+      {/* Theme Customization Section */}
+      <div className="mt-8">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-800">Menu Appearance Settings</h3>
+          <button
+            onClick={() => setShowThemeOptions(!showThemeOptions)}
+            className="bg-purple-100 hover:bg-purple-200 text-purple-700 px-4 py-2 rounded-lg transition-colors text-sm font-medium"
+          >
+            {showThemeOptions ? '⬆️ Hide' : '🎨 Customize'}
+          </button>
+        </div>
+        {showThemeOptions && (
+          <div className="bg-gray-50 rounded-xl p-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Background Color */}
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-700">Background Color</label>
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="color"
+                    value={themeSettings.backgroundColor}
+                    onChange={(e) => setThemeSettings({...themeSettings, backgroundColor: e.target.value})}
+                    className="w-12 h-12 rounded-lg border-2 border-gray-200 cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={themeSettings.backgroundColor}
+                    onChange={(e) => setThemeSettings({...themeSettings, backgroundColor: e.target.value})}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
+                    placeholder="#ffffff"
+                  />
+                </div>
+              </div>
+              {/* Text Color */}
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-700">Text Color</label>
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="color"
+                    value={themeSettings.textColor}
+                    onChange={(e) => setThemeSettings({...themeSettings, textColor: e.target.value})}
+                    className="w-12 h-12 rounded-lg border-2 border-gray-200 cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={themeSettings.textColor}
+                    onChange={(e) => setThemeSettings({...themeSettings, textColor: e.target.value})}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
+                    placeholder="#000000"
+                  />
+                </div>
+              </div>
+              {/* Logo Area Color */}
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-700">Logo Area Color</label>
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="color"
+                    value={themeSettings.logoAreaColor}
+                    onChange={(e) => setThemeSettings({...themeSettings, logoAreaColor: e.target.value})}
+                    className="w-12 h-12 rounded-lg border-2 border-gray-200 cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={themeSettings.logoAreaColor}
+                    onChange={(e) => setThemeSettings({...themeSettings, logoAreaColor: e.target.value})}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
+                    placeholder="#f8f9fa"
+                  />
+                </div>
+              </div>
+              {/* Style Selection */}
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-700">Theme Style</label>
+                <select
+                  value={themeSettings.style}
+                  onChange={(e) => setThemeSettings({...themeSettings, style: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
+                >
+                  <option value="modern">Modern</option>
+                  <option value="classic">Klasik</option>
+                  <option value="elegant">Şık</option>
+                  <option value="minimal">Minimal</option>
+                </select>
+              </div>
+            </div>
+            {/* Preview */}
+            <div className="mt-6">
+              <h4 className="text-sm font-medium mb-3 text-gray-700">Preview</h4>
+              <div 
+                className="border-2 border-gray-300 rounded-lg p-6 text-center"
+                style={{ backgroundColor: themeSettings.backgroundColor, color: themeSettings.textColor }}
+              >
+                <div 
+                  className="inline-block px-4 py-2 rounded-lg mb-4"
+                  style={{ backgroundColor: themeSettings.logoAreaColor }}
+                >
+                  <span className="font-bold text-sm">Logo Area</span>
+                </div>
+                <h3 className="text-xl font-bold mb-2">{userData?.company?.C_Name || 'Restaurant Name'}</h3>
+                <p className="text-sm opacity-75">Your PDF menu will be displayed with this theme</p>
+              </div>
+            </div>
+            {/* Save Theme Button */}
+            <div className="text-center pt-4">
+              <button
+                onClick={handleSaveTheme}
+                className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium transition-colors shadow-lg"
+              >
+                🎨 Save Theme Settings
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+      {/* Image Upload Section */}
+      <div className="mt-8">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-800">Logo and Welcome Image</h3>
+          <button
+            onClick={() => setShowImageOptions(!showImageOptions)}
+            className="bg-purple-100 hover:bg-purple-200 text-purple-700 px-4 py-2 rounded-lg transition-colors text-sm font-medium"
+          >
+            {showImageOptions ? '⬆️ Hide' : '🖼️ Upload Images'}
+          </button>
+        </div>
+        {/* Current Images Display */}
+        {(userData?.company?.C_Logo_Image || userData?.company?.Welcoming_Page) && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
+            <h4 className="text-sm font-medium text-green-800 mb-3">Uploaded Images</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {userData?.company?.C_Logo_Image && (
+                <div className="text-center">
+                  <p className="text-sm text-green-600 mb-2">Company Logo</p>
+                  <img 
+                    src={`/api/AdminPanel/company/image/${userData.company.id}/logo`}
+                    alt="Company Logo"
+                    className="max-w-32 max-h-32 mx-auto rounded-lg border shadow-sm mb-2"
+                  />
+                  <button
+                    onClick={() => handleDeleteImage('logo')}
+                    className="text-xs bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md transition-colors"
+                  >
+                    🗑️ Delete
+                  </button>
+                </div>
+              )}
+              {userData?.company?.Welcoming_Page && (
+                <div className="text-center">
+                  <p className="text-sm text-green-600 mb-2">Welcome Image</p>
+                  <img 
+                    src={`/api/AdminPanel/company/image/${userData.company.id}/welcoming`}
+                    alt="Welcoming Page"
+                    className="max-w-32 max-h-32 mx-auto rounded-lg border shadow-sm mb-2"
+                  />
+                  <button
+                    onClick={() => handleDeleteImage('welcoming')}
+                    className="text-xs bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md transition-colors"
+                  >
+                    🗑️ Delete
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        {showImageOptions && (
+          <div className="bg-gray-50 rounded-xl p-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Logo Upload */}
+              <div>
+                <label className="block text-sm font-medium mb-3 text-gray-700">Company Logo</label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoSelect}
+                    className="hidden"
+                    id="logo-upload"
+                  />
+                  <label htmlFor="logo-upload" className="cursor-pointer block">
+                    <div className="text-sm font-medium mb-2 text-gray-800">{selectedLogo ? selectedLogo.name : 'Select Logo'}</div>
+                    <div className="text-xs text-gray-500">JPEG, PNG, WebP (Max 5MB)</div>
+                  </label>
+                </div>
+                {selectedLogo && (
+                  <div className="mt-3 text-center">
+                    <img 
+                      src={URL.createObjectURL(selectedLogo)}
+                      alt="Logo Preview"
+                      className="max-w-24 max-h-24 mx-auto rounded-lg border"
+                    />
+                    <button
+                      onClick={() => setSelectedLogo(null)}
+                      className="mt-2 text-xs text-red-600 hover:text-red-800"
+                    >
+                      Kaldır
+                    </button>
+                  </div>
+                )}
+              </div>
+              {/* Welcoming Page Upload */}
+              <div>
+                <label className="block text-sm font-medium mb-3 text-gray-700">Welcome Image</label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleWelcomingSelect}
+                    className="hidden"
+                    id="welcoming-upload"
+                  />
+                  <label htmlFor="welcoming-upload" className="cursor-pointer block">
+                    <div className="text-sm font-medium mb-2 text-gray-800">{selectedWelcoming ? selectedWelcoming.name : 'Select Welcome Image'}</div>
+                    <div className="text-xs text-gray-500">JPEG, PNG, WebP (Max 5MB)</div>
+                  </label>
+                </div>
+                {selectedWelcoming && (
+                  <div className="mt-3 text-center">
+                    <img 
+                      src={URL.createObjectURL(selectedWelcoming)}
+                      alt="Welcoming Preview"
+                      className="max-w-24 max-h-24 mx-auto rounded-lg border"
+                    />
+                    <button
+                      onClick={() => setSelectedWelcoming(null)}
+                      className="mt-2 text-xs text-red-600 hover:text-red-800"
+                    >
+                      Kaldır
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+            {/* Upload Button */}
+            {(selectedLogo || selectedWelcoming) && (
+              <div className="text-center pt-4">
+                <button
+                  onClick={handleImageUpload}
+                  disabled={uploadingImages}
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-lg disabled:bg-purple-400"
+                >
+                  {uploadingImages ? 'Uploading...' : '🖼️ Upload Images'}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}

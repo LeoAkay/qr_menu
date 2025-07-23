@@ -119,11 +119,11 @@ export default function GetStartedPage() {
               onChange={handleChange}
               placeholder="Optional message or request..."
               rows={5}
-              className="w-full px-5 py-4 rounded-xl bg-white border border-gray-300 placeholder-gray-400 text-gray-900 text-lg resize-none transition focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent shadow-sm"
+              className="w-full px-3 sm:px-5 py-3 sm:py-4 rounded-xl bg-white border border-gray-300 placeholder-gray-400 text-gray-900 text-base sm:text-lg resize-none transition focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent shadow-sm"
             />
             <button
               type="submit"
-              className="w-full py-4 bg-purple-600 text-white text-lg font-semibold rounded-xl hover:bg-purple-700 transition shadow-md"
+              className="w-full py-3 sm:py-4 bg-purple-600 text-white text-base sm:text-lg font-semibold rounded-xl hover:bg-purple-700 transition shadow-md"
             >
               Send Details
             </button>
