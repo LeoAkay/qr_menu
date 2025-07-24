@@ -1,12 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useEffect, useRef } from 'react' 
 import { useRouter, useSearchParams } from 'next/navigation'
 
 export default function EditCompanyForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-
+  const itemRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+  const [highlightedItemId, setHighlightedItemId] = useState<string | null>(null);
   const [cId, setCId] = useState('')
   const [userId, setuserId] = useState('')
   const [showThemeOptions, setShowThemeOptions] = useState(false)
@@ -680,9 +681,10 @@ return (
               )}
 
               {/* Items List */}
+             {/* Items List */}
               <div className="space-y-3">
                                  {category.subCategories?.map((item: any) => (
-                   <div key={item.id} className="border border-gray-100 rounded-lg p-4 bg-gray-50">
+                   <div key={item.id} ref={el => { itemRefs.current[item.id] = el; }} className={`border border-gray-100 rounded-lg p-4 bg-gray-50 ${highlightedItemId === item.id ? 'ring-4 ring-purple-400' : ''}`}>
                      <div className="flex justify-between items-start">
                        <div className="flex-1">
                          <div className="flex items-center space-x-3">
@@ -693,7 +695,7 @@ return (
                          </div>
                        </div>
                        <div className="flex items-center space-x-3">
-                         {item.menuImage && (
+                         {item.menuImageUrl && (
                            <div>
                              <img 
                                src={`/api/QR_Panel/user/manual-menu/image/${item.id}`}
@@ -716,6 +718,62 @@ return (
                          </button>
                        </div>
                      </div>
+                     {/* Inline Edit Item Form */}
+                     {editingItem?.id === item.id && (
+                       <div className="mt-4 mb-2 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+                         <h3 className="text-lg font-semibold mb-4">Edit Item: {editingItem?.name}</h3>
+                         <div className="space-y-4">
+                           <div>
+                             <label className="block text-sm font-medium mb-2">Item Name</label>
+                             <input
+                               type="text"
+                               value={editItemForm.name}
+                               onChange={(e) => setEditItemForm({...editItemForm, name: e.target.value})}
+                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none"
+                               placeholder="e.g., Grilled Chicken"
+                             />
+                           </div>
+                           <div>
+                             <label className="block text-sm font-medium mb-2">Price (₺)</label>
+                             <input
+                               type="number"
+                               step="0.01"
+                               value={editItemForm.price}
+                               onChange={(e) => setEditItemForm({...editItemForm, price: e.target.value})}
+                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none"
+                               placeholder="e.g., 19.99"
+                             />
+                           </div>
+                           <div>
+                             <label className="block text-sm font-medium mb-2">Item Image (Optional - Leave empty to keep current)</label>
+                             <input
+                               type="file"
+                               accept="image/*"
+                               onChange={(e) => setEditItemForm({...editItemForm, menuImage: e.target.files?.[0] || null})}
+                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none"
+                             />
+                           </div>
+                         </div>
+                         <div className="flex space-x-3 mt-4">
+                           <button
+                             onClick={handleUpdateItem}
+                             className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                           >
+                             Update Item
+                           </button>
+                           <button
+                             onClick={() => {
+                               setShowEditItemForm(false)
+                               setEditingItem(null)
+                               setEditItemForm({ name: '', price: '', menuImage: null })
+                             }}
+                             className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                           >
+                             Cancel
+                           </button>
+                         </div>
+                       </div>
+                     )}
                    </div>
                  )) || (
                   <p className="text-gray-500 text-sm text-center py-4">

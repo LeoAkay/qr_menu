@@ -45,7 +45,7 @@ export async function DELETE(req: Request) {
 
     return NextResponse.json({
       success: true,
-      message: `${imageType === 'logo' ? 'Logo' : 'Hoş geldin resmi'} başarıyla silindi`
+      message: `${imageType === 'logo' ? 'Logo' : 'Welcoming page image'} successfully deleted.`
     })
 
   } catch (error) {

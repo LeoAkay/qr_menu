@@ -1,28 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '../../../../../lib/prisma'
-
+import { createClient } from '@supabase/supabase-js'
+const supabase = createClient(process.env.DB_URL!,
+     process.env.ROLE_KEY!)
 // Add new menu item (subcategory)
 export async function POST(request: NextRequest) {
+let imageUrl: string | null = null
   try {
-    const formData = await request.formData()
-    const name = formData.get('name') as string
-    const price = formData.get('price') as string
-    const mainCategoryId = formData.get('mainCategoryId') as string
-    const menuImage = formData.get('menuImage') as File | null
-    const id = formData.get('id') as string // ✅ Get userId from form data
+    const userId = request.cookies.get('userId')?.value
+    const role = request.cookies.get('role')?.value
 
-    if (!id || !name || !mainCategoryId) {
-      return NextResponse.json({ error: 'User ID, name, and category are required' }, { status: 400 })
+    if (!userId ) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-
+    
     // Get user's company
     const user = await prisma.user.findUnique({
-      where: { id },
+      where: { id: userId },
       include: { company: true }
     })
 
     if (!user || !user.company) {
       return NextResponse.json({ error: 'Company not found' }, { status: 404 })
+    }
+
+    const formData = await request.formData()
+    const name = formData.get('name') as string
+    const price = formData.get('price') as string
+    const mainCategoryId = formData.get('mainCategoryId') as string
+    const menuImage = formData.get('menuImage') as File | null
+
+    if (!name || !mainCategoryId) {
+      return NextResponse.json({ error: 'Name and category are required' }, { status: 400 })
     }
 
     // Verify category belongs to user's company
@@ -44,22 +53,47 @@ export async function POST(request: NextRequest) {
     const orderNo = existingItemsCount + 1
 
     // Convert image to buffer if provided
-    let imageBuffer: Buffer | undefined
-    if (menuImage && menuImage.size > 0) {
-      const arrayBuffer = await menuImage.arrayBuffer()
-      imageBuffer = Buffer.from(arrayBuffer)
-    }
+if (menuImage && menuImage.size > 0) {
+  const arrayBuffer = await menuImage.arrayBuffer()
+  const buffer = Buffer.from(arrayBuffer)
+
+  // Upload image to Supabase Storage
+  const fileName = `items/${Date.now()}-${menuImage.name}`
+  try {
+  const { data, error } = await supabase.storage
+    .from('qrmenu')
+    .upload(fileName, buffer, {
+      contentType: menuImage.type || 'image/jpeg' // fallback
+    })
+
+  if (error) {
+    console.error('Supabase upload error:', error)
+    return NextResponse.json({ error: error.message || 'Image upload failed' }, { status: 500 })
+  }
+
+  const { data: publicUrlData } = supabase
+    .storage
+    .from('qrmenu')
+    .getPublicUrl(fileName)
+
+  imageUrl = publicUrlData?.publicUrl || null
+} catch (uploadError) {
+  console.error('Unexpected Supabase error:', uploadError)
+  return NextResponse.json({ error: 'Unexpected error uploading image' }, { status: 500 })
+}
+}
+
 
     // Create new menu item
     const newItem = await prisma.subCategory.create({
-      data: {
-        name,
-        price: price ? parseFloat(price) : null,
-        orderNo,
-        mainCategoryId,
-        menuImage: imageBuffer
-      }
-    })
+  data: {
+    name,
+    price: price ? parseFloat(price) : null,
+    orderNo,
+    mainCategoryId,
+    menuImageUrl: imageUrl
+  }
+})
 
     return NextResponse.json({
       success: true,
@@ -75,75 +109,76 @@ export async function POST(request: NextRequest) {
 // Delete menu item
 export async function DELETE(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const itemId = searchParams.get('itemId')
-    const userId = searchParams.get('userId') // ✅ use from URL
-
-    if (!userId || !itemId) {
-      return NextResponse.json({ error: 'User ID and Item ID are required' }, { status: 400 })
+    const userId = request.cookies.get('userId')?.value
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user's company
+    const { itemId } = Object.fromEntries(new URL(request.url).searchParams)
+    if (!itemId) {
+      return NextResponse.json({ error: 'Item ID is required' }, { status: 400 })
+    }
+
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: { company: true }
     })
-
-    if (!user || !user.company) {
+    if (!user?.company) {
       return NextResponse.json({ error: 'Company not found' }, { status: 404 })
     }
 
-    // Verify item belongs to user's company through its category
     const item = await prisma.subCategory.findFirst({
       where: {
         id: itemId,
-        mainCategory: {
-          companyId: user.company.id
-        }
-      }
+        mainCategory: { companyId: user.company.id }
+      },
+      select: { menuImageUrl: true }
     })
-
     if (!item) {
       return NextResponse.json({ error: 'Item not found' }, { status: 404 })
     }
 
-    // Delete the item
-    await prisma.subCategory.delete({
-      where: { id: itemId }
-    })
+    // Attempt to delete image from Supabase if exists
+    if (item.menuImageUrl) {
+      const pathSegments = item.menuImageUrl.split('/').slice(-2)
+      const filePath = pathSegments.join('/')
+      const { error: deleteErr } = await supabase.storage
+        .from('qrmenu')
+        .remove([filePath])
+      if (deleteErr) console.error('Error deleting image file:', deleteErr)
+    }
 
-    return NextResponse.json({
-      success: true,
-      message: 'Item deleted successfully'
-    })
+    // Delete from database
+    await prisma.subCategory.delete({ where: { id: itemId } })
+
+    return NextResponse.json({ success: true, message: 'Item and image deleted' })
   } catch (error) {
     console.error('Delete item error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-
 // Update menu item
 export async function PUT(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const itemId = searchParams.get('itemId')
-    const userId = searchParams.get('userId') // ✅ Fix here
-
-    if (!userId || !itemId) {
-      return NextResponse.json({ error: 'User ID and Item ID are required' }, { status: 400 })
+    const userId = request.cookies.get('userId')?.value
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user's company
+    const { searchParams } = new URL(request.url)
+    const itemId = searchParams.get('itemId')
+    if (!itemId) {
+      return NextResponse.json({ error: 'Item ID is required' }, { status: 400 })
+    }
+
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: { company: true }
     })
-
-    if (!user || !user.company) {
+    if (!user?.company) {
       return NextResponse.json({ error: 'Company not found' }, { status: 404 })
     }
 
-    // Verify item belongs to user's company through its category
     const item = await prisma.subCategory.findFirst({
       where: {
         id: itemId,
@@ -152,7 +187,6 @@ export async function PUT(request: NextRequest) {
         }
       }
     })
-
     if (!item) {
       return NextResponse.json({ error: 'Item not found' }, { status: 404 })
     }
@@ -166,15 +200,43 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Name is required' }, { status: 400 })
     }
 
-    let imageBuffer: Buffer | undefined
-    if (menuImage && menuImage.size > 0) {
-      const arrayBuffer = await menuImage.arrayBuffer()
-      imageBuffer = Buffer.from(arrayBuffer)
+    const updateData: any = { name }
+    if (price) {
+      updateData.price = parseFloat(price)
     }
 
-    const updateData: any = { name }
-    if (price) updateData.price = parseFloat(price)
-    if (imageBuffer) updateData.menuImage = imageBuffer
+    if (menuImage && menuImage.size > 0) {
+      const supabase = createClient(process.env.DB_URL!, process.env.ROLE_KEY!)
+
+      // DELETE OLD IMAGE
+      if (item.menuImageUrl) {
+        const oldPath = item.menuImageUrl.split('/').slice(-2).join('/')
+        const { error: deleteError } = await supabase.storage.from('qrmenu').remove([oldPath])
+        if (deleteError) console.warn('Failed to delete old image:', deleteError.message)
+      }
+
+      const arrayBuffer = await menuImage.arrayBuffer()
+      const buffer = Buffer.from(arrayBuffer)
+
+      const fileName = `items/${Date.now()}-${menuImage.name}`
+      const { data, error } = await supabase.storage
+        .from('qrmenu')
+        .upload(fileName, buffer, {
+          contentType: menuImage.type,
+          upsert: true
+        })
+
+      if (error) {
+        console.error('Image upload error:', error)
+        return NextResponse.json({ error: 'Failed to upload image' }, { status: 500 })
+      }
+
+      const { data: publicUrlData } = supabase.storage.from('qrmenu').getPublicUrl(fileName)
+      const imageUrl = publicUrlData?.publicUrl
+      if (imageUrl) {
+        updateData.menuImageUrl = imageUrl
+      }
+    }
 
     const updatedItem = await prisma.subCategory.update({
       where: { id: itemId },

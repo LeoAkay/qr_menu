@@ -24,7 +24,7 @@ const company = await prisma.company.findUnique({
             name: true,
             orderNo: true,
             price: true,
-            menuImage: true,
+            menuImageUrl: true,
           }
         }
       },

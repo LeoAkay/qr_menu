@@ -267,50 +267,44 @@ export default function MenuPage() {
   }
 
   // Welcoming screen - 3 saniye tam ekran
-  if (company && company.Welcoming_Page && showWelcoming) {
-    return (
-      <div 
-        className={`fixed inset-0 w-full h-full bg-cover bg-center bg-no-repeat flex items-center justify-center z-50 transition-opacity duration-500 cursor-pointer ${fadeOut ? 'opacity-0' : 'opacity-100'}`}
-        style={{
-          backgroundImage: `url(/api/AdminPanel/company/image/${company.id}/welcoming)`,
-          backgroundColor: theme.backgroundColor
-        }}
+if (company && showWelcoming) {
+  return (
+ <div
+    className={`fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center transition-opacity duration-500 ${
+      fadeOut ? 'opacity-0' : 'opacity-100'
+    }`}
+    onClick={() => {
+      setFadeOut(true)
+      setTimeout(() => setShowWelcoming(false), 300)
+    }}
+  >
+    <div
+      className="relative bg-white rounded-xl overflow-hidden shadow-2xl max-w-sm w-[90%] sm:max-w-md"
+      onClick={(e) => e.stopPropagation()} // prevent click-through close
+    >
+      {/* Close button */}
+      <button
         onClick={() => {
           setFadeOut(true)
           setTimeout(() => setShowWelcoming(false), 300)
         }}
+        className="absolute top-2 right-2 text-gray-600 hover:text-black bg-gray-200 hover:bg-gray-300 rounded-full w-8 h-8 flex items-center justify-center z-10"
+        aria-label="Close welcome screen"
       >
-        <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
-          <div className="text-center text-white">
-            {company.C_Logo_Image && (
-              <div className="mb-6">
-                <img 
-                  src={`/api/AdminPanel/company/image/${company.id}/logo`}
-                  alt="Company Logo"
-                  className="max-w-32 max-h-32 mx-auto rounded-lg shadow-lg"
-                />
-              </div>
-            )}
-            <h1 className="text-5xl md:text-7xl font-bold mb-4 text-shadow-lg">
-              {restaurantName}
-            </h1>
-            <p className="text-xl md:text-2xl opacity-90">
-              Welcome
-            </p>
-                         <div className="mt-8">
-               <div className="inline-flex items-center space-x-3">
-                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
-                 <span className="text-lg font-medium text-gray-600">Loading menu...</span>
-               </div>
-               <p className="text-sm opacity-75 mt-4 animate-pulse">
-                 Click to skip
-               </p>
-             </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
+        &times;
+      </button>
+
+      {/* Welcoming image */}
+        <img
+          src={`/api/AdminPanel/company/image/${company.id}/welcoming?${Date.now()}`}
+          alt="Welcoming"
+          className="w-full h-auto object-cover"
+        />
+    </div>
+  </div>
+  )
+}
+
 
   return (
     <div 
@@ -327,7 +321,7 @@ export default function MenuPage() {
           {company.C_Logo_Image && (
             <div className="mb-1">
               <img 
-                src={`/api/AdminPanel/company/image/${company.id}/logo`}
+                src={`/api/AdminPanel/company/image/${company.id}/logo?${Date.now()}`}
                 alt="Company Logo"
                 className="max-w-16 max-h-16 mx-auto rounded-lg shadow-lg"
               />

@@ -231,8 +231,8 @@ export default function UserDashboard() {
           <img
             src={
               userData?.company?.C_Logo_Image
-                ? `/api/AdminPanel/company/image/${userData.company.id}/logo`
-                : ''
+                ? `/api/AdminPanel/company/image/${userData.company.id}/logo?${Date.now()}`
+                : '/user-icon-on-transparent-background-free-png.webp'
             }
             alt="Company Logo"
             className="h-full w-full object-contain rounded"
@@ -296,7 +296,7 @@ export default function UserDashboard() {
           <img
             src={
               userData?.company?.C_Logo_Image
-                ? `/api/AdminPanel/company/image/${userData.company.id}/logo`
+                ? `/api/AdminPanel/company/image/${userData.company.id}/logo?${Date.now()}`
                 : '/user-icon-on-transparent-background-free-png.webp'
             }
             alt="Company Logo"
@@ -2368,7 +2368,7 @@ function ThemeSettingsSection({ userData }: { userData: UserData | null }) {
                 <div className="text-center">
                   <p className="text-sm text-green-600 mb-2">Company Logo</p>
                   <img 
-                    src={`/api/AdminPanel/company/image/${userData.company.id}/logo`}
+                    src={`/api/AdminPanel/company/image/${userData.company.id}/logo?${Date.now()}`}
                     alt="Company Logo"
                     className="max-w-32 max-h-32 mx-auto rounded-lg border shadow-sm mb-2"
                   />
@@ -2384,7 +2384,7 @@ function ThemeSettingsSection({ userData }: { userData: UserData | null }) {
                 <div className="text-center">
                   <p className="text-sm text-green-600 mb-2">Welcome Image</p>
                   <img 
-                    src={`/api/AdminPanel/company/image/${userData.company.id}/welcoming`}
+                    src={`/api/AdminPanel/company/image/${userData.company.id}/welcoming?${Date.now()}`}
                     alt="Welcoming Page"
                     className="max-w-32 max-h-32 mx-auto rounded-lg border shadow-sm mb-2"
                   />
@@ -2429,7 +2429,7 @@ function ThemeSettingsSection({ userData }: { userData: UserData | null }) {
                       onClick={() => setSelectedLogo(null)}
                       className="mt-2 text-xs text-red-600 hover:text-red-800"
                     >
-                      Kaldır
+                      Remove
                     </button>
                   </div>
                 )}
@@ -2461,7 +2461,7 @@ function ThemeSettingsSection({ userData }: { userData: UserData | null }) {
                       onClick={() => setSelectedWelcoming(null)}
                       className="mt-2 text-xs text-red-600 hover:text-red-800"
                     >
-                      Kaldır
+                      Remove
                     </button>
                   </div>
                 )}
