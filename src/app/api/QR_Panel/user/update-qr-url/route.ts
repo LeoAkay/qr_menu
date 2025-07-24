@@ -19,37 +19,35 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid display mode" }, { status: 400 })
     }
 
-    // Find user's company
+    // Find user's company by userId
     const company = await prisma.company.findFirst({
-      where: { userId: userId }
+      where: { userId }
     })
 
     if (!company) {
       return NextResponse.json({ error: "Company not found" }, { status: 404 })
     }
 
-    // Generate QR URL with network IP for external access
+    // Function to get the base URL for QR code link generation
     const getBaseUrl = () => {
       if (process.env.NODE_ENV === 'production') {
         return `https://${process.env.VERCEL_URL || 'localhost:3000'}`
       }
       
-      // For development, try to get the actual network IP from request headers
       const host = req.headers.get('host')
       if (host && !host.includes('localhost')) {
         return `http://${host}`
       }
       
-      // Fallback to localhost for direct access
-      return `http://localhost:3000`
+      return 'http://localhost:3000'
     }
-    
-    // Include both menu type and display mode in QR URL
+
     const menuTypeParam = company.menuType ? `type=${company.menuType}` : ''
     const modeParam = displayMode ? `mode=${displayMode}` : ''
     const params = [menuTypeParam, modeParam].filter(Boolean).join('&')
     const newQrUrl = `${getBaseUrl()}/QR_Portal/menu/${company.id}${params ? `?${params}` : ''}`
 
+    // Update company's QR URL
     await prisma.company.update({
       where: { id: company.id },
       data: { C_QR_URL: newQrUrl }
@@ -65,4 +63,4 @@ export async function POST(req: Request) {
     console.error("QR URL update error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
-} 
+}

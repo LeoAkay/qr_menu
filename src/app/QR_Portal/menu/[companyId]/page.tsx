@@ -485,24 +485,55 @@ if (company && showWelcoming) {
                     Clear Cart
                   </button>
                   <button
-                    onClick={() => {
-                      if (!tableNumber.trim()) {
-                        alert('Please enter your table number before confirming the order.')
-                        return
-                      }
-                      const orderDetails = `Order confirmed!\nTable: ${tableNumber}\nTotal: ₺${getTotalPrice().toFixed(2)}\nItems: ${getTotalItems()}${orderRequest.trim() ? `\nSpecial Requests: ${orderRequest}` : ''}`
-                      alert(orderDetails)
-                      clearCart()
-                    }}
-                    disabled={!tableNumber.trim()}
-                    className={`flex-1 py-2 rounded-lg transition-colors ${
-                      tableNumber.trim() 
-                        ? 'bg-green-500 text-white hover:bg-green-600' 
-                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    }`}
-                  >
-                    Confirm Order
-                  </button>
+  onClick={async () => {
+    if (!tableNumber.trim()) {
+      alert('Please enter your table number before confirming the order.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/QR_Panel/order/${companyId}`, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    tableNumber: parseInt(tableNumber),
+    orderRequest: orderRequest.trim(),
+    cart: cart.map(item => ({
+      id: item.id,
+      quantity: item.quantity,
+      price: item.price,
+    })),
+    totalAmount: getTotalPrice(),
+  }),
+});
+
+      if (response.ok) {
+        const data = await response.json();
+        alert(`✅ Order confirmed!\nOrder ID: ${data.orderId}`);
+        clearCart();
+        setShowCart(false);
+      } else {
+        const error = await response.json();
+        console.error('Order failed:', error);
+        alert('❌ Failed to place the order. Please try again.');
+      }
+    } catch (err) {
+      console.error('Error placing order:', err);
+      alert('❌ Something went wrong. Please try again later.');
+    }
+  }}
+  disabled={!tableNumber.trim()}
+  className={`flex-1 py-2 rounded-lg transition-colors ${
+    tableNumber.trim()
+      ? 'bg-green-500 text-white hover:bg-green-600'
+      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+  }`}
+>
+  Confirm Order
+</button>
+
                 </div>
               </div>
             )}

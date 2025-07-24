@@ -107,6 +107,7 @@ model Order {
   updatedAt      DateTime      @updatedAt
   status         String        @default("pending") // pending, completed, etc.
   totalAmount    Float
+  note           String?
   company        Company       @relation(fields: [companyId], references: [id])
   orderItems     OrderItem[]
 
