@@ -3,14 +3,13 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import HTMLFlipBook from 'react-pageflip';
-import { useSearchParams } from 'next/navigation';
 
 interface Company {
   id: string
   C_Name: string
   C_Logo_Image?: any
   Welcoming_Page?: any
-  pdfMenuUrl?: string
+  pdfMenuFile?: any
   menuType?: string
 
   Main_Categories?: Array<{
@@ -39,6 +38,14 @@ interface Company {
   };
 }
 
+interface CartItem {
+  id: string
+  name: string
+  price: number
+  quantity: number
+  image?: string
+}
+
 export default function MenuPage() {
   const params = useParams()
   const companyId = params.companyId as string
@@ -48,6 +55,13 @@ export default function MenuPage() {
   const [showWelcoming, setShowWelcoming] = useState(false)
   const [fadeOut, setFadeOut] = useState(false)
   const [pdfDisplayMode, setPdfDisplayMode] = useState('flipbook')
+  
+  // Shopping cart state
+  const [cart, setCart] = useState<CartItem[]>([])
+  const [showCart, setShowCart] = useState(false)
+  const [selectedItem, setSelectedItem] = useState<{id: string, quantity: number} | null>(null)
+  const [tableNumber, setTableNumber] = useState('')
+  const [orderRequest, setOrderRequest] = useState('')
 
   useEffect(() => {
     if (companyId) {
@@ -116,6 +130,50 @@ export default function MenuPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Shopping cart functions
+  const getTotalItems = () => {
+    return cart.reduce((total, item) => total + item.quantity, 0)
+  }
+
+  const getTotalPrice = () => {
+    return cart.reduce((total, item) => total + (item.price * item.quantity), 0)
+  }
+
+  const addToCart = (item: { id: string, name: string, price: number, image?: string }, quantity: number) => {
+    setCart(prevCart => {
+      const existingItem = prevCart.find(cartItem => cartItem.id === item.id)
+      if (existingItem) {
+        return prevCart.map(cartItem =>
+          cartItem.id === item.id
+            ? { ...cartItem, quantity: cartItem.quantity + quantity }
+            : cartItem
+        )
+      } else {
+        return [...prevCart, { ...item, quantity }]
+      }
+    })
+    setSelectedItem(null)
+  }
+
+  const updateCartItemQuantity = (id: string, quantity: number) => {
+    if (quantity <= 0) {
+      setCart(prevCart => prevCart.filter(item => item.id !== id))
+    } else {
+      setCart(prevCart =>
+        prevCart.map(item =>
+          item.id === id ? { ...item, quantity } : item
+        )
+      )
+    }
+  }
+
+  const clearCart = () => {
+    setCart([])
+    setShowCart(false)
+    setTableNumber('')
+    setOrderRequest('')
   }
 
   if (loading) {
@@ -263,13 +321,7 @@ export default function MenuPage() {
       }}
     >
       {/* Header */}
-      <header 
-        className="py-2 px-4 text-center bg-opacity-90 backdrop-blur-sm border-b"
-        style={{ 
-          backgroundColor: theme.logoAreaColor,
-          borderBottomColor: theme.textColor + '20' // 20% opacity
-        }}
-      >
+      <header className="py-2 px-4 text-center bg-opacity-90 backdrop-blur-sm relative">
         <div className="max-w-4xl mx-auto">
           {/* Company Logo */}
           {company.C_Logo_Image && (
@@ -277,21 +329,36 @@ export default function MenuPage() {
               <img 
                 src={`/api/AdminPanel/company/image/${company.id}/logo`}
                 alt="Company Logo"
-                className="max-w-12 sm:max-w-16 max-h-12 sm:max-h-16 mx-auto rounded-lg shadow-lg"
+                className="max-w-16 max-h-16 mx-auto rounded-lg shadow-lg"
               />
             </div>
           )}
-          <h1 
-            className="text-xl sm:text-2xl md:text-3xl font-bold"
-            style={{ color: theme.textColor }}
-          >
+          
+          <h1 className="text-2xl font-bold">
             {restaurantName}
           </h1>
         </div>
+
+        {/* Shopping Cart Icon */}
+        <button
+          onClick={() => setShowCart(true)}
+          className="absolute top-2 right-4 bg-black text-white p-3 rounded-full shadow-lg hover:bg-gray-800 transition-colors"
+        >
+          <div className="relative">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.1 5A1 1 0 006.9 19H19M9 19a2 2 0 100 4 2 2 0 000-4zm8 0a2 2 0 100 4 2 2 0 000-4z" />
+            </svg>
+            {getTotalItems() > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                {getTotalItems()}
+              </span>
+            )}
+          </div>
+        </button>
       </header>
 
-      <div className={`mx-auto ${getEffectiveMenuType() === 'pdf' ? 'max-w-none p-0 min-h-screen' : 'max-w-4xl px-2 sm:px-4'}`}>
-        {getEffectiveMenuType() === 'pdf' && company.pdfMenuUrl ? (
+      <div className={`mx-auto ${getEffectiveMenuType() === 'pdf' ? 'max-w-none p-0 min-h-screen' : 'max-w-4xl px-4'}`}>
+        {getEffectiveMenuType() === 'pdf' && company.pdfMenuFile ? (
           <div 
             className={`w-full min-h-[85vh] flex items-center justify-center transition-all duration-500 ${
               pdfDisplayMode === 'scroll' 
@@ -302,47 +369,159 @@ export default function MenuPage() {
             <PDFViewer 
               pdfUrl={`/api/AdminPanel/company/pdf/${company.id}?t=${Date.now()}`}
               displayMode={pdfDisplayMode}
-              theme={theme}
             />
           </div>
         ) : getEffectiveMenuType() === 'manual' && company.Main_Categories ? (
-          <ManualMenu categories={company.Main_Categories} theme={theme} />
+          <ManualMenu 
+            categories={company.Main_Categories} 
+            theme={theme}
+            selectedItem={selectedItem}
+            setSelectedItem={setSelectedItem}
+            addToCart={addToCart}
+          />
         ) : (
           <div className="text-center py-8">
             <div className="text-6xl mb-4">🍽️</div>
-            <h2 
-              className="text-2xl font-bold mb-4"
-              style={{ color: theme.textColor }}
-            >
-              Menu Coming Soon
-            </h2>
-            <p 
-              className="text-lg opacity-80"
-              style={{ color: theme.textColor }}
-            >
+            <h2 className="text-2xl font-bold mb-4">Menu Coming Soon</h2>
+            <p className="text-lg opacity-80">
               This restaurant is still setting up their menu. Please check back later!
             </p>
           </div>
         )}
       </div>
 
+      {/* Shopping Cart Modal */}
+      {showCart && (
+       <div
+  className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+  style={{ backgroundColor: 'rgba(255, 255, 255, 0.4)' }}
+>
+          <div className="bg-white rounded-lg max-w-md w-full max-h-[80vh] overflow-hidden">
+            <div className="p-4 border-b flex items-center justify-between">
+              <h2 className="text-xl font-bold">Shopping Cart</h2>
+              <button
+                onClick={() => setShowCart(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="p-4 max-h-96 overflow-y-auto">
+              {/* Table Number Input */}
+              <div className="mb-4">
+                <label htmlFor="tableNumber" className="block text-sm font-medium text-gray-700 mb-2">
+                  Table Number <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="tableNumber"
+                  value={tableNumber}
+                  onChange={(e) => setTableNumber(e.target.value)}
+                  placeholder="Enter your table number"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Order Request/Notes Input */}
+              <div className="mb-4">
+                <label htmlFor="orderRequest" className="block text-sm font-medium text-gray-700 mb-2">
+                  Special Requests or Notes
+                </label>
+                <textarea
+                  id="orderRequest"
+                  value={orderRequest}
+                  onChange={(e) => setOrderRequest(e.target.value)}
+                  placeholder="Any special requests, allergies, or additional notes..."
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                />
+              </div>
+
+              {cart.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="text-4xl mb-4">🛒</div>
+                  <p className="text-gray-500">Your cart is empty</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {cart.map((item) => (
+                    <div key={item.id} className="flex items-center space-x-3 bg-gray-50 p-3 rounded-lg">
+                      <div className="flex-1">
+                        <h3 className="font-medium">{item.name}</h3>
+                        <p className="text-sm text-gray-600">₺{item.price.toFixed(2)} each</p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => updateCartItemQuantity(item.id, item.quantity - 1)}
+                          className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300"
+                        >
+                          -
+                        </button>
+                        <span className="w-8 text-center">{item.quantity}</span>
+                        <button
+                          onClick={() => updateCartItemQuantity(item.id, item.quantity + 1)}
+                          className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300"
+                        >
+                          +
+                        </button>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold">₺{(item.price * item.quantity).toFixed(2)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            {cart.length > 0 && (
+              <div className="p-4 border-t">
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-lg font-bold">Total: ₺{getTotalPrice().toFixed(2)}</span>
+                  <span className="text-sm text-gray-600">{getTotalItems()} items</span>
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={clearCart}
+                    className="flex-1 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition-colors"
+                  >
+                    Clear Cart
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (!tableNumber.trim()) {
+                        alert('Please enter your table number before confirming the order.')
+                        return
+                      }
+                      const orderDetails = `Order confirmed!\nTable: ${tableNumber}\nTotal: ₺${getTotalPrice().toFixed(2)}\nItems: ${getTotalItems()}${orderRequest.trim() ? `\nSpecial Requests: ${orderRequest}` : ''}`
+                      alert(orderDetails)
+                      clearCart()
+                    }}
+                    disabled={!tableNumber.trim()}
+                    className={`flex-1 py-2 rounded-lg transition-colors ${
+                      tableNumber.trim() 
+                        ? 'bg-green-500 text-white hover:bg-green-600' 
+                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    }`}
+                  >
+                    Confirm Order
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Footer */}
-      <footer 
-        className="text-center py-1 px-4 border-t mt-1"
-        style={{ 
-          backgroundColor: theme.logoAreaColor,
-          borderTopColor: theme.textColor + '20' // 20% opacity
-        }}
-      >
+      <footer className="text-center py-1 px-4 border-t mt-1">
         {/* Social Media Links */}
         {(theme.facebookUrl || theme.instagramUrl || theme.xUrl) && (
           <div className="mb-1">
-            <h3 
-              className="text-xs font-medium mb-1 opacity-80"
-              style={{ color: theme.textColor }}
-            >
-              Follow Us
-            </h3>
+            <h3 className="text-xs font-medium mb-1 opacity-80">Follow Us</h3>
             <div className="flex justify-center space-x-2">
               {theme.facebookUrl && (
                 <a
@@ -389,10 +568,7 @@ export default function MenuPage() {
           </div>
         )}
         
-        <p 
-          className="text-xs opacity-60 leading-tight"
-          style={{ color: theme.textColor }}
-        >
+        <p className="text-xs opacity-60 leading-tight">
           Powered by QR Menu System
         </p>
       </footer>
@@ -401,7 +577,7 @@ export default function MenuPage() {
 }
 
 // Flipbook PDF Viewer Component
-function PDFFlipbook({ pdfUrl, theme }: { pdfUrl: string; theme: any }) {
+function PDFFlipbook({ pdfUrl }: { pdfUrl: string }) {
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [dimensions, setDimensions] = useState({ width: 800, height: 1200 });
@@ -415,27 +591,27 @@ function PDFFlipbook({ pdfUrl, theme }: { pdfUrl: string; theme: any }) {
       const container = containerRef.current;
       const screenWidth = window.innerWidth;
       const containerWidth = container.clientWidth;
-      const containerHeight = window.innerHeight * 0.95;
+      const containerHeight = window.innerHeight * 0.8;
       
       // Aspect ratio - A4 page ratio (1:√2)
       const aspectRatio = 1 / Math.sqrt(2); // Approximately 0.707
       
       // Initial size based on container width
       let targetWidth = containerWidth * (
-        screenWidth >= 1024 ? 0.95 : // Desktop - büyütüldü
-        screenWidth >= 768 ? 0.98 :  // Tablet - büyütüldü
-        0.98                         // Mobile - büyütüldü
+        screenWidth >= 1024 ? 0.8 : // Desktop
+        screenWidth >= 768 ? 0.9 :  // Tablet
+        0.95                        // Mobile
       );
       
-      let targetHeight = containerHeight * 0.98; // Daha az margin
+      let targetHeight = containerHeight * 0.9; // Keep some margin
       
       // Calculate dimensions while maintaining aspect ratio
       let newWidth = Math.min(targetWidth, targetHeight * aspectRatio);
       let newHeight = Math.min(targetHeight, targetWidth / aspectRatio);
       
       // Ensure minimum dimensions
-      newWidth = Math.max(newWidth, 400); // min width - büyütüldü
-      newHeight = Math.max(newHeight, 500); // min height - büyütüldü
+      newWidth = Math.max(newWidth, 320); // min width
+      newHeight = Math.max(newHeight, 400); // min height
       
       setDimensions({
         width: Math.round(newWidth), // Required by HTMLFlipBook component
@@ -507,95 +683,55 @@ function PDFFlipbook({ pdfUrl, theme }: { pdfUrl: string; theme: any }) {
 
   if (loading) {
     return (
-      <div 
-        className="flex justify-center items-center min-h-screen"
-        style={{ 
-          backgroundColor: theme?.backgroundColor || '#fef7ed',
-          background: `linear-gradient(135deg, ${theme?.backgroundColor || '#fef7ed'}, ${theme?.logoAreaColor || '#fed7aa'})`
-        }}
-      >
-        <div className="text-center">
-          <div 
-            className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4"
-            style={{ borderColor: theme?.logoAreaColor || '#92400e' }}
-          ></div>
-          <span 
-            className="text-lg font-medium"
-            style={{ color: theme?.textColor || '#92400e' }}
-          >
-            Loading menu...
-          </span>
-        </div>
+      <div className="flex justify-center items-center min-h-[50vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
       </div>
     );
   }
 
   return (
-    <div 
-      className="flex justify-center items-center w-full min-h-screen py-2"
-      style={{ 
-        backgroundColor: theme?.backgroundColor || '#fef7ed',
-        background: `linear-gradient(135deg, ${theme?.backgroundColor || '#fef7ed'}, ${theme?.logoAreaColor || '#fed7aa'})`
-      }}
-    >
-      <div ref={containerRef} className="w-full max-w-full mx-auto px-1">
-        <div className="relative flex justify-center items-center">
-          <div 
-            className="relative rounded-lg shadow-2xl p-2 border" 
-            style={{ 
-              backgroundColor: 'white',
-              borderColor: theme?.logoAreaColor || '#fed7aa'
-            }}
+    <div className="flex justify-center items-center w-full min-h-screen bg-gray-100 py-8">
+      <div ref={containerRef} className="w-full max-w-6xl mx-auto px-4">
+        <div className="relative bg-white rounded-lg shadow-xl">
+          <HTMLFlipBook
+            width={dimensions.width}
+            height={dimensions.height}
+            size="stretch"
+            minWidth={320}
+            maxWidth={1600}
+            minHeight={400}
+            maxHeight={2000}
+            showCover={true}
+            drawShadow={true}
+            flippingTime={1000}
+            usePortrait={true}
+            startPage={0}
+            useMouseEvents={true}
+            disableFlipByClick={false}
+            mobileScrollSupport={true}
+            clickEventForward={false}
+            showPageCorners={true}
+            swipeDistance={30}
+            maxShadowOpacity={0.5}
+            startZIndex={20}
+            autoSize={true}
+            style={{ padding: '20px' }}
+            className="shadow-2xl mx-auto"
           >
-            <HTMLFlipBook
-              width={dimensions.width}
-              height={dimensions.height}
-              size="stretch"
-              minWidth={400}
-              maxWidth={1800}
-              minHeight={500}
-              maxHeight={2200}
-              showCover={true}
-              drawShadow={true}
-              flippingTime={800}
-              usePortrait={true}
-              startPage={0}
-              useMouseEvents={true}
-              disableFlipByClick={false}
-              mobileScrollSupport={true}
-              clickEventForward={false}
-              showPageCorners={true}
-              swipeDistance={30}
-              maxShadowOpacity={0.4}
-              startZIndex={20}
-              autoSize={true}
-              style={{ 
-                margin: '0 auto',
-                borderRadius: '8px',
-                overflow: 'hidden'
-              }}
-              className="mx-auto"
-            >
-              {images.map((src, idx) => (
-                <div key={idx} className="bg-white flex items-center justify-center h-full overflow-hidden">
-                  <div className="relative w-full h-full">
-                    <img 
-                      src={src} 
-                      alt={`Page ${idx + 1}`} 
-                      className="w-full h-full object-contain select-none"
-                      draggable="false"
-                      loading={idx < 2 ? "eager" : "lazy"}
-                      style={{ 
-                        imageRendering: 'auto',
-                        WebkitUserSelect: 'none',
-                        userSelect: 'none'
-                      }}
-                    />
-                  </div>
+            {images.map((src, idx) => (
+              <div key={idx} className="bg-white flex items-center justify-center h-full overflow-hidden shadow-inner">
+                <div className="relative w-full h-full">
+                  <img 
+                    src={src} 
+                    alt={`Page ${idx + 1}`} 
+                    className="absolute inset-0 w-full h-full object-contain select-none"
+                    draggable="false"
+                    loading={idx < 2 ? "eager" : "lazy"} // Preload first two pages
+                  />
                 </div>
-              ))}
-            </HTMLFlipBook>
-          </div>
+              </div>
+            ))}
+          </HTMLFlipBook>
         </div>
       </div>
     </div>
@@ -603,7 +739,7 @@ function PDFFlipbook({ pdfUrl, theme }: { pdfUrl: string; theme: any }) {
 }
 
 // Scroll PDF Viewer Component
-function ScrollPDFViewer({ pdfUrl, theme }: { pdfUrl: string; theme: any }) {
+function ScrollPDFViewer({ pdfUrl }: { pdfUrl: string }) {
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -650,21 +786,10 @@ function ScrollPDFViewer({ pdfUrl, theme }: { pdfUrl: string; theme: any }) {
 
   if (loading) {
     return (
-      <div 
-        className="text-center py-12 min-h-screen flex items-center justify-center"
-        style={{ backgroundColor: theme?.backgroundColor || '#f8fafc' }}
-      >
+      <div className="text-center py-12">
         <div className="inline-flex items-center space-x-3">
-          <div 
-            className="animate-spin rounded-full h-8 w-8 border-b-2"
-            style={{ borderColor: theme?.logoAreaColor || '#1e293b' }}
-          ></div>
-          <span 
-            className="text-lg font-medium"
-            style={{ color: theme?.textColor || '#1e293b' }}
-          >
-            Loading menu...
-          </span>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+          <span className="text-lg font-medium text-gray-600">Loading menu...</span>
         </div>
       </div>
     );
@@ -674,8 +799,7 @@ function ScrollPDFViewer({ pdfUrl, theme }: { pdfUrl: string; theme: any }) {
     <div 
       className="w-full max-w-4xl mx-auto px-4 py-6 space-y-4 overflow-auto"
       style={{ 
-        blockSize: `${Math.max(window.innerHeight - 120, 600)}px`,
-        backgroundColor: theme?.backgroundColor || '#f8fafc'
+        blockSize: `${Math.max(window.innerHeight - 120, 600)}px`
       }}
     >
       {images.map((src, idx) => (
@@ -683,11 +807,8 @@ function ScrollPDFViewer({ pdfUrl, theme }: { pdfUrl: string; theme: any }) {
           <img 
             src={src} 
             alt={`Page ${idx + 1}`} 
-            className="max-w-full h-auto shadow-lg rounded-lg border"
-            style={{ 
-              blockSize: 'max(95vh)',
-              borderColor: theme?.logoAreaColor || '#e2e8f0'
-            }}
+            className="max-w-full h-auto shadow-lg rounded-lg border border-gray-200"
+            style={{ blockSize: 'max(95vh)' }}
           />
         </div>
       ))}
@@ -696,27 +817,29 @@ function ScrollPDFViewer({ pdfUrl, theme }: { pdfUrl: string; theme: any }) {
 }
 
 // PDFViewer fonksiyonu:
-function PDFViewer({ pdfUrl, displayMode, theme }: { pdfUrl: string; displayMode: string; theme: any }) {
+function PDFViewer({ pdfUrl, displayMode }: { pdfUrl: string; displayMode: string }) {
   if (displayMode === 'scroll') {
-    return <ScrollPDFViewer pdfUrl={pdfUrl} theme={theme} />;
+    return <ScrollPDFViewer pdfUrl={pdfUrl} />;
   }
-  return <PDFFlipbook pdfUrl={pdfUrl} theme={theme} />;
+  return <PDFFlipbook pdfUrl={pdfUrl} />;
 }
 
 // Manual Menu Component
 function ManualMenu({ 
   categories, 
-  theme 
+  theme,
+  selectedItem,
+  setSelectedItem,
+  addToCart
 }: { 
   categories: Company['Main_Categories']
   theme: { backgroundColor?: string; textColor?: string; logoAreaColor?: string; style?: string }
+  selectedItem: {id: string, quantity: number} | null
+  setSelectedItem: (item: {id: string, quantity: number} | null) => void
+  addToCart: (item: { id: string, name: string, price: number, image?: string }, quantity: number) => void
 }) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const [highlightedItemId, setHighlightedItemId] = useState<string | null>(null);
   const sortedCategories = [...(categories || [])].sort((a, b) => a.categoryNo - b.categoryNo)
-  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-  const searchQuery = searchParams ? searchParams.get('search') : null;
-  const itemRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   // Show first category by default
   useEffect(() => {
@@ -725,38 +848,36 @@ function ManualMenu({
     }
   }, [sortedCategories, selectedCategory])
 
-  // On mount, if search param is present, select category and scroll to item
-  useEffect(() => {
-    if (searchQuery && sortedCategories.length > 0) {
-      let foundCat = null;
-      let foundItem = null;
-      for (const cat of sortedCategories) {
-        for (const item of cat.subCategories) {
-          if (item.name.toLowerCase() === searchQuery.toLowerCase()) {
-            foundCat = cat;
-            foundItem = item;
-            break;
-          }
-        }
-        if (foundCat) break;
-      }
-      if (foundCat && foundItem) {
-        setSelectedCategory(foundCat.id);
-        setHighlightedItemId(foundItem.id);
-        setTimeout(() => {
-          if (itemRefs.current[foundItem.id]) {
-            itemRefs.current[foundItem.id]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
-        }, 500);
-      }
-    }
-  }, [searchQuery, sortedCategories]);
-
   const getCurrentCategory = () => {
     return sortedCategories.find(cat => cat.id === selectedCategory) || sortedCategories[0]
   }
 
   const currentCategory = getCurrentCategory()
+
+  const handleQuantityChange = (itemId: string, change: number) => {
+    const currentQuantity = selectedItem?.id === itemId ? selectedItem.quantity : 0
+    const newQuantity = Math.max(0, currentQuantity + change)
+    if (newQuantity === 0) {
+      setSelectedItem(null)
+    } else {
+      setSelectedItem({ id: itemId, quantity: newQuantity })
+    }
+  }
+
+  const handleAddToCart = (item: any) => {
+    if (!selectedItem || selectedItem.id !== item.id) return
+    
+    addToCart({
+      id: item.id,
+      name: item.name,
+      price: item.price || 0,
+      image: item.menuImageUrl ? `/api/QR_Panel/user/manual-menu/image/${item.id}` : undefined
+    }, selectedItem.quantity)
+  }
+
+  const handleCancelSelection = () => {
+    setSelectedItem(null)
+  }
 
   if (sortedCategories.length === 0) {
     return (
@@ -771,48 +892,50 @@ function ManualMenu({
   return (
     <div className="min-h-screen">
       {/* Category Selection Tabs */}
-      <div className="sticky top-0 z-10 bg-white bg-opacity-95 backdrop-blur-sm border-b border-gray-200 py-2 sm:py-4 mb-4 sm:mb-6 rounded-full">
-        <div className="flex overflow-x-auto scrollbar-hide space-x-1 sm:space-x-2 px-2 sm:px-4">
-          {sortedCategories.map((category) => (
-            <button
-              key={category.id}
-              onClick={() => setSelectedCategory(category.id)}
-              className={`flex-shrink-0 px-6 py-3 rounded-full font-medium text-sm transition-all ${
-                selectedCategory === category.id
-                  ? 'bg-black text-white shadow-lg'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {category.name}
-            </button>
-          ))}
+      <div className="sticky top-0 z-10 bg-white bg-opacity-95 backdrop-blur-sm border-b border-gray-200 py-4 mb-6 rounded-full">
+        {/* Outer flex wrapper to center inner content */}
+        <div className="flex justify-center">
+          <div className="flex flex-wrap space-x-2 px-4">
+            {sortedCategories.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => setSelectedCategory(category.id)}
+                className={`flex-shrink-0 px-6 py-3 rounded-full font-medium text-sm transition-all ${
+                  selectedCategory === category.id
+                    ? 'bg-black text-white shadow-lg'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {category.name}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Selected Category Content */}
       {currentCategory && (
-        <div className="px-2 sm:px-4 pb-6 sm:pb-8">
-    {/* Category Header */}
-    <div className="text-center mb-4 sm:mb-8">
-      <h1
-        className="text-xl sm:text-3xl font-bold mb-1 sm:mb-2"
-        style={{ color: theme?.textColor || '#1f2937' }} 
-      >
-        {currentCategory.name}
-      </h1>
-      <div className="w-12 sm:w-20 h-1 bg-black mx-auto rounded"></div>
-    </div>
+        <div className="px-4 pb-8">
+          {/* Category Header */}
+          <div className="text-center mb-8">
+            <h1
+              className="text-3xl font-bold mb-2"
+              style={{ color: theme?.textColor || '#1f2937' }} 
+            >
+              {currentCategory.name}
+            </h1>
+            <div className="w-20 h-1 bg-black mx-auto rounded"></div>
+          </div>
 
           {/* Items Grid */}
           {currentCategory.subCategories && currentCategory.subCategories.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {[...currentCategory.subCategories]
                 .sort((a, b) => a.orderNo - b.orderNo)
                 .map((item) => (
                   <div 
                     key={item.id}
-                    ref={el => { itemRefs.current[item.id] = el; }}
-                    className={`bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group hover:-translate-y-1 ${highlightedItemId === item.id ? 'ring-4 ring-purple-400' : ''}`}
+                    className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group hover:-translate-y-1 relative"
                   >
                     {/* Product Image */}
                     <div className="aspect-square w-full bg-gray-100 overflow-hidden">
@@ -832,23 +955,63 @@ function ManualMenu({
                       )}
                     </div>
 
-                                         {/* Product Info */}
-                     <div className="p-4">
-                       <h3 className="font-bold text-lg text-gray-800 mb-2 line-clamp-2">
-                         {item.name}
-                       </h3>
-                       {/* Price and availability */}
-                       <div className="flex items-center justify-between">
-                         {item.price ? (
-                           <span className="text-lg font-bold text-green-600">
-                             ₺{item.price.toFixed(2)}
-                           </span>
-                         ) : (
-                           <span className="text-sm text-gray-500">Price not set</span>
-                         )}
-                         <div className="w-3 h-3 bg-green-500 rounded-full" title="Available"></div>
-                       </div>
-                     </div>
+                    {/* Product Info */}
+                    <div className="p-4">
+                      <h3 className="font-bold text-lg text-gray-800 mb-2 line-clamp-2">
+                        {item.name}
+                      </h3>
+                      
+                      {/* Price and availability */}
+                      <div className="flex items-center justify-between mb-3">
+                        {item.price ? (
+                          <span className="text-lg font-bold text-green-600">
+                            ₺{item.price.toFixed(2)}
+                          </span>
+                        ) : (
+                          <span className="text-sm text-gray-500">Price not set</span>
+                        )}
+                        <div className="w-3 h-3 bg-green-500 rounded-full" title="Available"></div>
+                      </div>
+
+                      {/* Quantity Controls */}
+                      {item.price && (
+                        <div className="flex items-center justify-center space-x-3">
+                          <button
+                            onClick={() => handleQuantityChange(item.id, -1)}
+                            className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors"
+                          >
+                            -
+                          </button>
+                          <span className="w-8 text-center font-bold">
+                            {selectedItem?.id === item.id ? selectedItem.quantity : 0}
+                          </span>
+                          <button
+                            onClick={() => handleQuantityChange(item.id, 1)}
+                            className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors"
+                          >
+                            +
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Action Buttons */}
+                      {selectedItem?.id === item.id && selectedItem.quantity > 0 && item.price && (
+                        <div className="flex space-x-2 mt-3 transition-all duration-300 ease-in-out opacity-100">
+                          <button
+                            onClick={handleCancelSelection}
+                            className="flex-1 bg-red-500 text-white py-2 px-3 rounded-lg hover:bg-red-600 transition-colors text-sm font-medium"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={() => handleAddToCart(item)}
+                            className="flex-1 bg-green-500 text-white py-2 px-3 rounded-lg hover:bg-green-600 transition-colors text-sm font-medium"
+                          >
+                            Add to Cart
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))
               }

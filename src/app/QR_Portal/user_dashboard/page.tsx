@@ -219,17 +219,32 @@ export default function UserDashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Modern Header */}
-     <header className="bg-gradient-to-r from-purple-400 to-purple-600 shadow-lg">
+     <header className="bg-gradient-to-r from-purple-500 to-purple-600 shadow-md py-3">
   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div className="flex items-center justify-between h-16 space-x-6">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 
-      {/* Left: Company Name */}
-      <div className="text-white font-bold text-2xl sm:text-3xl tracking-wide whitespace-nowrap">
-        {userData?.company?.C_Name || 'Company Name'}
+
+      {/* Left: Logo & Company Name */}
+      <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
+
+        <div className="h-12 w-12 sm:h-16 sm:w-16 rounded bg-white p-1">
+          <img
+            src={
+              userData?.company?.C_Logo_Image
+                ? `/api/AdminPanel/company/image/${userData.company.id}/logo`
+                : ''
+            }
+            alt="Company Logo"
+            className="h-full w-full object-contain rounded"
+          />
+        </div>
+        <div className="text-white font-bold text-xl sm:text-2xl whitespace-nowrap">
+          {userData?.company?.C_Name || ''}
+        </div>
       </div>
 
       {/* Center: Search Bar */}
-      <div className="flex-1 max-w-xl">
+      <div className="flex-1 min-w-[240px] max-w-xl w-full">
         <div className="relative">
           <input
             type="text"
@@ -237,19 +252,19 @@ export default function UserDashboard() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={handleSearch}
-            className="w-full pl-10 pr-10 py-2 bg-white bg-opacity-90 border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:bg-white transition-all"
+            className="w-full py-2 pl-10 pr-10 rounded-lg bg-white bg-opacity-90 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-300 transition-all"
           />
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
             >
-              <svg className="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -257,22 +272,22 @@ export default function UserDashboard() {
         </div>
       </div>
 
-      {/* Right: Buttons */}
-      <div className="flex items-center space-x-3">
-        {/* Contact */}
+      {/* Right: Icons */}
+      <div className="flex items-center space-x-4">
+        {/* Contact Button */}
         <button
-  onClick={() => setActiveTab('contactUs')}
-  aria-label="Contact Us"
-  className="bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full p-1.5 transition-all"
->
-  <img
-    src="/6ed29fc85c4dad83456b89637af7df.webp"
-    alt="Contact"
-    className="w-8 h-8 object-cover rounded-full ring-1 ring-white hover:ring-2 transition duration-200"
-  />
-</button>
+          onClick={() => setActiveTab('contactUs')}
+          aria-label="Contact Us"
+          className="p-2 bg-white bg-opacity-10 hover:bg-opacity-20 rounded-full transition"
+        >
+          <img
+            src="/6ed29fc85c4dad83456b89637af7df.webp"
+            alt="Contact"
+            className="w-8 h-8 rounded-full object-cover ring-1 ring-white"
+          />
+        </button>
 
-        {/* Profile */}
+        {/* Profile Button */}
         <button
           onClick={() => setActiveTab('profile')}
           aria-label="Profile"
@@ -294,18 +309,18 @@ export default function UserDashboard() {
         <button
           onClick={handleLogout}
           aria-label="Logout"
-          className="bg-red-500 bg-opacity-80 hover:bg-opacity-100 rounded-full p-2.5 transition-all"
           title="Logout"
+          className="p-2 bg-red-500 hover:bg-red-600 rounded-full transition"
         >
           <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
         </button>
       </div>
-
     </div>
   </div>
 </header>
+
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Menu Section */}
@@ -320,47 +335,63 @@ export default function UserDashboard() {
           </div>
         </div>
 
-        {/* Main Dashboard Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 justify-center max-w-4xl mx-auto">
-          {/* PDF Upload Card */}
-          <div
-            onClick={() => {
-              setMenuType('pdf')
-              setActiveTab('pdf')
-            }}
-            className="bg-gradient-to-br from-pink-400 to-pink-300 hover:from-pink-300 hover:to-pink-400 rounded-xl p-8 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-          >
-            <div className="text-center">
-              <div className="text-3xl mb-4">📄</div>
-              <h3 className="text-xl font-semibold text-gray-800">PDF Upload</h3>
-            </div>
-          </div>
+       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 justify-center max-w-4xl mx-auto">
+  {/* PDF Upload Card */}
+  <div
+    onClick={() => {
+      setMenuType('pdf');
+      setActiveTab('pdf');
+    }}
+    className="bg-gradient-to-br from-pink-400 to-pink-300 hover:from-pink-300 hover:to-pink-400 rounded-xl p-8 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+  >
+    <div className="text-center">
+      <div className="text-3xl mb-4">📄</div>
+      <h3 className="text-xl font-semibold text-gray-800">PDF Upload</h3>
+    </div>
+  </div>
 
-          {/* Manual Upload Card */}
-          <div
-            onClick={() => {
-              setMenuType('manual')
-              setActiveTab('manual')
-            }}
-            className="bg-gradient-to-br from-pink-400 to-pink-300 hover:from-pink-300 hover:to-pink-400 rounded-xl p-8 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-          >
-            <div className="text-center">
-              <div className="text-3xl mb-4">📝</div>
-              <h3 className="text-xl font-semibold text-gray-800"> Order system</h3>
-            </div>
-          </div>
+  {/* Manual Upload Card (first one) */}
+  <div
+    onClick={() => {
+      setMenuType('manual');
+      setActiveTab('manual');
+    }}
+    className="bg-gradient-to-br from-pink-400 to-pink-300 hover:from-pink-300 hover:to-pink-400 rounded-xl p-8 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+  >
+    <div className="text-center">
+      <div className="text-3xl mb-4">📝</div>
+      <h3 className="text-xl font-semibold text-gray-800">Manual Menu</h3>
+    </div>
+  </div>
 
-          {/* Theme Settings Card */}
-          <div
-            onClick={() => setActiveTab('theme')}
-            className="bg-gradient-to-br from-pink-400 to-pink-300 hover:from-pink-300 hover:to-pink-400 rounded-xl p-8 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-          >
-            <div className="text-center">
-              <div className="text-3xl mb-4">🎨</div>
-              <h3 className="text-xl font-semibold text-gray-800">Theme Settings</h3>
-            </div>
-          </div>
-        </div>
+  {/* Theme Settings Card */}
+  <div
+    onClick={() => setActiveTab('theme')}
+    className="bg-gradient-to-br from-pink-400 to-pink-300 hover:from-pink-300 hover:to-pink-400 rounded-xl p-8 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+  >
+    <div className="text-center">
+      <div className="text-3xl mb-4">🎨</div>
+      <h3 className="text-xl font-semibold text-gray-800">Theme Settings</h3>
+    </div>
+  </div>
+
+  {/* Centered Second "Order System" Card */}
+  <div className="col-span-1 md:col-span-1 lg:col-start-2">
+    <div
+      onClick={() => {
+        setMenuType('manual');
+        setActiveTab('manual');
+      }}
+      className="bg-gradient-to-br from-pink-400 to-pink-300 hover:from-pink-300 hover:to-pink-400 rounded-xl p-8 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+    >
+      <div className="text-center">
+        <div className="text-3xl mb-4">📝</div>
+        <h3 className="text-xl font-semibold text-gray-800">Order system</h3>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 
         {/* Content Area */}
