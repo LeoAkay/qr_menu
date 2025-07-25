@@ -19,7 +19,7 @@ export async function POST(req: NextRequest, context: { params: { companyId: str
       data: {
         tableNumber,
         totalAmount,
-        status: 'pending',
+        isActive: true,
         companyId,
         ...(orderRequest ? { note: orderRequest } : {}),
         orderItems: {

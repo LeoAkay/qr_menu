@@ -22,6 +22,7 @@ interface Company {
       orderNo: number
       menuImageUrl?: any
       price?: number
+      stock: boolean
     }>
   }>
   Themes?: Array<{
@@ -988,18 +989,29 @@ function ManualMenu({
                       
                       {/* Price and availability */}
                       <div className="flex items-center justify-between mb-3">
-                        {item.price ? (
+                        {item.stock ?(
+                          item.price ? (
                           <span className="text-lg font-bold text-green-600">
                             ₺{item.price.toFixed(2)}
                           </span>
                         ) : (
                           <span className="text-sm text-gray-500">Price not set</span>
+                        )
+                        ):(<span className="text-sm font-medium text-red-500">Out of Stock</span>
+
                         )}
-                        <div className="w-3 h-3 bg-green-500 rounded-full" title="Available"></div>
+                       
+                        <div
+                            className={`w-3 h-3 rounded-full ${item.stock ? 'bg-green-500' : 'bg-red-500'}`}
+                            title={item.stock ? 'Available' : 'Out of Stock'}
+                          >
+                            
+                          </div>
+
                       </div>
 
                       {/* Quantity Controls */}
-                      {item.price && (
+                      {item.price && item.stock &&(
                         <div className="flex items-center justify-center space-x-3">
                           <button
                             onClick={() => handleQuantityChange(item.id, -1)}

@@ -27,6 +27,8 @@ let imageUrl: string | null = null
     const formData = await request.formData()
     const name = formData.get('name') as string
     const price = formData.get('price') as string
+    const stockRaw = formData.get('stock') as string;
+    const stock = stockRaw === 'true';
     const mainCategoryId = formData.get('mainCategoryId') as string
     const menuImage = formData.get('menuImage') as File | null
 
@@ -91,7 +93,8 @@ if (menuImage && menuImage.size > 0) {
     price: price ? parseFloat(price) : null,
     orderNo,
     mainCategoryId,
-    menuImageUrl: imageUrl
+    menuImageUrl: imageUrl,
+    stock,
   }
 })
 
@@ -195,7 +198,8 @@ export async function PUT(request: NextRequest) {
     const name = formData.get('name') as string
     const price = formData.get('price') as string
     const menuImage = formData.get('menuImage') as File | null
-
+    const stockRaw = formData.get('stock') as string | null;
+    const stock = stockRaw === 'true'; 
     if (!name) {
       return NextResponse.json({ error: 'Name is required' }, { status: 400 })
     }
@@ -204,6 +208,10 @@ export async function PUT(request: NextRequest) {
     if (price) {
       updateData.price = parseFloat(price)
     }
+
+    if (stockRaw !== null) {
+  updateData.stock = stock; 
+}
 
     if (menuImage && menuImage.size > 0) {
       const supabase = createClient(process.env.DB_URL!, process.env.ROLE_KEY!)

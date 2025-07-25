@@ -30,7 +30,7 @@ interface UserData {
         id: string
         name: string
         orderNo: number
-      }>
+        stock:boolean      }>
     }>
     Themes?: Array<{
       style?: string
@@ -1005,6 +1005,8 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
       if (itemForm.menuImage) {
         formData.append('menuImage', itemForm.menuImage)
       }
+      formData.append('stock', itemForm.stock ? 'true' : 'false');
+
 
       const res = await fetch('/api/QR_Panel/user/manual-menu/item', {
         method: 'POST',
@@ -1138,7 +1140,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
       if (editItemForm.menuImage) {
         formData.append('menuImage', editItemForm.menuImage)
       }
-
+      formData.append('stock', itemForm.stock ? 'true' : 'false');
       const res = await fetch(`/api/QR_Panel/user/manual-menu/item?itemId=${editingItem.id}`, {
         method: 'PUT',
         body: formData,
@@ -1350,6 +1352,17 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
                       />
                     </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Stock Status</label>
+                      <select
+                        value={itemForm.stock ? 'true' : 'false'}
+                        onChange={(e) => setItemForm({ ...itemForm, stock: e.target.value === 'true' })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                      >
+                        <option value="true">In Stock</option>
+                        <option value="false">Out of Stock</option>
+                      </select>
+                  </div>
                   </div>
                   <div className="flex space-x-3 mt-4">
                     <button
@@ -1378,6 +1391,11 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
                            <h4 className="font-semibold text-gray-800">{item.name}</h4>
                            {item.price && (
                              <span className="text-green-600 font-bold">₺{item.price}</span>
+                           )}
+                           {item.stock ? (
+                            <span className='text-green-600 font-bold'>Available</span>
+                           ):(
+                            <span className='text-red-600 font-bold'>Out of Stock</span>
                            )}
                          </div>
                        </div>
@@ -1440,6 +1458,17 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none"
                              />
                            </div>
+                            <div>
+                            <label className="block text-sm font-medium mb-1">Stock Status</label>
+                            <select
+                              value={itemForm.stock ? 'true' : 'false'}
+                              onChange={(e) => setItemForm({ ...itemForm, stock: e.target.value === 'true' })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                            >
+                              <option value="true">In Stock</option>
+                              <option value="false">Out of Stock</option>
+                            </select>
+                          </div>
                          </div>
                          <div className="flex space-x-3 mt-4">
                            <button
