@@ -9,14 +9,19 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
+  bodyClassName = '',
 }: {
   children: React.ReactNode
+  bodyClassName?: string
 }) {
   return (
     <html lang="en">
       <head>
         {/* PDF.js global library */}
-        <Script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" strategy="beforeInteractive" />
+        <Script
+          src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"
+          strategy="beforeInteractive"
+        />
         <Script id="pdfjs-worker-setup" strategy="beforeInteractive">
           {`
             if (window && window['pdfjsLib']) {
@@ -25,7 +30,7 @@ export default function RootLayout({
           `}
         </Script>
       </head>
-      <body className="dashboard-mode bubble-bg">
+      <body className={`bubble-bg`}>
         {children}
       </body>
     </html>
