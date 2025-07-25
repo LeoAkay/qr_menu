@@ -58,11 +58,26 @@ export default function UserDashboard() {
   const [menuType, setMenuType] = useState<'pdf' | 'manual' | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [orderSystemSearch, setOrderSystemSearch] = useState('');
+  const [newOrderCount, setNewOrderCount] = useState(0);
   const [theme, setTheme] = useState<Theme>({
     backgroundColor: '#ffffff',
     textColor: '#000000',
     style: 'modern'
   })
+  useEffect(() => {
+    if (!userData?.company?.id) return;
+    const interval = setInterval(async () => {
+      if (!userData?.company?.id) return;
+      const res = await fetch(`/api/QR_Panel/order/${userData.company.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        const activeOrders = data.orders.filter((order: any) => order.isActive !== false);
+        setNewOrderCount(activeOrders.length);
+      }
+    }, 5000); // 5 seconds
+    return () => clearInterval(interval);
+  }, [userData?.company?.id]);
+
 
   useEffect(() => {
     checkAuth()
@@ -376,17 +391,25 @@ export default function UserDashboard() {
   </div>
 
   {/* Centered Second "Order System" Card */}
-  <div className="col-span-1 md:col-span-1 lg:col-start-2">
-    <div
-      onClick={() =>setActiveTab('orders')}
-      className="bg-gradient-to-br from-pink-400 to-pink-300 hover:from-pink-300 hover:to-pink-400 rounded-xl p-8 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-    >
-      <div className="text-center">
-        <div className="text-3xl mb-4">📝</div>
-        <h3 className="text-xl font-semibold text-gray-800">Order system</h3>
-      </div>
+  <div className="col-span-1 md:col-span-1 lg:col-start-2 relative">
+  <div
+    onClick={() => {
+      setActiveTab('orders');
+      setNewOrderCount(0); // Reset badge when viewing orders
+    }}
+    className="bg-gradient-to-br from-pink-400 to-pink-300 hover:from-pink-300 hover:to-pink-400 rounded-xl p-8 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+  >
+    <div className="text-center">
+      <div className="text-3xl mb-4">📝</div>
+      <h3 className="text-xl font-semibold text-gray-800">Order system</h3>
     </div>
+    {newOrderCount > 0 && (
+      <span className="absolute top-2 right-2 bg-red-500 text-white rounded-full px-2 py-0.5 text-xs font-bold shadow">
+        {newOrderCount}
+      </span>
+    )}
   </div>
+</div>
 </div>
 
 
