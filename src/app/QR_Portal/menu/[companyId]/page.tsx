@@ -916,152 +916,146 @@ function ManualMenu({
   }
 
   return (
-    <div className="min-h-screen">
-      {/* Category Selection Tabs */}
-      <div className="sticky top-0 z-10 bg-white bg-opacity-95 backdrop-blur-sm border-b border-gray-200 py-4 mb-6 rounded-full">
-        {/* Outer flex wrapper to center inner content */}
-        <div className="flex justify-center">
-          <div className="flex flex-wrap space-x-2 px-4">
-            {sortedCategories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                className={`flex-shrink-0 px-6 py-3 rounded-full font-medium text-sm transition-all ${
-                  selectedCategory === category.id
-                    ? 'bg-black text-white shadow-lg'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {category.name}
-              </button>
-            ))}
-          </div>
+  <div className="min-h-screen">
+    {/* Category Selection Tabs */}
+    <div className="sticky top-0 z-10 bg-white bg-opacity-95 backdrop-blur-sm border-b border-gray-200 py-4 mb-6 rounded-full">
+      <div className="flex justify-center">
+        <div className="flex flex-wrap justify-center gap-2 px-4">
+          {sortedCategories.map((category) => (
+            <button
+              key={category.id}
+              onClick={() => setSelectedCategory(category.id)}
+              className={`px-6 py-3 rounded-full font-medium text-sm transition-all ${
+                selectedCategory === category.id
+                  ? 'bg-black text-white shadow-lg'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {category.name}
+            </button>
+          ))}
         </div>
       </div>
+    </div>
 
-      {/* Selected Category Content */}
-      {currentCategory && (
-        <div className="px-4 pb-8">
-          {/* Category Header */}
-          <div className="text-center mb-8">
-            <h1
-              className="text-3xl font-bold mb-2"
-              style={{ color: theme?.textColor || '#1f2937' }} 
-            >
-              {currentCategory.name}
-            </h1>
-            <div className="w-20 h-1 bg-black mx-auto rounded"></div>
-          </div>
+    {/* Selected Category Content */}
+    {currentCategory && (
+      <div className="px-4 pb-8">
+        <div className="text-center mb-8">
+          <h1
+            className="text-3xl font-bold mb-2"
+            style={{ color: theme?.textColor || '#1f2937' }}
+          >
+            {currentCategory.name}
+          </h1>
+          <div className="w-20 h-1 bg-black mx-auto rounded"></div>
+        </div>
 
-          {/* Items Grid */}
-          {currentCategory.subCategories && currentCategory.subCategories.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {[...currentCategory.subCategories]
-                .sort((a, b) => a.orderNo - b.orderNo)
-                .map((item) => (
-                  <div 
-                    key={item.id}
-                    className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group hover:-translate-y-1 relative"
-                  >
-                    {/* Product Image */}
-                    <div className="aspect-square w-full bg-gray-100 overflow-hidden">
-                      {item.menuImageUrl ? (
-                        <img 
-                          src={`/api/QR_Panel/user/manual-menu/image/${item.id}`}
-                          alt={item.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                          <div className="text-gray-400 text-center">
-                            <div className="text-4xl mb-2">🍽️</div>
-                            <div className="text-sm">No Image</div>
-                          </div>
+        {/* Items Grid */}
+        {currentCategory.subCategories && currentCategory.subCategories.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {[...currentCategory.subCategories]
+              .sort((a, b) => a.orderNo - b.orderNo)
+              .map((item) => (
+                <div
+                  key={item.id}
+                  className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group hover:-translate-y-1 relative"
+                >
+                  {/* Product Image */}
+                  <div className="aspect-square w-full bg-gray-100 overflow-hidden">
+                    {item.menuImageUrl ? (
+                      <img
+                        src={`/api/QR_Panel/user/manual-menu/image/${item.id}`}
+                        alt={item.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+                        <div className="text-gray-400 text-center">
+                          <div className="text-4xl mb-2">🍽️</div>
+                          <div className="text-sm">No Image</div>
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
+                  </div>
 
-                    {/* Product Info */}
-                    <div className="p-4">
-                      <h3 className="font-bold text-lg text-gray-800 mb-2 line-clamp-2">
-                        {item.name}
-                      </h3>
-                      
-                      {/* Price and availability */}
-                      <div className="flex items-center justify-between mb-3">
-                        {item.stock ?(
-                          item.price ? (
+                  {/* Product Info */}
+                  <div className="p-4">
+                    <h3 className="font-bold text-lg text-gray-800 mb-2 line-clamp-2">
+                      {item.name}
+                    </h3>
+
+                    {/* Price and availability */}
+                    <div className="flex items-center justify-between mb-3">
+                      {item.stock ? (
+                        item.price ? (
                           <span className="text-lg font-bold text-green-600">
                             ₺{item.price.toFixed(2)}
                           </span>
                         ) : (
                           <span className="text-sm text-gray-500">Price not set</span>
                         )
-                        ):(<span className="text-sm font-medium text-red-500">Out of Stock</span>
-
-                        )}
-                       
-                        <div
-                            className={`w-3 h-3 rounded-full ${item.stock ? 'bg-green-500' : 'bg-red-500'}`}
-                            title={item.stock ? 'Available' : 'Out of Stock'}
-                          >
-                            
-                          </div>
-
-                      </div>
-
-                      {/* Quantity Controls */}
-                      {item.price && item.stock &&(
-                        <div className="flex items-center justify-center space-x-3">
-                          <button
-                            onClick={() => handleQuantityChange(item.id, -1)}
-                            className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors"
-                          >
-                            -
-                          </button>
-                          <span className="w-8 text-center font-bold">
-                            {selectedItem?.id === item.id ? selectedItem.quantity : 0}
-                          </span>
-                          <button
-                            onClick={() => handleQuantityChange(item.id, 1)}
-                            className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors"
-                          >
-                            +
-                          </button>
-                        </div>
+                      ) : (
+                        <span className="text-sm font-medium text-red-500">Out of Stock</span>
                       )}
 
-                      {/* Action Buttons */}
-                      {selectedItem?.id === item.id && selectedItem.quantity > 0 && item.price && (
-                        <div className="flex space-x-2 mt-3 transition-all duration-300 ease-in-out opacity-100">
-                          <button
-                            onClick={handleCancelSelection}
-                            className="flex-1 bg-red-500 text-white py-2 px-3 rounded-lg hover:bg-red-600 transition-colors text-sm font-medium"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            onClick={() => handleAddToCart(item)}
-                            className="flex-1 bg-green-500 text-white py-2 px-3 rounded-lg hover:bg-green-600 transition-colors text-sm font-medium"
-                          >
-                            Add to Cart
-                          </button>
-                        </div>
-                      )}
+                      <div
+                        className={`w-3 h-3 rounded-full ${item.stock ? 'bg-green-500' : 'bg-red-500'}`}
+                        title={item.stock ? 'Available' : 'Out of Stock'}
+                      ></div>
                     </div>
+
+                    {/* Quantity Controls */}
+                    {item.price && item.stock && (
+                      <div className="flex items-center justify-center space-x-3">
+                        <button
+                          onClick={() => handleQuantityChange(item.id, -1)}
+                          className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors"
+                        >
+                          -
+                        </button>
+                        <span className="w-8 text-center font-bold">
+                          {selectedItem?.id === item.id ? selectedItem.quantity : 0}
+                        </span>
+                        <button
+                          onClick={() => handleQuantityChange(item.id, 1)}
+                          className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors"
+                        >
+                          +
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Action Buttons */}
+                    {selectedItem?.id === item.id && selectedItem.quantity > 0 && item.price && (
+                      <div className="flex space-x-2 mt-3 transition-all duration-300 ease-in-out opacity-100">
+                        <button
+                          onClick={handleCancelSelection}
+                          className="flex-1 bg-red-500 text-white py-2 px-3 rounded-lg hover:bg-red-600 transition-colors text-sm font-medium"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => handleAddToCart(item)}
+                          className="flex-1 bg-green-500 text-white py-2 px-3 rounded-lg hover:bg-green-600 transition-colors text-sm font-medium"
+                        >
+                          Add to Cart
+                        </button>
+                      </div>
+                    )}
                   </div>
-                ))
-              }
-            </div>
-          ) : (
-            <div className="text-center py-16">
-              <div className="text-6xl mb-4">🍽️</div>
-              <h3 className="text-xl font-semibold text-gray-600 mb-2">No Items Yet</h3>
-              <p className="text-gray-500">Items will appear here once they are added to this category.</p>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  )
+                </div>
+              ))}
+          </div>
+        ) : (
+          <div className="text-center py-16">
+            <div className="text-6xl mb-4">🍽️</div>
+            <h3 className="text-xl font-semibold text-gray-600 mb-2">No Items Yet</h3>
+            <p className="text-gray-500">Items will appear here once they are added to this category.</p>
+          </div>
+        )}
+      </div>
+    )}
+  </div>
+)
 }

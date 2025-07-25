@@ -2577,6 +2577,13 @@ function OrderSystemSection({ companyId }: { companyId: string }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const previousOrderIds = useRef<Set<string>>(new Set());
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    audioRef.current = new Audio('/sounds/shop-notification-355746.mp3');
+  }, []);
+  
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -2586,6 +2593,15 @@ function OrderSystemSection({ companyId }: { companyId: string }) {
         const res = await fetch(`/api/QR_Panel/order/${companyId}`);
         if (!res.ok) throw new Error('Failed to fetch orders');
         const data = await res.json();
+
+        const newOrderIds = new Set(data.orders.map((o: any) => o.id));
+        const prevIds = previousOrderIds.current;
+
+        const hasNewOrder = data.orders.some((o: any) => !prevIds.has(o.id) && o.isActive !== false);
+
+        if (hasNewOrder && audioRef.current) {
+          audioRef.current.play();
+        }
         setOrders(data.orders);
       } catch (err: any) {
         setError(err.message || 'Unknown error');
@@ -2593,79 +2609,80 @@ function OrderSystemSection({ companyId }: { companyId: string }) {
         setLoading(false);
       }
     };
+
     fetchOrders();
+    const interval = setInterval(fetchOrders, 10000); // poll every 10 seconds
+
+    return () => clearInterval(interval);
   }, [companyId]);
 
   if (loading) return <div className="text-center py-8">Loading orders...</div>;
   if (error) return <div className="text-center text-red-500 py-8">{error}</div>;
- // Only show active orders
-const activeOrders = orders.filter((order: any) => order.isActive !== false);
-if (activeOrders.length === 0) return <div className="text-center py-8">No active orders found.</div>;
 
-return (
-  <div>
-    <h2 className="text-2xl font-bold mb-6 text-center text-purple-700">Orders</h2>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {activeOrders.map((order: any) => (
-        <div
-          key={order.id}
-          className="bg-white rounded-xl shadow-lg p-6 border border-purple-100 hover:shadow-xl transition-shadow duration-200"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-lg font-semibold text-purple-700">
-              Table #{order.tableNumber}
-            </span>
-            <span className="text-sm text-gray-500">
-              {new Date(order.createdAt).toLocaleString()}
-            </span>
-          </div>
-          <div className="mb-2 flex items-center justify-between">
-            <span className="font-medium text-gray-700">Total:</span>
-            <span className="font-bold text-green-600">₺{order.totalAmount.toFixed(2)}</span>
-          </div>
-          <div className="mb-2 text-sm text-gray-600 italic">
-            <span className="font-medium text-purple-600">Special Note:</span> {order.note ? order.note : 'No special note'}
-          </div>
-          <div>
-            <span className="font-medium text-gray-700">Items:</span>
-            <ul className="mt-2 space-y-1">
-              {order.orderItems.map((item: any) => (
-                <li
-                  key={item.id}
-                  className="grid grid-cols-3 items-center bg-purple-50 rounded px-2 py-1"
-                >
-                  <span className="text-gray-800 truncate">{item.subCategory?.name || 'Unknown Item'}</span>
-                  <span className="text-gray-600 text-sm w-20 text-center">
-                    Qty: <span className="font-semibold">{item.quantity}</span>
-                  </span>
-                  <span className="text-green-700 font-semibold text-right">
-                    ₺{item.price.toFixed(2)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
+  const activeOrders = orders.filter((order: any) => order.isActive !== false);
+  if (activeOrders.length === 0) return <div className="text-center py-8">No active orders found.</div>;
 
-          <div className="flex justify-end mt-4">
-            <button
-              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-semibold transition"
-              onClick={async () => {
-                // Optimistically remove from UI
-                setOrders((prev: any) => prev.filter((o: any) => o.id !== order.id));
-                // Update in DB
-                await fetch(`/api/QR_Panel/order/${companyId}`, {
-                  method: 'PATCH',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ orderId: order.id }),
-                });
-              }}
-            >
-              Paid
-            </button>
+  return (
+    <div>
+      <h2 className="text-2xl font-bold mb-6 text-center text-purple-700">Orders</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {activeOrders.map((order: any) => (
+          <div
+            key={order.id}
+            className="bg-white rounded-xl shadow-lg p-6 border border-purple-100 hover:shadow-xl transition-shadow duration-200"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-lg font-semibold text-purple-700">
+                Table #{order.tableNumber}
+              </span>
+              <span className="text-sm text-gray-500">
+                {new Date(order.createdAt).toLocaleString()}
+              </span>
+            </div>
+            <div className="mb-2 flex items-center justify-between">
+              <span className="font-medium text-gray-700">Total:</span>
+              <span className="font-bold text-green-600">₺{order.totalAmount.toFixed(2)}</span>
+            </div>
+            <div className="mb-2 text-sm text-gray-600 italic">
+              <span className="font-medium text-purple-600">Special Note:</span> {order.note || 'No special note'}
+            </div>
+            <div>
+              <span className="font-medium text-gray-700">Items:</span>
+              <ul className="mt-2 space-y-1">
+                {order.orderItems.map((item: any) => (
+                  <li
+                    key={item.id}
+                    className="grid grid-cols-3 items-center bg-purple-50 rounded px-2 py-1"
+                  >
+                    <span className="text-gray-800 truncate">{item.subCategory?.name || 'Unknown Item'}</span>
+                    <span className="text-gray-600 text-sm w-20 text-center">
+                      Qty: <span className="font-semibold">{item.quantity}</span>
+                    </span>
+                    <span className="text-green-700 font-semibold text-right">
+                      ₺{item.price.toFixed(2)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="flex justify-end mt-4">
+              <button
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-semibold transition"
+                onClick={async () => {
+                  setOrders((prev: any) => prev.filter((o: any) => o.id !== order.id));
+                  await fetch(`/api/QR_Panel/order/${companyId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderId: order.id }),
+                  });
+                }}
+              >
+                Paid
+              </button>
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
-  </div>
-);
+  );
 }
