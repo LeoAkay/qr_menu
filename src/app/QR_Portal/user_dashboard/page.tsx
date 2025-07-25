@@ -379,8 +379,8 @@ export default function UserDashboard() {
   <div className="col-span-1 md:col-span-1 lg:col-start-2">
     <div
       onClick={() => {
-        setMenuType('manual');
-        setActiveTab('manual');
+      
+        setActiveTab('orders');
       }}
       className="bg-gradient-to-br from-pink-400 to-pink-300 hover:from-pink-300 hover:to-pink-400 rounded-xl p-8 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
     >
@@ -417,6 +417,7 @@ export default function UserDashboard() {
 
               {activeTab === 'manual' && <ManualMenuSection searchQuery={orderSystemSearch} onSearchHandled={() => setOrderSystemSearch('')} />}
               {activeTab === 'theme' && <ThemeSettingsSection userData={userData} />}
+              {activeTab === 'orders' && userData?.company?.id && <OrderSystemSection companyId={userData.company.id} />}
               {activeTab === 'preview' && (
                 <PreviewSection 
                   userData={userData} 
@@ -2487,4 +2488,81 @@ function ThemeSettingsSection({ userData }: { userData: UserData | null }) {
       </div>
     </div>
   )
+}
+
+function OrderSystemSection({ companyId }: { companyId: string }) {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`/api/QR_Panel/order/${companyId}`);
+        if (!res.ok) throw new Error('Failed to fetch orders');
+        const data = await res.json();
+        setOrders(data.orders);
+      } catch (err: any) {
+        setError(err.message || 'Unknown error');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOrders();
+  }, [companyId]);
+
+  if (loading) return <div className="text-center py-8">Loading orders...</div>;
+  if (error) return <div className="text-center text-red-500 py-8">{error}</div>;
+  if (orders.length === 0) return <div className="text-center py-8">No orders found.</div>;
+
+  return (
+    <div>
+      <h2 className="text-2xl font-bold mb-6 text-center text-purple-700">Orders</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {orders.map((order: any) => (
+          <div
+            key={order.id}
+            className="bg-white rounded-xl shadow-lg p-6 border border-purple-100 hover:shadow-xl transition-shadow duration-200"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-lg font-semibold text-purple-700">
+                Table #{order.tableNumber}
+              </span>
+              <span className="text-sm text-gray-500">
+                {new Date(order.createdAt).toLocaleString()}
+              </span>
+            </div>
+            <div className="mb-2 flex items-center justify-between">
+              <span className="font-medium text-gray-700">Total:</span>
+              <span className="font-bold text-green-600">₺{order.totalAmount.toFixed(2)}</span>
+            </div>
+            <div className="mb-2 text-sm text-gray-600 italic">
+              <span className="font-medium text-purple-600"> Note:</span> {order.note ? order.note : 'No special note'}
+            </div>
+            <div>
+              <span className="font-medium text-gray-700">Items:</span>
+              <ul className="mt-2 space-y-1">
+                {order.orderItems.map((item: any) => (
+                  <li
+                    key={item.id}
+                    className="flex justify-between items-center bg-purple-50 rounded px-2 py-1"
+                  >
+                    <span className="text-gray-800">{item.subCategory?.name || 'Unknown Item'}</span>
+                    <span className="text-gray-600 text-sm">
+                      Qty: <span className="font-semibold">{item.quantity}</span>
+                    </span>
+                    <span className="text-green-700 font-semibold">
+                      ₺{item.price.toFixed(2)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
