@@ -16,23 +16,24 @@ export default function HomePage() {
 
       {/* Header */}
        <header className="py-8">
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="text-center">
-        <h1 className="text-5xl font-bold text-gray-900 mb-4">QR Menu System</h1>
-        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-          Build and share digital menus effortlessly using QR codes. Upload PDF menus or design your own with custom categories and items.
-        </p>
-      </div>
-      <div className="mt-8 text-center">
-        <Link
-          href="/QR_Portal/get_started"
-          className="absolute right-5 top-6 bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-semibold text-lg"
-        >
-          Get Started
-        </Link> 
-        </div>
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="text-center">
+      <h1 className="text-5xl font-bold text-gray-900 mb-4">QR Menu System</h1>
+      <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+        Build and share digital menus effortlessly using QR codes. Upload PDF menus or design your own with custom categories and items.
+      </p>
     </div>
-  </header>
+    <div className="mt-8 text-center">
+      <Link
+        href="/QR_Portal/get_started"
+        className="inline-block bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-semibold text-lg"
+      >
+        Get Started
+      </Link> 
+    </div>
+  </div>
+</header>
+
 
       {/* Main Content */}
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
