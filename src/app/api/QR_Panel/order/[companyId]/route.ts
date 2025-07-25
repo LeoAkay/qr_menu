@@ -38,3 +38,29 @@ export async function POST(req: NextRequest, context: { params: { companyId: str
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
   }
 }
+
+export async function GET(req: NextRequest, context: { params?: { companyId?: string } } = {}) {
+  const companyId = context?.params?.companyId;
+  if (!companyId) {
+    return NextResponse.json({ message: 'Company ID is required' }, { status: 400 });
+  }
+  try {
+    const orders = await prisma.order.findMany({
+      where: { companyId },
+      include: {
+        orderItems: {
+          include: {
+            subCategory: {
+              select: { name: true }
+            }
+          }
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    return NextResponse.json({ orders }, { status: 200 });
+  } catch (error) {
+    console.error('[ORDER_GET]', error);
+    return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
+  }
+}
