@@ -64,6 +64,12 @@ export default function UserDashboard() {
     textColor: '#000000',
     style: 'modern'
   })
+  const pdfRef = useRef<HTMLDivElement>(null);
+  const manualRef = useRef<HTMLDivElement>(null);
+  const themeRef = useRef<HTMLDivElement>(null);
+  const ordersRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!userData?.company?.id) return;
     const interval = setInterval(async () => {
@@ -304,7 +310,10 @@ export default function UserDashboard() {
           </button>
 
           <button
-            onClick={() => setActiveTab('profile')}
+            onClick={() => {
+              setActiveTab('profile');
+              setTimeout(() => profileRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+            }}
             aria-label="Profile"
             className="bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full p-1.5 transition-all"
           >
@@ -376,7 +385,10 @@ export default function UserDashboard() {
         <div className="mb-8">
           <div className="flex justify-center">
             <button 
-              onClick={() => setActiveTab('preview')}
+              onClick={() => {
+                setActiveTab('preview');
+                setTimeout(() => menuRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+              }}
               className="bg-gradient-to-r from-purple-400 to-purple-400 hover:from-purple-400 hover:to-purple-500 text-gray-800 font-semibold py-4 px-12 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 text-xl"
             >
               Menu
@@ -390,6 +402,7 @@ export default function UserDashboard() {
     onClick={() => {
       setMenuType('pdf');
       setActiveTab('pdf');
+      setTimeout(() => pdfRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
     }}
     className="bg-gradient-to-br from-pink-400 to-pink-300 hover:from-pink-300 hover:to-pink-400 rounded-xl p-8 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
   >
@@ -404,6 +417,7 @@ export default function UserDashboard() {
     onClick={() => {
       setMenuType('manual');
       setActiveTab('manual');
+      setTimeout(() => manualRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
     }}
     className="bg-gradient-to-br from-pink-400 to-pink-300 hover:from-pink-300 hover:to-pink-400 rounded-xl p-8 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
   >
@@ -415,7 +429,11 @@ export default function UserDashboard() {
 
   {/* Theme Settings Card */}
   <div
-    onClick={() => setActiveTab('theme')}
+    onClick={() => {
+      setActiveTab('theme');
+      setTimeout(() => themeRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+    }}
+  
     className="bg-gradient-to-br from-pink-400 to-pink-300 hover:from-pink-300 hover:to-pink-400 rounded-xl p-8 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
   >
     <div className="text-center">
@@ -430,6 +448,7 @@ export default function UserDashboard() {
     onClick={() => {
       setActiveTab('orders');
       setNewOrderCount(0); // Reset badge when viewing orders
+      setTimeout(() => ordersRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
     }}
     className="bg-gradient-to-br from-pink-400 to-pink-300 hover:from-pink-300 hover:to-pink-400 rounded-xl p-8 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
   >
@@ -451,6 +470,7 @@ export default function UserDashboard() {
         {/* Content Area */}
         <div className="bg-white rounded-xl shadow-lg p-6">
           {activeTab === 'pdf' && (
+            <div ref={pdfRef}>
             <div>
               {!menuType ? (
                 <div className="text-center py-12">
@@ -467,20 +487,39 @@ export default function UserDashboard() {
                 <PDFUploadSection userData={userData} />
               )}
             </div>
+            </div>
           )}
 
-              {activeTab === 'manual' && <ManualMenuSection searchQuery={orderSystemSearch} onSearchHandled={() => setOrderSystemSearch('')} />}
-              {activeTab === 'theme' && <ThemeSettingsSection userData={userData} />}
-              {activeTab === 'orders' && userData?.company?.id && <OrderSystemSection companyId={userData.company.id} />}
+              {activeTab === 'manual' && (
+  <div ref={manualRef}>
+    <ManualMenuSection searchQuery={orderSystemSearch} onSearchHandled={() => setOrderSystemSearch('')} />
+  </div>
+)}
+              {activeTab === 'theme' && (
+  <div ref={themeRef}>
+    <ThemeSettingsSection userData={userData} />
+  </div>
+)}
+              {activeTab === 'orders' && userData?.company?.id && (
+  <div ref={ordersRef}>
+    <OrderSystemSection companyId={userData.company.id} />
+  </div>
+)}
               {activeTab === 'preview' && (
-                <PreviewSection 
-                  userData={userData} 
-                  theme={theme}
-                  qrUrl={generateQRUrl()}
-                  onDownloadQR={downloadQR}
-                />
+                <div ref={menuRef}>
+                  <PreviewSection 
+                    userData={userData} 
+                    theme={theme}
+                    qrUrl={generateQRUrl()}
+                    onDownloadQR={downloadQR}
+                  />
+                </div>
               )}
-          {activeTab === 'profile' && <ProfileSection userData={userData} />}
+          {activeTab === 'profile' && (
+            <div ref={profileRef}>
+              <ProfileSection userData={userData} />
+            </div>
+          )}
           {activeTab === 'contactUs' && <GetStartedPage userData={userData} />}
           {/* Default Welcome Screen */}
           {!activeTab && (
