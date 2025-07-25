@@ -933,6 +933,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
   const [itemForm, setItemForm] = useState({
     name: '',
     price: '',
+    stock: true,
     menuImage: null as File | null
   });
   const [editCategoryForm, setEditCategoryForm] = useState({
@@ -942,6 +943,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
   const [editItemForm, setEditItemForm] = useState({
     name: '',
     price: '',
+    stock: true,
     menuImage: null as File | null
   });
 
@@ -1013,7 +1015,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
       if (res.ok) {
         alert('Item added successfully!')
         setItemForm({
-          name: '', price: '', menuImage: null
+          name: '', price: '',stock:true, menuImage: null
         })
         setShowItemForm(null)
         fetchCategories()
@@ -1088,6 +1090,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
     setEditItemForm({
       name: item.name,
       price: item.price?.toString() || '',
+      stock: item.stock?.true,
       menuImage: null
     })
     setShowEditItemForm(true)
@@ -1144,7 +1147,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
 
       if (res.ok) {
         alert('Item updated successfully!')
-        setEditItemForm({ name: '', price: '', menuImage: null })
+        setEditItemForm({ name: '', price: '',stock:true, menuImage: null })
         setShowEditItemForm(false)
         setEditingItem(null)
         fetchCategories()
@@ -1449,7 +1452,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
                              onClick={() => {
                                setShowEditItemForm(false)
                                setEditingItem(null)
-                               setEditItemForm({ name: '', price: '', menuImage: null })
+                               setEditItemForm({ name: '', price: '',stock:true, menuImage: null })
                              }}
                              className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                            >

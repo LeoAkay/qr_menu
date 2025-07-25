@@ -43,7 +43,6 @@ CREATE TABLE "MainCategory" (
     "companyId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "categoryNo" INTEGER NOT NULL,
-    "backgroundImage" BYTEA,
 
     CONSTRAINT "MainCategory_pkey" PRIMARY KEY ("id")
 );
@@ -67,6 +66,7 @@ CREATE TABLE "SubCategory" (
     "mainCategoryId" TEXT NOT NULL,
     "menuImageUrl" TEXT,
     "price" DOUBLE PRECISION,
+    "stock" BOOLEAN NOT NULL DEFAULT true,
 
     CONSTRAINT "SubCategory_pkey" PRIMARY KEY ("id")
 );
@@ -84,6 +84,30 @@ CREATE TABLE "Theme" (
     "xUrl" TEXT,
 
     CONSTRAINT "Theme_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Order" (
+    "id" TEXT NOT NULL,
+    "tableNumber" INTEGER NOT NULL,
+    "companyId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "isActive" BOOLEAN NOT NULL DEFAULT false,
+    "totalAmount" DOUBLE PRECISION NOT NULL,
+    "note" TEXT,
+
+    CONSTRAINT "Order_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "OrderItem" (
+    "id" TEXT NOT NULL,
+    "orderId" TEXT NOT NULL,
+    "subCategoryId" TEXT NOT NULL,
+    "quantity" INTEGER NOT NULL,
+    "price" DOUBLE PRECISION NOT NULL,
+
+    CONSTRAINT "OrderItem_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -110,6 +134,18 @@ CREATE INDEX "SubCategory_mainCategoryId_idx" ON "SubCategory"("mainCategoryId")
 -- CreateIndex
 CREATE INDEX "Theme_companyId_idx" ON "Theme"("companyId");
 
+-- CreateIndex
+CREATE INDEX "Order_companyId_idx" ON "Order"("companyId");
+
+-- CreateIndex
+CREATE INDEX "Order_tableNumber_idx" ON "Order"("tableNumber");
+
+-- CreateIndex
+CREATE INDEX "OrderItem_orderId_idx" ON "OrderItem"("orderId");
+
+-- CreateIndex
+CREATE INDEX "OrderItem_subCategoryId_idx" ON "OrderItem"("subCategoryId");
+
 -- AddForeignKey
 ALTER TABLE "User" ADD CONSTRAINT "User_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "Role"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -133,3 +169,12 @@ ALTER TABLE "SubCategory" ADD CONSTRAINT "SubCategory_mainCategoryId_fkey" FOREI
 
 -- AddForeignKey
 ALTER TABLE "Theme" ADD CONSTRAINT "Theme_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "Company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Order" ADD CONSTRAINT "Order_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "Company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "OrderItem" ADD CONSTRAINT "OrderItem_subCategoryId_fkey" FOREIGN KEY ("subCategoryId") REFERENCES "SubCategory"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "OrderItem" ADD CONSTRAINT "OrderItem_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "Order"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

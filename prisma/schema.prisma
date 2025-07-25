@@ -79,6 +79,7 @@ model SubCategory {
   mainCategoryId String
   menuImageUrl  String?
   price          Float?
+  stock          Boolean      @default(true)
   mainCategory   MainCategory @relation(fields: [mainCategoryId], references: [id])
 
   @@index([mainCategoryId])
@@ -104,8 +105,7 @@ model Order {
   tableNumber    Int
   companyId      String
   createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  status         String        @default("pending") // pending, completed, etc.
+  isActive       Boolean        @default(false)
   totalAmount    Float
   note           String?
   company        Company       @relation(fields: [companyId], references: [id])
