@@ -40,7 +40,8 @@ export async function POST(req: NextRequest, context: { params: { companyId: str
 }
 
 export async function GET(req: NextRequest, context: { params?: { companyId?: string } } = {}) {
-  const companyId = context?.params?.companyId;
+  const params = context?.params ? await context.params : {};
+  const companyId = params.companyId;
   if (!companyId) {
     return NextResponse.json({ message: 'Company ID is required' }, { status: 400 });
   }
