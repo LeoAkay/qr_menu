@@ -54,7 +54,7 @@ export default function UserDashboard() {
   const router = useRouter()
   const [userData, setUserData] = useState<UserData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'pdf' | 'manual' | 'theme' | 'preview' | 'profile'| 'contactUs' | 'orders' |''>('')
+  const [activeTab, setActiveTab] = useState<'pdf' | 'manual' | 'theme' | 'preview' | 'profile'| 'contactUs'| 'orders' | ''>('')
   const [menuType, setMenuType] = useState<'pdf' | 'manual' | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [orderSystemSearch, setOrderSystemSearch] = useState('');
@@ -378,10 +378,7 @@ export default function UserDashboard() {
   {/* Centered Second "Order System" Card */}
   <div className="col-span-1 md:col-span-1 lg:col-start-2">
     <div
-      onClick={() => {
-      
-        setActiveTab('orders');
-      }}
+      onClick={() =>setActiveTab('orders')}
       className="bg-gradient-to-br from-pink-400 to-pink-300 hover:from-pink-300 hover:to-pink-400 rounded-xl p-8 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
     >
       <div className="text-center">
