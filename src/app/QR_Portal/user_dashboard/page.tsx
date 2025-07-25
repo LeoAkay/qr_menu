@@ -218,108 +218,142 @@ export default function UserDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Modern Header */}
-     <header className="bg-gradient-to-r from-purple-500 to-purple-600 shadow-md py-3">
+        <header className="bg-gradient-to-r from-purple-500 to-purple-600 shadow-md py-3">
   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
 
+      {/* Row container for desktop: flex with three parts */}
+      <div className="flex items-center w-full sm:justify-between">
 
-      {/* Left: Logo & Company Name */}
-      <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
-
-        <div className="h-12 w-12 sm:h-16 sm:w-16 rounded bg-white p-1">
-          <img
-            src={
-              userData?.company?.C_Logo_Image
-                ? `/api/AdminPanel/company/image/${userData.company.id}/logo?${Date.now()}`
-                : '/user-icon-on-transparent-background-free-png.webp'
-            }
-            alt="Company Logo"
-            className="h-full w-full object-contain rounded"
-          />
-        </div>
-        <div className="text-white font-bold text-xl sm:text-2xl whitespace-nowrap">
-          {userData?.company?.C_Name || ''}
-        </div>
-      </div>
-
-      {/* Center: Search Bar */}
-      <div className="flex-1 min-w-[240px] max-w-xl w-full">
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Search..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={handleSearch}
-            className="w-full py-2 pl-10 pr-10 rounded-lg bg-white bg-opacity-90 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-300 transition-all"
-          />
-          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+        {/* Left: Logo + Company Name */}
+        <div className="flex items-center gap-3 sm:gap-5 flex-1 min-w-0">
+          <div className="h-12 w-12 sm:h-16 sm:w-16 rounded bg-white p-1 flex-shrink-0">
+            <img
+              src={
+                userData?.company?.C_Logo_Image
+                  ? `/api/AdminPanel/company/image/${userData.company.id}/logo?${Date.now()}`
+                  : '/user-icon-on-transparent-background-free-png.webp'
+              }
+              alt="Company Logo"
+              className="h-full w-full object-contain rounded"
+            />
           </div>
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-            >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          )}
+          <div className="text-white font-bold text-xl sm:text-2xl whitespace-nowrap truncate min-w-0">
+            {userData?.company?.C_Name || ''}
+          </div>
+        </div>
+
+        {/* Center: Search bar */}
+         <div className="hidden sm:flex justify-center flex-1 px-4">
+          <div className="w-full max-w-xl">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleSearch}
+                className="w-full py-2 pl-10 pr-10 rounded-lg bg-white bg-opacity-90 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-300 transition-all"
+              />
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Buttons */}
+        <div className="flex items-center gap-3 ml-4 flex-1 justify-end">
+          <button
+            onClick={() => setActiveTab('contactUs')}
+            aria-label="Contact Us"
+            className="p-2 bg-white bg-opacity-10 hover:bg-opacity-20 rounded-full transition"
+          >
+            <img
+              src="/6ed29fc85c4dad83456b89637af7df.webp"
+              alt="Contact"
+              className="w-8 h-8 rounded-full object-cover ring-1 ring-white"
+            />
+          </button>
+
+          <button
+            onClick={() => setActiveTab('profile')}
+            aria-label="Profile"
+            className="bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full p-1.5 transition-all"
+          >
+            <img
+              src={
+                userData?.company?.C_Logo_Image
+                  ? `/api/AdminPanel/company/image/${userData.company.id}/logo?${Date.now()}`
+                  : '/user-icon-on-transparent-background-free-png.webp'
+              }
+              alt="Company Logo"
+              className="w-8 h-8 object-cover rounded-full ring-1 ring-white hover:ring-2 transition duration-200"
+              loading="lazy"
+            />
+          </button>
+
+          <button
+            onClick={handleLogout}
+            aria-label="Logout"
+            title="Logout"
+            className="p-2 bg-red-500 hover:bg-red-600 rounded-full transition"
+          >
+            <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </button>
         </div>
       </div>
 
-      {/* Right: Icons */}
-      <div className="flex items-center space-x-4">
-        {/* Contact Button */}
-        <button
-          onClick={() => setActiveTab('contactUs')}
-          aria-label="Contact Us"
-          className="p-2 bg-white bg-opacity-10 hover:bg-opacity-20 rounded-full transition"
-        >
-          <img
-            src="/6ed29fc85c4dad83456b89637af7df.webp"
-            alt="Contact"
-            className="w-8 h-8 rounded-full object-cover ring-1 ring-white"
-          />
-        </button>
-
-        {/* Profile Button */}
-        <button
-          onClick={() => setActiveTab('profile')}
-          aria-label="Profile"
-          className="bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full p-1.5 transition-all"
-        >
-          <img
-            src={
-              userData?.company?.C_Logo_Image
-                ? `/api/AdminPanel/company/image/${userData.company.id}/logo?${Date.now()}`
-                : '/user-icon-on-transparent-background-free-png.webp'
-            }
-            alt="Company Logo"
-            className="w-8 h-8 object-cover rounded-full ring-1 ring-white hover:ring-2 transition duration-200"
-            loading="lazy"
-          />
-        </button>
-
-        {/* Logout */}
-        <button
-          onClick={handleLogout}
-          aria-label="Logout"
-          title="Logout"
-          className="p-2 bg-red-500 hover:bg-red-600 rounded-full transition"
-        >
-          <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-        </button>
+      {/* Mobile search bar below */}
+      <div className="sm:hidden mt-3">
+        <div className="w-full">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleSearch}
+              className="w-full py-2 pl-10 pr-10 rounded-lg bg-white bg-opacity-90 text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-300 transition-all"
+            />
+            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </header>
+
+
+
 
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -359,7 +393,7 @@ export default function UserDashboard() {
     className="bg-gradient-to-br from-pink-400 to-pink-300 hover:from-pink-300 hover:to-pink-400 rounded-xl p-8 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
   >
     <div className="text-center">
-      <div className="text-3xl mb-4">📝</div>
+      <div className="text-3xl mb-4">⚙️</div>
       <h3 className="text-xl font-semibold text-gray-800">Manual Menu</h3>
     </div>
   </div>
@@ -2575,19 +2609,20 @@ return (
               {order.orderItems.map((item: any) => (
                 <li
                   key={item.id}
-                  className="flex justify-between items-center bg-purple-50 rounded px-2 py-1"
+                  className="grid grid-cols-3 items-center bg-purple-50 rounded px-2 py-1"
                 >
-                  <span className="text-gray-800">{item.subCategory?.name || 'Unknown Item'}</span>
-                  <span className="text-gray-600 text-sm">
+                  <span className="text-gray-800 truncate">{item.subCategory?.name || 'Unknown Item'}</span>
+                  <span className="text-gray-600 text-sm w-20 text-center">
                     Qty: <span className="font-semibold">{item.quantity}</span>
                   </span>
-                  <span className="text-green-700 font-semibold">
+                  <span className="text-green-700 font-semibold text-right">
                     ₺{item.price.toFixed(2)}
                   </span>
                 </li>
               ))}
             </ul>
           </div>
+
           <div className="flex justify-end mt-4">
             <button
               className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-semibold transition"

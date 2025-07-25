@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import "./Adminglobals.css";
+import "../global.css";
 import RootLayout from "../layout";
 
 export const metadata: Metadata = {
