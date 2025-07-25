@@ -64,3 +64,20 @@ export async function GET(req: NextRequest, context: { params?: { companyId?: st
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
   }
 }
+
+export async function PATCH(req: NextRequest, context: { params?: { companyId?: string } } = {}) {
+  try {
+    const { orderId } = await req.json();
+    if (!orderId) {
+      return NextResponse.json({ message: 'Order ID is required' }, { status: 400 });
+    }
+    await prisma.order.update({
+      where: { id: orderId },
+      data: { isActive: false },
+    });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('[ORDER_PATCH]', error);
+    return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
+  }
+}

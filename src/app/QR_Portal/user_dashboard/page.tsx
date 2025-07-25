@@ -54,7 +54,7 @@ export default function UserDashboard() {
   const router = useRouter()
   const [userData, setUserData] = useState<UserData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'pdf' | 'manual' | 'theme' | 'preview' | 'profile'| 'contactUs' | ''>('')
+  const [activeTab, setActiveTab] = useState<'pdf' | 'manual' | 'theme' | 'preview' | 'profile'| 'contactUs' | 'orders' |''>('')
   const [menuType, setMenuType] = useState<'pdf' | 'manual' | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [orderSystemSearch, setOrderSystemSearch] = useState('');
@@ -2544,54 +2544,73 @@ function OrderSystemSection({ companyId }: { companyId: string }) {
 
   if (loading) return <div className="text-center py-8">Loading orders...</div>;
   if (error) return <div className="text-center text-red-500 py-8">{error}</div>;
-  if (orders.length === 0) return <div className="text-center py-8">No orders found.</div>;
+ // Only show active orders
+const activeOrders = orders.filter((order: any) => order.isActive !== false);
+if (activeOrders.length === 0) return <div className="text-center py-8">No active orders found.</div>;
 
-  return (
-    <div>
-      <h2 className="text-2xl font-bold mb-6 text-center text-purple-700">Orders</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {orders.map((order: any) => (
-          <div
-            key={order.id}
-            className="bg-white rounded-xl shadow-lg p-6 border border-purple-100 hover:shadow-xl transition-shadow duration-200"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-lg font-semibold text-purple-700">
-                Table #{order.tableNumber}
-              </span>
-              <span className="text-sm text-gray-500">
-                {new Date(order.createdAt).toLocaleString()}
-              </span>
-            </div>
-            <div className="mb-2 flex items-center justify-between">
-              <span className="font-medium text-gray-700">Total:</span>
-              <span className="font-bold text-green-600">₺{order.totalAmount.toFixed(2)}</span>
-            </div>
-            <div className="mb-2 text-sm text-gray-600 italic">
-              <span className="font-medium text-purple-600"> Note:</span> {order.note ? order.note : 'No special note'}
-            </div>
-            <div>
-              <span className="font-medium text-gray-700">Items:</span>
-              <ul className="mt-2 space-y-1">
-                {order.orderItems.map((item: any) => (
-                  <li
-                    key={item.id}
-                    className="flex justify-between items-center bg-purple-50 rounded px-2 py-1"
-                  >
-                    <span className="text-gray-800">{item.subCategory?.name || 'Unknown Item'}</span>
-                    <span className="text-gray-600 text-sm">
-                      Qty: <span className="font-semibold">{item.quantity}</span>
-                    </span>
-                    <span className="text-green-700 font-semibold">
-                      ₺{item.price.toFixed(2)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+return (
+  <div>
+    <h2 className="text-2xl font-bold mb-6 text-center text-purple-700">Orders</h2>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {activeOrders.map((order: any) => (
+        <div
+          key={order.id}
+          className="bg-white rounded-xl shadow-lg p-6 border border-purple-100 hover:shadow-xl transition-shadow duration-200"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-lg font-semibold text-purple-700">
+              Table #{order.tableNumber}
+            </span>
+            <span className="text-sm text-gray-500">
+              {new Date(order.createdAt).toLocaleString()}
+            </span>
           </div>
-        ))}
-      </div>
+          <div className="mb-2 flex items-center justify-between">
+            <span className="font-medium text-gray-700">Total:</span>
+            <span className="font-bold text-green-600">₺{order.totalAmount.toFixed(2)}</span>
+          </div>
+          <div className="mb-2 text-sm text-gray-600 italic">
+            <span className="font-medium text-purple-600">Special Note:</span> {order.note ? order.note : 'No special note'}
+          </div>
+          <div>
+            <span className="font-medium text-gray-700">Items:</span>
+            <ul className="mt-2 space-y-1">
+              {order.orderItems.map((item: any) => (
+                <li
+                  key={item.id}
+                  className="flex justify-between items-center bg-purple-50 rounded px-2 py-1"
+                >
+                  <span className="text-gray-800">{item.subCategory?.name || 'Unknown Item'}</span>
+                  <span className="text-gray-600 text-sm">
+                    Qty: <span className="font-semibold">{item.quantity}</span>
+                  </span>
+                  <span className="text-green-700 font-semibold">
+                    ₺{item.price.toFixed(2)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="flex justify-end mt-4">
+            <button
+              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-semibold transition"
+              onClick={async () => {
+                // Optimistically remove from UI
+                setOrders((prev: any) => prev.filter((o: any) => o.id !== order.id));
+                // Update in DB
+                await fetch(`/api/QR_Panel/order/${companyId}`, {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ orderId: order.id }),
+                });
+              }}
+            >
+              Paid
+            </button>
+          </div>
+        </div>
+      ))}
     </div>
-  );
+  </div>
+);
 }
