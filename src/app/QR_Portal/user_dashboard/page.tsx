@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { QRCodeSVG } from 'qrcode.react'
+import { io } from "socket.io-client";
 
 interface UserData {
   id: string
@@ -43,7 +44,26 @@ interface UserData {
     }>
   }
 }
+interface Order {
+  id: string;
+  tableNumber: number;
+  companyId: string;
+  createdAt: string; // or Date if you convert it
+  isActive: boolean;
+  totalAmount: number;
+  note?: string;
+  orderItems: OrderItem[];
+}
 
+interface OrderItem {
+  id: string;
+  orderId: string;
+  subCategoryId: string;
+  quantity: number;
+  price: number;
+  subCategory?: {
+    name?: string;
+  };}
 interface Theme {
   backgroundColor?: string
   textColor?: string
@@ -2613,59 +2633,88 @@ function ThemeSettingsSection({ userData }: { userData: UserData | null }) {
 }
 
 function OrderSystemSection({ companyId }: { companyId: string }) {
-  const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const previousOrderIds = useRef<Set<string>>(new Set());
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const socketRef = useRef<any>(null);
+  const [orders, setOrders] = useState<Order[]>([]);
 
-  useEffect(() => {
-    audioRef.current = new Audio('/sounds/shop-notification-355746.mp3');
+  // Load notification sound
+   useEffect(() => {
+    const audio = new Audio('/sounds/shop-notification-355746.mp3');
+    audio.preload = 'auto';
+    audioRef.current = audio;
   }, []);
-  
 
+  // Unlock audio on first user interaction
   useEffect(() => {
-    const fetchOrders = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch(`/api/QR_Panel/order/${companyId}`);
-        if (!res.ok) throw new Error('Failed to fetch orders');
-        const data = await res.json();
+  const unlockAudio = () => {
+    if (audioRef.current) {
+      audioRef.current
+        .play()
+        .then(() => {
+          audioRef.current!.pause();
+          try {
+            audioRef.current!.currentTime = 0;
+          } catch (e) {
+            console.warn("Error resetting audio:", e);
+          }
+        })
+        .catch((err) => {
+          console.warn("Audio unlock failed:", err);
+        });
+    }
+    window.removeEventListener('click', unlockAudio);
+  };
 
-        const newOrderIds = new Set(data.orders.map((o: any) => o.id));
-        const prevIds = previousOrderIds.current;
+  window.addEventListener('click', unlockAudio);
+  return () => window.removeEventListener('click', unlockAudio);
+}, []);
 
-        const hasNewOrder = data.orders.some((o: any) => !prevIds.has(o.id) && o.isActive !== false);
+  // WebSocket connection + fetch initial orders
+  useEffect(() => {
+    const socket = io('http://localhost');
+    socketRef.current = socket;
 
-        if (hasNewOrder && audioRef.current) {
-          audioRef.current.play();
-        }
-        setOrders(data.orders);
-      } catch (err: any) {
-        setError(err.message || 'Unknown error');
-      } finally {
-        setLoading(false);
+    socket.emit('join', companyId);
+
+    socket.on('new-order', (newOrder: Order) => {
+      if (!newOrder?.id) return;
+
+      setOrders(prev => {
+        if (prev.some(order => order.id === newOrder.id)) return prev;
+        return [newOrder, ...prev];
+      });
+
+      // Play notification sound
+      if (audioRef.current) {
+        audioRef.current.play().catch(console.warn);
       }
+    });
+
+    fetch(`/api/QR_Panel/order/${companyId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data.orders)) setOrders(data.orders);
+        else setError('Invalid order data');
+      })
+      .catch(err => setError(err.message || 'Failed to fetch orders'));
+
+    return () => {
+      socket.disconnect();
     };
-
-    fetchOrders();
-    const interval = setInterval(fetchOrders, 10000); // poll every 10 seconds
-
-    return () => clearInterval(interval);
   }, [companyId]);
 
-  if (loading) return <div className="text-center py-8">Loading orders...</div>;
-  if (error) return <div className="text-center text-red-500 py-8">{error}</div>;
+  const activeOrders = orders.filter(order => order.isActive !== false);
 
-  const activeOrders = orders.filter((order: any) => order.isActive !== false);
+  if (error) return <div className="text-center text-red-500 py-8">{error}</div>;
   if (activeOrders.length === 0) return <div className="text-center py-8">No active orders found.</div>;
 
   return (
     <div>
       <h2 className="text-2xl font-bold mb-6 text-center text-purple-700">Orders</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {activeOrders.map((order: any) => (
+        {activeOrders.map(order => (
           <div
             key={order.id}
             className="bg-white rounded-xl shadow-lg p-6 border border-purple-100 hover:shadow-xl transition-shadow duration-200"
@@ -2688,7 +2737,7 @@ function OrderSystemSection({ companyId }: { companyId: string }) {
             <div>
               <span className="font-medium text-gray-700">Items:</span>
               <ul className="mt-2 space-y-1">
-                {order.orderItems.map((item: any) => (
+                {order.orderItems.map(item => (
                   <li
                     key={item.id}
                     className="grid grid-cols-3 items-center bg-purple-50 rounded px-2 py-1"
@@ -2708,7 +2757,7 @@ function OrderSystemSection({ companyId }: { companyId: string }) {
               <button
                 className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-semibold transition"
                 onClick={async () => {
-                  setOrders((prev: any) => prev.filter((o: any) => o.id !== order.id));
+                  setOrders(prev => prev.filter(o => o.id !== order.id));
                   await fetch(`/api/QR_Panel/order/${companyId}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
