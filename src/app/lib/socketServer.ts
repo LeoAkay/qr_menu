@@ -12,33 +12,19 @@ export const getIO = () => {
     return global.io;
   }
 
-  const io = new Server({
-    cors: {
-      origin: '*', // Adjust this to your frontend URL
-      methods: ['GET', 'POST'],
-    },
-  });
-
-  io.on('connection', (socket) => {
-    console.log('Client connected');
-
-    socket.on('join', (companyId) => {
-      socket.join(companyId);
-      console.log(`Socket joined company room: ${companyId}`);
-    });
-
-    socket.on('disconnect', () => {
-      console.log('Client disconnected');
-    });
-  });
-
-  global.io = io;
-
-  return io;
+  // This should not be called in the client-side code
+  // The server is set up in server.js
+  console.warn('getIO called but no server instance found');
+  return null;
 };
 
 // Emit event helper
 export const emitNewOrder = (companyId: string, order: any) => {
   const io = getIO();
-  io.to(companyId).emit('new-order', order);
+  if (io) {
+    console.log(`Emitting new order to company ${companyId}:`, order.id);
+    io.to(companyId).emit('new-order', order);
+  } else {
+    console.warn('Cannot emit order - WebSocket server not available');
+  }
 };

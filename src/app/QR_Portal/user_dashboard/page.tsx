@@ -2635,12 +2635,14 @@ function ThemeSettingsSection({ userData }: { userData: UserData | null }) {
 function OrderSystemSection({ companyId }: { companyId: string }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const socketRef = useRef<any>(null);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [newOrderNotification, setNewOrderNotification] = useState(false);
 
   // Load notification sound
-   useEffect(() => {
+  useEffect(() => {
     const audio = new Audio('/sounds/shop-notification-355746.mp3');
     audio.preload = 'auto';
     audioRef.current = audio;
@@ -2648,43 +2650,81 @@ function OrderSystemSection({ companyId }: { companyId: string }) {
 
   // Unlock audio on first user interaction
   useEffect(() => {
-  const unlockAudio = () => {
-    if (audioRef.current) {
-      audioRef.current
-        .play()
-        .then(() => {
-          audioRef.current!.pause();
-          try {
-            audioRef.current!.currentTime = 0;
-          } catch (e) {
-            console.warn("Error resetting audio:", e);
-          }
-        })
-        .catch((err) => {
-          console.warn("Audio unlock failed:", err);
-        });
-    }
-    window.removeEventListener('click', unlockAudio);
-  };
+    const unlockAudio = () => {
+      if (audioRef.current) {
+        audioRef.current
+          .play()
+          .then(() => {
+            audioRef.current!.pause();
+            try {
+              audioRef.current!.currentTime = 0;
+            } catch (e) {
+              console.warn("Error resetting audio:", e);
+            }
+          })
+          .catch((err) => {
+            console.warn("Audio unlock failed:", err);
+          });
+      }
+      window.removeEventListener('click', unlockAudio);
+    };
 
-  window.addEventListener('click', unlockAudio);
-  return () => window.removeEventListener('click', unlockAudio);
-}, []);
+    window.addEventListener('click', unlockAudio);
+    return () => window.removeEventListener('click', unlockAudio);
+  }, []);
 
   // WebSocket connection + fetch initial orders
   useEffect(() => {
-    const socket = io('http://localhost');
+    // Connect to WebSocket server
+    const socketUrl = window.location.origin;
+    
+    console.log('Attempting to connect to WebSocket at:', socketUrl);
+    
+    const socket = io(socketUrl, {
+      transports: ['polling', 'websocket'], // Try polling first, then websocket
+      timeout: 20000,
+      forceNew: true,
+    });
     socketRef.current = socket;
 
-    socket.emit('join', companyId);
+    // Connection event handlers
+    socket.on('connect', () => {
+      console.log('WebSocket connected successfully');
+      setConnectionStatus('connected');
+      socket.emit('join', companyId);
+    });
 
+    socket.on('disconnect', () => {
+      console.log('WebSocket disconnected');
+      setConnectionStatus('disconnected');
+    });
+
+    socket.on('connect_error', (error) => {
+      console.error('WebSocket connection error:', error);
+      setConnectionStatus('disconnected');
+      setError('Failed to connect to real-time updates. Orders will still be visible but may not update automatically.');
+    });
+
+    // Handle new orders
     socket.on('new-order', (newOrder: Order) => {
-      if (!newOrder?.id) return;
+      console.log('Received new order via WebSocket:', newOrder);
+      if (!newOrder?.id) {
+        console.warn('Received order without ID:', newOrder);
+        return;
+      }
 
       setOrders(prev => {
-        if (prev.some(order => order.id === newOrder.id)) return prev;
+        if (prev.some(order => order.id === newOrder.id)) {
+          console.log('Order already exists, skipping:', newOrder.id);
+          return prev;
+        }
+        console.log('Adding new order to state:', newOrder.id);
         return [newOrder, ...prev];
       });
+
+      // Show notification
+      setNewOrderNotification(true);
+      setTimeout(() => setNewOrderNotification(false), 3000);
 
       // Play notification sound
       if (audioRef.current) {
@@ -2692,13 +2732,31 @@ function OrderSystemSection({ companyId }: { companyId: string }) {
       }
     });
 
-    fetch(`/api/QR_Panel/order/${companyId}`)
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data.orders)) setOrders(data.orders);
-        else setError('Invalid order data');
-      })
-      .catch(err => setError(err.message || 'Failed to fetch orders'));
+    // Handle test responses
+    socket.on('test-response', (data) => {
+      console.log('Test response received from server:', data);
+    });
+
+    // Fetch initial orders
+    const fetchOrders = async () => {
+      try {
+        const res = await fetch(`/api/QR_Panel/order/${companyId}`);
+        if (!res.ok) throw new Error('Failed to fetch orders');
+        
+        const data = await res.json();
+        if (Array.isArray(data.orders)) {
+          setOrders(data.orders);
+        } else {
+          setError('Invalid order data received');
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch orders');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
 
     return () => {
       socket.disconnect();
@@ -2707,70 +2765,136 @@ function OrderSystemSection({ companyId }: { companyId: string }) {
 
   const activeOrders = orders.filter(order => order.isActive !== false);
 
-  if (error) return <div className="text-center text-red-500 py-8">{error}</div>;
-  if (activeOrders.length === 0) return <div className="text-center py-8">No active orders found.</div>;
+  if (loading) {
+    return (
+      <div className="text-center py-8">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+        <p className="text-gray-600">Loading orders...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+          <p className="text-red-600">{error}</p>
+        </div>
+        <button
+          onClick={() => window.location.reload()}
+          className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-6 text-center text-purple-700">Orders</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {activeOrders.map(order => (
-          <div
-            key={order.id}
-            className="bg-white rounded-xl shadow-lg p-6 border border-purple-100 hover:shadow-xl transition-shadow duration-200"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-lg font-semibold text-purple-700">
-                Table #{order.tableNumber}
-              </span>
-              <span className="text-sm text-gray-500">
-                {new Date(order.createdAt).toLocaleString()}
-              </span>
-            </div>
-            <div className="mb-2 flex items-center justify-between">
-              <span className="font-medium text-gray-700">Total:</span>
-              <span className="font-bold text-green-600">₺{order.totalAmount.toFixed(2)}</span>
-            </div>
-            <div className="mb-2 text-sm text-gray-600 italic">
-              <span className="font-medium text-purple-600">Special Note:</span> {order.note || 'No special note'}
-            </div>
-            <div>
-              <span className="font-medium text-gray-700">Items:</span>
-              <ul className="mt-2 space-y-1">
-                {order.orderItems.map(item => (
-                  <li
-                    key={item.id}
-                    className="grid grid-cols-3 items-center bg-purple-50 rounded px-2 py-1"
-                  >
-                    <span className="text-gray-800 truncate">{item.subCategory?.name || 'Unknown Item'}</span>
-                    <span className="text-gray-600 text-sm w-20 text-center">
-                      Qty: <span className="font-semibold">{item.quantity}</span>
-                    </span>
-                    <span className="text-green-700 font-semibold text-right">
-                      ₺{item.price.toFixed(2)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="flex justify-end mt-4">
-              <button
-                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-semibold transition"
-                onClick={async () => {
-                  setOrders(prev => prev.filter(o => o.id !== order.id));
-                  await fetch(`/api/QR_Panel/order/${companyId}`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ orderId: order.id }),
-                  });
-                }}
-              >
-                Paid
-              </button>
-            </div>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold text-purple-700">Orders</h2>
+        <div className="flex items-center space-x-2">
+          {/* Connection status indicator */}
+          <div className={`flex items-center space-x-1 text-sm ${
+            connectionStatus === 'connected' ? 'text-green-600' : 
+            connectionStatus === 'connecting' ? 'text-yellow-600' : 'text-red-600'
+          }`}>
+            <div className={`w-2 h-2 rounded-full ${
+              connectionStatus === 'connected' ? 'bg-green-500' : 
+              connectionStatus === 'connecting' ? 'bg-yellow-500' : 'bg-red-500'
+            }`}></div>
+            <span className="capitalize">{connectionStatus}</span>
           </div>
-        ))}
+          
+          {/* Test WebSocket button */}
+          {connectionStatus === 'connected' && (
+            <button
+              onClick={() => {
+                console.log('Testing WebSocket connection...');
+                socketRef.current?.emit('test', { message: 'Test from client' });
+              }}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs"
+            >
+              Test WS
+            </button>
+          )}
+          
+          {/* New order notification */}
+          {newOrderNotification && (
+            <div className="bg-green-100 border border-green-300 text-green-700 px-3 py-1 rounded-full text-sm animate-pulse">
+              New Order! 🎉
+            </div>
+          )}
+        </div>
       </div>
+
+      {activeOrders.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="text-6xl mb-4">📋</div>
+          <h3 className="text-xl font-semibold text-gray-700 mb-2">No Active Orders</h3>
+          <p className="text-gray-500">Orders will appear here when customers place them.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {activeOrders.map(order => (
+            <div
+              key={order.id}
+              className="bg-white rounded-xl shadow-lg p-6 border border-purple-100 hover:shadow-xl transition-shadow duration-200"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-lg font-semibold text-purple-700">
+                  Table #{order.tableNumber}
+                </span>
+                <span className="text-sm text-gray-500">
+                  {new Date(order.createdAt).toLocaleString()}
+                </span>
+              </div>
+              <div className="mb-2 flex items-center justify-between">
+                <span className="font-medium text-gray-700">Total:</span>
+                <span className="font-bold text-green-600">₺{order.totalAmount.toFixed(2)}</span>
+              </div>
+              <div className="mb-2 text-sm text-gray-600 italic">
+                <span className="font-medium text-purple-600">Special Note:</span> {order.note || 'No special note'}
+              </div>
+              <div>
+                <span className="font-medium text-gray-700">Items:</span>
+                <ul className="mt-2 space-y-1">
+                  {order.orderItems.map(item => (
+                    <li
+                      key={item.id}
+                      className="grid grid-cols-3 items-center bg-purple-50 rounded px-2 py-1"
+                    >
+                      <span className="text-gray-800 truncate">{item.subCategory?.name || 'Unknown Item'}</span>
+                      <span className="text-gray-600 text-sm w-20 text-center">
+                        Qty: <span className="font-semibold">{item.quantity}</span>
+                      </span>
+                      <span className="text-green-700 font-semibold text-right">
+                        ₺{item.price.toFixed(2)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="flex justify-end mt-4">
+                <button
+                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-semibold transition"
+                  onClick={async () => {
+                    setOrders(prev => prev.filter(o => o.id !== order.id));
+                    await fetch(`/api/QR_Panel/order/${companyId}`, {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ orderId: order.id }),
+                    });
+                  }}
+                >
+                  Paid
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

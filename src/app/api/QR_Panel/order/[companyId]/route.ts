@@ -30,23 +30,26 @@ export async function POST(req: NextRequest, context: { params: Promise<{ compan
           })),
         },
       },
+      include: {
+        orderItems: {
+          include: {
+            subCategory: {
+              select: { name: true }
+            }
+          }
+        },
+      },
     });
 
-    // Attach socket.io server to Next.js HTTP server only once
-    if (!(global as any).ioAttached) {
-      const io = getIO();
-      // @ts-ignore
-      const server = req.socket?.server;
-      if (server && !server.io) {
-        io.attach(server);
-        server.io = io;
-        (global as any).ioAttached = true;
-        console.log('Socket.IO server attached to Next.js server');
-      }
-    }
+    console.log('Created order with full data:', JSON.stringify(order, null, 2));
 
-    // Emit new order event
-    emitNewOrder(companyId, order);
+    // Emit new order event using global io instance
+    if (global.io) {
+      console.log(`Emitting new order to company ${companyId}:`, order.id);
+      global.io.to(companyId).emit('new-order', order);
+    } else {
+      console.warn('WebSocket server not available - order created but not emitted');
+    }
 
     return NextResponse.json({ orderId: order.id }, { status: 201 });
   } catch (error) {
