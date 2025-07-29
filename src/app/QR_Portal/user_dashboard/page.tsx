@@ -2828,7 +2828,7 @@ function OrderSystemSection({ companyId }: { companyId: string }) {
             <span className="capitalize">{connectionStatus}</span>
           </div>
           
-          {/* Test WebSocket button */}
+          {/* Test WebSocket button 
           {connectionStatus === 'connected' && (
             <button
               onClick={() => {
@@ -2839,7 +2839,7 @@ function OrderSystemSection({ companyId }: { companyId: string }) {
             >
               Test WS
             </button>
-          )}
+          )}*/}
         </div>
       </div>
 

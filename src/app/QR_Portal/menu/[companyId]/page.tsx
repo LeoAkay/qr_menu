@@ -512,7 +512,7 @@ if (company && showWelcoming) {
 
       if (response.ok) {
         const data = await response.json();
-        alert(`✅ Order confirmed!\nOrder ID: ${data.orderId}`);
+        alert(`✅ Order confirmed!`);
         clearCart();
         setShowCart(false);
       } else {
@@ -959,8 +959,10 @@ function ManualMenu({
               .map((item) => (
                 <div
                   key={item.id}
-                  className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group hover:-translate-y-1 relative"
-                >
+                  className={`bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group hover:-translate-y-1 relative
+                    ${!item.stock}`}
+                    style={{ alignSelf: 'start' }} // keep this for layout fix from before
+                  >
                   {/* Product Image */}
                   <div className="aspect-square w-full bg-gray-100 overflow-hidden">
                     {item.menuImageUrl ? (
