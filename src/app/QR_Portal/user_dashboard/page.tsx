@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { QRCodeSVG } from 'qrcode.react'
 import { io } from "socket.io-client";
+import GlobalOrderBanner from '@/app/components/CompanyComponents/globalOrderComponents';
 
 interface UserData {
   id: string
@@ -104,6 +105,24 @@ export default function UserDashboard() {
     return () => clearInterval(interval);
   }, [userData?.company?.id]);
 
+   const [bannerVisible, setBannerVisible] = useState(false);
+  const [bannerOrder, setBannerOrder] = useState<Order | null>(null);
+
+  useEffect(() => {
+    const handleNewOrder = (event: Event) => {
+      const customEvent = event as CustomEvent<Order>;
+      const order = customEvent.detail;
+      setBannerOrder(order);
+      setBannerVisible(true);
+
+      setTimeout(() => {
+        setBannerVisible(false);
+      }, 5000); // Hide after 5 seconds
+    };
+
+    window.addEventListener('new-order-notification', handleNewOrder);
+    return () => window.removeEventListener('new-order-notification', handleNewOrder);
+  }, []);
 
   useEffect(() => {
     checkAuth()
@@ -259,6 +278,7 @@ export default function UserDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <GlobalOrderBanner/>
         <header className="bg-gradient-to-r from-purple-500 to-purple-600 shadow-md py-3">
   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -2707,6 +2727,7 @@ function OrderSystemSection({ companyId }: { companyId: string }) {
 
     // Handle new orders
     socket.on('new-order', (newOrder: Order) => {
+       window.dispatchEvent(new CustomEvent('new-order-notification', { detail: newOrder }));
       console.log('Received new order via WebSocket:', newOrder);
       if (!newOrder?.id) {
         console.warn('Received order without ID:', newOrder);
@@ -2818,13 +2839,6 @@ function OrderSystemSection({ companyId }: { companyId: string }) {
             >
               Test WS
             </button>
-          )}
-          
-          {/* New order notification */}
-          {newOrderNotification && (
-            <div className="bg-green-100 border border-green-300 text-green-700 px-3 py-1 rounded-full text-sm animate-pulse">
-              New Order! 🎉
-            </div>
           )}
         </div>
       </div>
