@@ -48,9 +48,9 @@ app.prepare().then(() => {
   });
 
   const PORT = process.env.PORT || 3000;
-  httpServer.listen(PORT, (err) => {
-    if (err) throw err;
-    console.log(`> Ready on http://localhost:${PORT}`);
-    console.log('> WebSocket server is running');
-  });
+httpServer.listen(PORT, '0.0.0.0', (err) => {
+  if (err) throw err;
+  console.log(`> Ready on http://0.0.0.0:${PORT}`);
+  console.log('> WebSocket server is running');
+});
 }); 
