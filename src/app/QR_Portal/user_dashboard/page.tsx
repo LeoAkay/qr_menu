@@ -2696,8 +2696,9 @@ function OrderSystemSection({ companyId }: { companyId: string }) {
   // WebSocket connection + fetch initial orders
   useEffect(() => {
     // Connect to WebSocket server
-    const socketUrl = 'http://172.20.10.3:3000';
-    
+    const socketUrl = window.location.origin;
+       {/*const socketUrl = 'http://172.20.10.3:3000'; "Akay mobil test" */} 
+
     console.log('Attempting to connect to WebSocket at:', socketUrl);
     
     const socket = io(socketUrl, {
