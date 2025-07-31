@@ -1,7 +1,6 @@
 // src/app/api/QR_Panel/order/[companyId]/route.ts
 import { prisma } from '@/app/lib/prisma';
 import { NextRequest, NextResponse } from 'next/server';
-import { getIO, emitNewOrder } from '@/app/lib/socketServer';
 
 export async function POST(req: NextRequest, context: { params: Promise<{ companyId: string }> }) {
   const params = await context.params;
