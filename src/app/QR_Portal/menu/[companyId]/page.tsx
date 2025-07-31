@@ -1262,21 +1262,22 @@ function ManualMenu({
 
                     {/* Action Buttons */}
                     {selectedItem?.id === item.id && selectedItem.quantity > 0 && item.price && (
-                      <div className="flex space-x-2 mt-3 transition-all duration-300 ease-in-out opacity-100">
-                        <button
-                          onClick={handleCancelSelection}
-                          className="flex-1 bg-red-500 text-white py-2 px-3 rounded-lg hover:bg-red-600 transition-colors text-sm font-medium"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={() => handleAddToCart(item)}
-                          className="flex-1 bg-green-500 text-white py-2 px-3 rounded-lg hover:bg-green-600 transition-colors text-sm font-medium"
-                        >
-                          Add to Cart
-                        </button>
-                      </div>
-                    )}
+  <div className="flex gap-x-2 mt-3 transition-all duration-300 ease-in-out opacity-100">
+    <button
+      onClick={handleCancelSelection}
+      className="flex-1 bg-red-500 text-black py-2 px-3 rounded-lg hover:bg-red-600 transition-colors text-sm font-medium"
+    >
+     ✖️
+    </button>
+    <button
+      onClick={() => handleAddToCart(item)}
+      className="flex-1 bg-green-500 text-black py-2 px-3 rounded-lg hover:bg-green-600 transition-colors text-sm font-medium"
+    >
+     🛒
+    </button>
+  </div>
+)}
+
                   </div>
                 </div>
               ))}

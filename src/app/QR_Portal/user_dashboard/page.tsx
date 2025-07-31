@@ -136,8 +136,9 @@ export default function UserDashboard() {
     if (!userData?.company?.id) {
       return;
     }
-
+{/*const socketUrl = 'http://172.20.10.3:3000';*/}
     const socketUrl = window.location.origin;
+
     const socket = io(socketUrl, {
       transports: ['polling', 'websocket'],
       timeout: 20000,
