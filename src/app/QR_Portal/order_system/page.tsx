@@ -104,7 +104,7 @@ export default function OrderSystemPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-100 to-pink-100">
+    <div className="min-h-screen bg-gradient-to-br from-purple-300 to-pink-300">
       {/* Header */}
       <header className="bg-white bg-opacity-90 backdrop-blur-md shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -114,9 +114,10 @@ export default function OrderSystemPage() {
                 onClick={() => router.push('/QR_Portal/user_dashboard')}
                 className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
               >
-                ← Back to Dashboard
+                Back to Dashboard
               </button>
-              <h1 className="text-2xl font-bold text-gray-800">Order System</h1>
+              <h1 className="text-2xl font-bold text-black-800">Order System</h1>
+              
             </div>
             <div className="flex items-center space-x-4">
              
@@ -316,7 +317,7 @@ function OrderSystemSection({ companyId }: { companyId: string }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-purple-700">Orders</h2>
+        <h2 className="text-4xl font-bold text-white">Orders</h2>
         <div className="flex items-center space-x-4">
           <button
             onClick={fetchOrders}
