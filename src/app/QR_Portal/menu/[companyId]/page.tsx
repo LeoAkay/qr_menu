@@ -64,6 +64,17 @@ export default function MenuPage() {
   const [tableNumber, setTableNumber] = useState('')
   const [orderRequest, setOrderRequest] = useState('')
 
+  // Confirmation dialog states
+  const [showAddToCartConfirm, setShowAddToCartConfirm] = useState(false)
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false)
+  const [showClearCartConfirm, setShowClearCartConfirm] = useState(false)
+  const [showOrderConfirm, setShowOrderConfirm] = useState(false)
+  const [showRemoveItemConfirm, setShowRemoveItemConfirm] = useState(false)
+  const [pendingAction, setPendingAction] = useState<{
+    type: 'addToCart' | 'cancel' | 'clearCart' | 'order' | 'removeItem'
+    data?: any
+  } | null>(null)
+
   useEffect(() => {
     if (companyId) {
       fetchCompanyData()
@@ -175,6 +186,114 @@ export default function MenuPage() {
     setShowCart(false)
     setTableNumber('')
     setOrderRequest('')
+  }
+
+  // Confirmation dialog functions
+  const handleAddToCartConfirm = (itemData: any) => {
+    setPendingAction({ type: 'addToCart', data: itemData })
+    setShowAddToCartConfirm(true)
+  }
+
+  const handleCancelConfirm = () => {
+    setPendingAction({ type: 'cancel' })
+    setShowCancelConfirm(true)
+  }
+
+  const handleClearCartConfirm = () => {
+    setPendingAction({ type: 'clearCart' })
+    setShowClearCartConfirm(true)
+  }
+
+  const handleOrderConfirm = () => {
+    if (!tableNumber.trim()) {
+      alert('Please enter your table number before confirming the order.')
+      return
+    }
+    setPendingAction({ type: 'order' })
+    setShowOrderConfirm(true)
+  }
+
+  const handleRemoveItemConfirm = (itemId: string, itemName: string) => {
+    setPendingAction({ type: 'removeItem', data: { itemId, itemName } })
+    setShowRemoveItemConfirm(true)
+  }
+
+  const executePendingAction = () => {
+    if (!pendingAction) return
+
+    switch (pendingAction.type) {
+      case 'addToCart':
+        if (pendingAction.data) {
+          addToCart(pendingAction.data.item, pendingAction.data.quantity)
+        }
+        break
+      case 'cancel':
+        setSelectedItem(null)
+        break
+      case 'clearCart':
+        clearCart()
+        break
+      case 'order':
+        placeOrder()
+        break
+      case 'removeItem':
+        if (pendingAction.data) {
+          updateCartItemQuantity(pendingAction.data.itemId, 0)
+        }
+        break
+    }
+
+    // Reset confirmation states
+    setShowAddToCartConfirm(false)
+    setShowCancelConfirm(false)
+    setShowClearCartConfirm(false)
+    setShowOrderConfirm(false)
+    setShowRemoveItemConfirm(false)
+    setPendingAction(null)
+  }
+
+  const cancelPendingAction = () => {
+    setShowAddToCartConfirm(false)
+    setShowCancelConfirm(false)
+    setShowClearCartConfirm(false)
+    setShowOrderConfirm(false)
+    setShowRemoveItemConfirm(false)
+    setPendingAction(null)
+  }
+
+  const placeOrder = async () => {
+    try {
+      const response = await fetch(`/api/QR_Panel/order/${companyId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          tableNumber: parseInt(tableNumber),
+          orderRequest: orderRequest.trim(),
+          cart: cart.map(item => ({
+            id: item.id,
+            quantity: item.quantity,
+            price: item.price,
+          })),
+          totalAmount: getTotalPrice(),
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        alert(`✅ Order confirmed!\nOrder ID: ${data.orderId}`);
+        clearCart();
+        setShowCart(false);
+      } else {
+        const error = await response.json();
+        console.error('Order failed:', error);
+        alert('❌ Failed to place the order. Please try again.');
+      }
+    } catch (err) {
+      console.error('Error placing order:', err);
+      alert('❌ Something went wrong. Please try again later.');
+    }
   }
 
   if (loading) {
@@ -306,6 +425,53 @@ if (company && showWelcoming) {
   )
 }
 
+  // Confirmation Dialog Component
+  const ConfirmationDialog = ({ 
+    isOpen, 
+    title, 
+    message, 
+    confirmText, 
+    cancelText, 
+    onConfirm, 
+    onCancel,
+    confirmColor = "bg-red-500 hover:bg-red-600"
+  }: {
+    isOpen: boolean
+    title: string
+    message: string
+    confirmText: string
+    cancelText: string
+    onConfirm: () => void
+    onCancel: () => void
+    confirmColor?: string
+  }) => {
+    if (!isOpen) return null
+
+    return (
+      <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div className="bg-white rounded-lg max-w-md w-full shadow-xl border border-gray-200">
+          <div className="p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-2">{title}</h3>
+            <p className="text-gray-600 mb-6">{message}</p>
+            <div className="flex space-x-3">
+              <button
+                onClick={onCancel}
+                className="flex-1 px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                {cancelText}
+              </button>
+              <button
+                onClick={onConfirm}
+                className={`flex-1 px-4 py-2 text-white rounded-lg transition-colors ${confirmColor}`}
+              >
+                {confirmText}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div 
@@ -373,6 +539,8 @@ if (company && showWelcoming) {
             selectedItem={selectedItem}
             setSelectedItem={setSelectedItem}
             addToCart={addToCart}
+            onAddToCartConfirm={handleAddToCartConfirm}
+            onCancelConfirm={handleCancelConfirm}
           />
         ) : (
           <div className="text-center py-8">
@@ -450,7 +618,13 @@ if (company && showWelcoming) {
                       </div>
                       <div className="flex items-center space-x-2">
                         <button
-                          onClick={() => updateCartItemQuantity(item.id, item.quantity - 1)}
+                          onClick={() => {
+                            if (item.quantity === 1) {
+                              handleRemoveItemConfirm(item.id, item.name)
+                            } else {
+                              updateCartItemQuantity(item.id, item.quantity - 1)
+                            }
+                          }}
                           className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300"
                         >
                           -
@@ -480,51 +654,13 @@ if (company && showWelcoming) {
                 </div>
                 <div className="flex space-x-2">
                   <button
-                    onClick={clearCart}
+                    onClick={handleClearCartConfirm}
                     className="flex-1 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition-colors"
                   >
                     Clear Cart
                   </button>
                   <button
-  onClick={async () => {
-    if (!tableNumber.trim()) {
-      alert('Please enter your table number before confirming the order.');
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/QR_Panel/order/${companyId}`, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({
-    tableNumber: parseInt(tableNumber),
-    orderRequest: orderRequest.trim(),
-    cart: cart.map(item => ({
-      id: item.id,
-      quantity: item.quantity,
-      price: item.price,
-    })),
-    totalAmount: getTotalPrice(),
-  }),
-});
-
-      if (response.ok) {
-        const data = await response.json();
-        alert(`✅ Order confirmed!`);
-        clearCart();
-        setShowCart(false);
-      } else {
-        const error = await response.json();
-        console.error('Order failed:', error);
-        alert('❌ Failed to place the order. Please try again.');
-      }
-    } catch (err) {
-      console.error('Error placing order:', err);
-      alert('❌ Something went wrong. Please try again later.');
-    }
-  }}
+  onClick={handleOrderConfirm}
   disabled={!tableNumber.trim()}
   className={`flex-1 py-2 rounded-lg transition-colors ${
     tableNumber.trim()
@@ -541,6 +677,62 @@ if (company && showWelcoming) {
           </div>
         </div>
       )}
+
+      {/* Confirmation Dialogs */}
+      <ConfirmationDialog
+        isOpen={showAddToCartConfirm}
+        title="Add to Cart"
+        message={`Are you sure you want to add ${pendingAction?.data?.quantity || 0} ${pendingAction?.data?.item?.name || 'item'} to your cart?`}
+        confirmText="Yes, Add to Cart"
+        cancelText="Cancel"
+        onConfirm={executePendingAction}
+        onCancel={cancelPendingAction}
+        confirmColor="bg-green-500 hover:bg-green-600"
+      />
+
+      <ConfirmationDialog
+        isOpen={showCancelConfirm}
+        title="Cancel Selection"
+        message="Are you sure you want to cancel your selection?"
+        confirmText="Yes, Cancel"
+        cancelText="Keep Selection"
+        onConfirm={executePendingAction}
+        onCancel={cancelPendingAction}
+        confirmColor="bg-red-500 hover:bg-red-600"
+      />
+
+      <ConfirmationDialog
+        isOpen={showClearCartConfirm}
+        title="Clear Cart"
+        message="Are you sure you want to clear your cart? This will remove all items and cannot be undone."
+        confirmText="Clear Cart"
+        cancelText="Keep Items"
+        onConfirm={executePendingAction}
+        onCancel={cancelPendingAction}
+        confirmColor="bg-red-500 hover:bg-red-600"
+      />
+
+      <ConfirmationDialog
+        isOpen={showOrderConfirm}
+        title="Confirm Order"
+        message={`Are you sure you want to place this order for ₺${getTotalPrice().toFixed(2)}? You cannot cancel after this confirmation. This is your final confirmation.`}
+        confirmText="Yes, Place Order"
+        cancelText="Review Order"
+        onConfirm={executePendingAction}
+        onCancel={cancelPendingAction}
+        confirmColor="bg-green-500 hover:bg-green-600"
+      />
+
+      <ConfirmationDialog
+        isOpen={showRemoveItemConfirm}
+        title="Remove Item"
+        message={`Are you sure you want to remove "${pendingAction?.data?.itemName || 'this item'}" from your cart?`}
+        confirmText="Yes, Remove"
+        cancelText="Keep Item"
+        onConfirm={executePendingAction}
+        onCancel={cancelPendingAction}
+        confirmColor="bg-red-500 hover:bg-red-600"
+      />
 
       {/* Footer */}
       <footer className="text-center py-1 px-4 border-t mt-1">
@@ -856,13 +1048,17 @@ function ManualMenu({
   theme,
   selectedItem,
   setSelectedItem,
-  addToCart
+  addToCart,
+  onAddToCartConfirm,
+  onCancelConfirm
 }: { 
   categories: Company['Main_Categories']
   theme: { backgroundColor?: string; textColor?: string; logoAreaColor?: string; style?: string }
   selectedItem: {id: string, quantity: number} | null
   setSelectedItem: (item: {id: string, quantity: number} | null) => void
   addToCart: (item: { id: string, name: string, price: number, image?: string }, quantity: number) => void
+  onAddToCartConfirm: (item: any) => void
+  onCancelConfirm: () => void
 }) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const sortedCategories = [...(categories || [])].sort((a, b) => a.categoryNo - b.categoryNo)
@@ -893,16 +1089,11 @@ function ManualMenu({
   const handleAddToCart = (item: any) => {
     if (!selectedItem || selectedItem.id !== item.id) return
     
-    addToCart({
-      id: item.id,
-      name: item.name,
-      price: item.price || 0,
-      image: item.menuImageUrl ? `/api/QR_Panel/user/manual-menu/image/${item.id}` : undefined
-    }, selectedItem.quantity)
+    onAddToCartConfirm({ item, quantity: selectedItem.quantity })
   }
 
   const handleCancelSelection = () => {
-    setSelectedItem(null)
+    onCancelConfirm()
   }
 
   if (sortedCategories.length === 0) {
@@ -959,10 +1150,8 @@ function ManualMenu({
               .map((item) => (
                 <div
                   key={item.id}
-                  className={`bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group hover:-translate-y-1 relative
-                    ${!item.stock}`}
-                    style={{ alignSelf: 'start' }} // keep this for layout fix from before
-                  >
+                  className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group hover:-translate-y-1 relative"
+                >
                   {/* Product Image */}
                   <div className="aspect-square w-full bg-gray-100 overflow-hidden">
                     {item.menuImageUrl ? (
