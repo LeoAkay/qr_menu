@@ -703,7 +703,6 @@ if (company && showWelcoming) {
       alert('❌ Something went wrong. Please try again later.');
     }
   }}
-  onClick={handleOrderConfirm}
   disabled={!tableNumber.trim()}
   className={`flex-1 py-2 rounded-lg transition-colors ${
     tableNumber.trim()
@@ -951,7 +950,8 @@ function PDFFlipbook({ pdfUrl }: { pdfUrl: string }) {
   }
 
   return (
-    <div className="flex justify-center items-center w-full min-h-screen bg-gray-100 py-8">
+    <div className="flex flex-col justify-center items-center w-full min-h-screen bg-gray-100 px-4 py-8">
+
       <div ref={containerRef} className="w-full max-w-6xl mx-auto px-4">
         <div className="relative bg-white rounded-lg shadow-xl">
           <HTMLFlipBook
@@ -977,6 +977,7 @@ function PDFFlipbook({ pdfUrl }: { pdfUrl: string }) {
             startZIndex={20}
             autoSize={true}
             className="shadow-2xl mx-auto"
+            style={{}}
           >
             {images.map((src, idx) => (
               <div key={idx} className="bg-white flex items-center justify-center h-full overflow-hidden shadow-inner">
