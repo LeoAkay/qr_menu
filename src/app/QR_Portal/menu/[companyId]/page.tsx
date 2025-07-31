@@ -9,7 +9,7 @@ interface Company {
   C_Name: string
   C_Logo_Image?: any
   Welcoming_Page?: any
-  pdfMenuFile?: any
+  pdfMenuUrl?: any
   menuType?: string
 
   Main_Categories?: Array<{
@@ -518,10 +518,10 @@ if (company && showWelcoming) {
         </button>
       </header>
 
-      <div className={`mx-auto ${getEffectiveMenuType() === 'pdf' ? 'max-w-none p-0 min-h-screen' : 'max-w-4xl px-4'}`}>
-        {getEffectiveMenuType() === 'pdf' && company.pdfMenuFile ? (
+      <div className={`mx-auto ${getEffectiveMenuType() === 'pdf' ? ' h-full max-w-none p-0 min-h-screen' : 'max-w-4xl px-4'}`}>
+        {getEffectiveMenuType() === 'pdf' && company.pdfMenuUrl ? (
           <div 
-            className={`w-full min-h-[85vh] flex items-center justify-center transition-all duration-500 ${
+            className={`w-full h-full flex items-center justify-center transition-all duration-500 ${
               pdfDisplayMode === 'scroll' 
                 ? 'bg-slate-50 border-t border-slate-200' 
                 : 'bg-orange-50 border-t border-orange-200'
@@ -543,7 +543,7 @@ if (company && showWelcoming) {
             onCancelConfirm={handleCancelConfirm}
           />
         ) : (
-          <div className="text-center py-8">
+          <div className="text-center py-8 h-full">
             <div className="text-6xl mb-4">🍽️</div>
             <h2 className="text-2xl font-bold mb-4">Menu Coming Soon</h2>
             <p className="text-lg opacity-80">
@@ -556,7 +556,7 @@ if (company && showWelcoming) {
       {/* Shopping Cart Modal */}
       {showCart && (
        <div
-  className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+  className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm h-full"
   style={{ backgroundColor: 'rgba(255, 255, 255, 0.4)' }}
 >
           <div className="bg-white rounded-lg max-w-md w-full max-h-[80vh] overflow-hidden">
@@ -976,7 +976,6 @@ function PDFFlipbook({ pdfUrl }: { pdfUrl: string }) {
             maxShadowOpacity={0.5}
             startZIndex={20}
             autoSize={true}
-            style={{ padding: '20px' }}
             className="shadow-2xl mx-auto"
           >
             {images.map((src, idx) => (
@@ -985,7 +984,7 @@ function PDFFlipbook({ pdfUrl }: { pdfUrl: string }) {
                   <img 
                     src={src} 
                     alt={`Page ${idx + 1}`} 
-                    className="absolute inset-0 w-full h-full object-contain select-none"
+                    className="absolute inset-0 w-full h-full object-contain "
                     draggable="false"
                     loading={idx < 2 ? "eager" : "lazy"} // Preload first two pages
                   />
