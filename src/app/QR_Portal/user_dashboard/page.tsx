@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { QRCodeSVG } from 'qrcode.react'
-import { io } from "socket.io-client";
+import { io } from 'socket.io-client'
 
 interface UserData {
   id: string
@@ -44,26 +44,7 @@ interface UserData {
     }>
   }
 }
-interface Order {
-  id: string;
-  tableNumber: number;
-  companyId: string;
-  createdAt: string; // or Date if you convert it
-  isActive: boolean;
-  totalAmount: number;
-  note?: string;
-  orderItems: OrderItem[];
-}
 
-interface OrderItem {
-  id: string;
-  orderId: string;
-  subCategoryId: string;
-  quantity: number;
-  price: number;
-  subCategory?: {
-    name?: string;
-  };}
 interface Theme {
   backgroundColor?: string
   textColor?: string
@@ -74,11 +55,12 @@ export default function UserDashboard() {
   const router = useRouter()
   const [userData, setUserData] = useState<UserData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'pdf' | 'manual' | 'theme' | 'preview' | 'profile'| 'contactUs'| 'orders' | ''>('')
+  const [activeTab, setActiveTab] = useState<'pdf' | 'manual' | 'theme' | 'preview' | 'profile'| 'contactUs' | ''>('')
   const [menuType, setMenuType] = useState<'pdf' | 'manual' | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [orderSystemSearch, setOrderSystemSearch] = useState('');
-  const [newOrderCount, setNewOrderCount] = useState(0);
+  const [newOrderNotification, setNewOrderNotification] = useState(false)
+  const [notificationMessage, setNotificationMessage] = useState('')
+
   const [theme, setTheme] = useState<Theme>({
     backgroundColor: '#ffffff',
     textColor: '#000000',
@@ -87,27 +69,59 @@ export default function UserDashboard() {
   const pdfRef = useRef<HTMLDivElement>(null);
   const manualRef = useRef<HTMLDivElement>(null);
   const themeRef = useRef<HTMLDivElement>(null);
-  const ordersRef = useRef<HTMLDivElement>(null);
+
   const menuRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!userData?.company?.id) return;
-    const interval = setInterval(async () => {
-      if (!userData?.company?.id) return;
-      const res = await fetch(`/api/QR_Panel/order/${userData.company.id}`);
-      if (res.ok) {
-        const data = await res.json();
-        const activeOrders = data.orders.filter((order: any) => order.isActive !== false);
-        setNewOrderCount(activeOrders.length);
-      }
-    }, 5000); // 5 seconds
-    return () => clearInterval(interval);
-  }, [userData?.company?.id]);
+
 
 
   useEffect(() => {
     checkAuth()
   }, [])
+
+  // WebSocket connection for new order notifications
+  useEffect(() => {
+    if (!userData?.company?.id) {
+      return;
+    }
+
+    const socketUrl = window.location.origin;
+    const socket = io(socketUrl, {
+      transports: ['polling', 'websocket'],
+      timeout: 20000,
+      forceNew: true,
+    });
+
+    socket.on('connect', () => {
+      if (userData?.company?.id) {
+        socket.emit('join', userData.company.id);
+      }
+    });
+
+    socket.on('disconnect', () => {
+      console.log('Dashboard WebSocket disconnected');
+    });
+
+    socket.on('connect_error', (error) => {
+      console.error('Dashboard WebSocket connection error:', error);
+    });
+
+    socket.on('new-order', (newOrder: any) => {
+      if (newOrder?.tableNumber) {
+        setNotificationMessage(`New order received for Table ${newOrder.tableNumber}!`);
+        setNewOrderNotification(true);
+        
+        // Auto-hide notification after 5 seconds
+        setTimeout(() => {
+          setNewOrderNotification(false);
+        }, 5000);
+      }
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [userData]);
 
   const checkAuth = async () => {
     const userId = localStorage.getItem('userId')
@@ -245,7 +259,7 @@ export default function UserDashboard() {
     if (e.key === 'Enter' && searchQuery.trim() && userData?.company?.Main_Categories) {
       setActiveTab('manual');
       setMenuType('manual');
-      setOrderSystemSearch(searchQuery.trim());
+      
     }
   };
 
@@ -259,6 +273,33 @@ export default function UserDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Notification Popup */}
+      {newOrderNotification && (
+        <div className="fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg animate-bounce">
+          <div className="flex items-center space-x-3">
+            <div className="text-2xl">🎉</div>
+            <div>
+              <div className="font-semibold">New Order!</div>
+              <div className="text-sm opacity-90">{notificationMessage}</div>
+            </div>
+            <button
+              onClick={() => setNewOrderNotification(false)}
+              className="ml-4 text-white hover:text-gray-200"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
+
+
+      
+
+    
+
+   
+      {/* Header */}
         <header className="bg-gradient-to-r from-purple-500 to-purple-600 shadow-md py-3">
   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -466,9 +507,7 @@ export default function UserDashboard() {
   <div className="col-span-1 md:col-span-1 lg:col-start-2 relative">
   <div
     onClick={() => {
-      setActiveTab('orders');
-      setNewOrderCount(0); // Reset badge when viewing orders
-      setTimeout(() => ordersRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+      router.push('/QR_Portal/order_system');
     }}
     className="bg-gradient-to-br from-pink-400 to-pink-300 hover:from-pink-300 hover:to-pink-400 rounded-xl p-8 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
   >
@@ -476,10 +515,10 @@ export default function UserDashboard() {
       <div className="text-3xl mb-4">📝</div>
       <h3 className="text-xl font-semibold text-gray-800">Order system</h3>
     </div>
-    {newOrderCount > 0 && (
-      <span className="absolute top-2 right-2 bg-red-500 text-white rounded-full px-2 py-0.5 text-xs font-bold shadow">
-        {newOrderCount}
-      </span>
+    {newOrderNotification && (
+      <div className="absolute top-2 right-2 bg-red-500 text-white rounded-full px-2 py-1 text-xs font-bold shadow animate-pulse">
+        NEW!
+      </div>
     )}
   </div>
 </div>
@@ -512,7 +551,7 @@ export default function UserDashboard() {
 
               {activeTab === 'manual' && (
   <div ref={manualRef}>
-    <ManualMenuSection searchQuery={orderSystemSearch} onSearchHandled={() => setOrderSystemSearch('')} />
+    <ManualMenuSection searchQuery={searchQuery} onSearchHandled={() => setSearchQuery('')} />
   </div>
 )}
               {activeTab === 'theme' && (
@@ -520,11 +559,7 @@ export default function UserDashboard() {
     <ThemeSettingsSection userData={userData} />
   </div>
 )}
-              {activeTab === 'orders' && userData?.company?.id && (
-  <div ref={ordersRef}>
-    <OrderSystemSection companyId={userData.company.id} />
-  </div>
-)}
+
               {activeTab === 'preview' && (
                 <div ref={menuRef}>
                   <PreviewSection 
@@ -2632,269 +2667,3 @@ function ThemeSettingsSection({ userData }: { userData: UserData | null }) {
   )
 }
 
-function OrderSystemSection({ companyId }: { companyId: string }) {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const socketRef = useRef<any>(null);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [newOrderNotification, setNewOrderNotification] = useState(false);
-
-  // Load notification sound
-  useEffect(() => {
-    const audio = new Audio('/sounds/shop-notification-355746.mp3');
-    audio.preload = 'auto';
-    audioRef.current = audio;
-  }, []);
-
-  // Unlock audio on first user interaction
-  useEffect(() => {
-    const unlockAudio = () => {
-      if (audioRef.current) {
-        audioRef.current
-          .play()
-          .then(() => {
-            audioRef.current!.pause();
-            try {
-              audioRef.current!.currentTime = 0;
-            } catch (e) {
-              console.warn("Error resetting audio:", e);
-            }
-          })
-          .catch((err) => {
-            console.warn("Audio unlock failed:", err);
-          });
-      }
-      window.removeEventListener('click', unlockAudio);
-    };
-
-    window.addEventListener('click', unlockAudio);
-    return () => window.removeEventListener('click', unlockAudio);
-  }, []);
-
-  // WebSocket connection + fetch initial orders
-  useEffect(() => {
-    // Connect to WebSocket server
-    const socketUrl = window.location.origin;
-    
-    console.log('Attempting to connect to WebSocket at:', socketUrl);
-    
-    const socket = io(socketUrl, {
-      transports: ['polling', 'websocket'], // Try polling first, then websocket
-      timeout: 20000,
-      forceNew: true,
-    });
-    socketRef.current = socket;
-
-    // Connection event handlers
-    socket.on('connect', () => {
-      console.log('WebSocket connected successfully');
-      setConnectionStatus('connected');
-      socket.emit('join', companyId);
-    });
-
-    socket.on('disconnect', () => {
-      console.log('WebSocket disconnected');
-      setConnectionStatus('disconnected');
-    });
-
-    socket.on('connect_error', (error) => {
-      console.error('WebSocket connection error:', error);
-      setConnectionStatus('disconnected');
-      setError('Failed to connect to real-time updates. Orders will still be visible but may not update automatically.');
-    });
-
-    // Handle new orders
-    socket.on('new-order', (newOrder: Order) => {
-      console.log('Received new order via WebSocket:', newOrder);
-      if (!newOrder?.id) {
-        console.warn('Received order without ID:', newOrder);
-        return;
-      }
-
-      setOrders(prev => {
-        if (prev.some(order => order.id === newOrder.id)) {
-          console.log('Order already exists, skipping:', newOrder.id);
-          return prev;
-        }
-        console.log('Adding new order to state:', newOrder.id);
-        return [newOrder, ...prev];
-      });
-
-      // Show notification
-      setNewOrderNotification(true);
-      setTimeout(() => setNewOrderNotification(false), 3000);
-
-      // Play notification sound
-      if (audioRef.current) {
-        audioRef.current.play().catch(console.warn);
-      }
-    });
-
-    // Handle test responses
-    socket.on('test-response', (data) => {
-      console.log('Test response received from server:', data);
-    });
-
-    // Fetch initial orders
-    const fetchOrders = async () => {
-      try {
-        const res = await fetch(`/api/QR_Panel/order/${companyId}`);
-        if (!res.ok) throw new Error('Failed to fetch orders');
-        
-        const data = await res.json();
-        if (Array.isArray(data.orders)) {
-          setOrders(data.orders);
-        } else {
-          setError('Invalid order data received');
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch orders');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchOrders();
-
-    return () => {
-      socket.disconnect();
-    };
-  }, [companyId]);
-
-  const activeOrders = orders.filter(order => order.isActive !== false);
-
-  if (loading) {
-    return (
-      <div className="text-center py-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-        <p className="text-gray-600">Loading orders...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="text-center py-8">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-          <p className="text-red-600">{error}</p>
-        </div>
-        <button
-          onClick={() => window.location.reload()}
-          className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors"
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-purple-700">Orders</h2>
-        <div className="flex items-center space-x-2">
-          {/* Connection status indicator */}
-          <div className={`flex items-center space-x-1 text-sm ${
-            connectionStatus === 'connected' ? 'text-green-600' : 
-            connectionStatus === 'connecting' ? 'text-yellow-600' : 'text-red-600'
-          }`}>
-            <div className={`w-2 h-2 rounded-full ${
-              connectionStatus === 'connected' ? 'bg-green-500' : 
-              connectionStatus === 'connecting' ? 'bg-yellow-500' : 'bg-red-500'
-            }`}></div>
-            <span className="capitalize">{connectionStatus}</span>
-          </div>
-          
-          {/* Test WebSocket button */}
-          {connectionStatus === 'connected' && (
-            <button
-              onClick={() => {
-                console.log('Testing WebSocket connection...');
-                socketRef.current?.emit('test', { message: 'Test from client' });
-              }}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs"
-            >
-              Test WS
-            </button>
-          )}
-          
-          {/* New order notification */}
-          {newOrderNotification && (
-            <div className="bg-green-100 border border-green-300 text-green-700 px-3 py-1 rounded-full text-sm animate-pulse">
-              New Order! 🎉
-            </div>
-          )}
-        </div>
-      </div>
-
-      {activeOrders.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="text-6xl mb-4">📋</div>
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">No Active Orders</h3>
-          <p className="text-gray-500">Orders will appear here when customers place them.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {activeOrders.map(order => (
-            <div
-              key={order.id}
-              className="bg-white rounded-xl shadow-lg p-6 border border-purple-100 hover:shadow-xl transition-shadow duration-200"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-lg font-semibold text-purple-700">
-                  Table #{order.tableNumber}
-                </span>
-                <span className="text-sm text-gray-500">
-                  {new Date(order.createdAt).toLocaleString()}
-                </span>
-              </div>
-              <div className="mb-2 flex items-center justify-between">
-                <span className="font-medium text-gray-700">Total:</span>
-                <span className="font-bold text-green-600">₺{order.totalAmount.toFixed(2)}</span>
-              </div>
-              <div className="mb-2 text-sm text-gray-600 italic">
-                <span className="font-medium text-purple-600">Special Note:</span> {order.note || 'No special note'}
-              </div>
-              <div>
-                <span className="font-medium text-gray-700">Items:</span>
-                <ul className="mt-2 space-y-1">
-                  {order.orderItems.map(item => (
-                    <li
-                      key={item.id}
-                      className="grid grid-cols-3 items-center bg-purple-50 rounded px-2 py-1"
-                    >
-                      <span className="text-gray-800 truncate">{item.subCategory?.name || 'Unknown Item'}</span>
-                      <span className="text-gray-600 text-sm w-20 text-center">
-                        Qty: <span className="font-semibold">{item.quantity}</span>
-                      </span>
-                      <span className="text-green-700 font-semibold text-right">
-                        ₺{item.price.toFixed(2)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="flex justify-end mt-4">
-                <button
-                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-semibold transition"
-                  onClick={async () => {
-                    setOrders(prev => prev.filter(o => o.id !== order.id));
-                    await fetch(`/api/QR_Panel/order/${companyId}`, {
-                      method: 'PATCH',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ orderId: order.id }),
-                    });
-                  }}
-                >
-                  Paid
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}

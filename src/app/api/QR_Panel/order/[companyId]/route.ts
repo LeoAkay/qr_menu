@@ -14,21 +14,20 @@ export async function POST(req: NextRequest, context: { params: Promise<{ compan
   }
 
   try {
-    // Create order
-    const order = await prisma.order.create({
-      data: {
-        tableNumber,
-        totalAmount,
-        isActive: true,
+    console.log('Processing order - Table:', tableNumber, 'Company:', companyId, 'Type:', typeof tableNumber);
+    
+    // Check if there's already an active order for this table
+    console.log('Searching for existing order with criteria:', {
+      tableNumber: tableNumber,
+      companyId: companyId,
+      isActive: true
+    });
+    
+    const existingOrder = await prisma.order.findFirst({
+      where: {
+        tableNumber: tableNumber,
         companyId,
-        ...(orderRequest ? { note: orderRequest } : {}),
-        orderItems: {
-          create: cart.map((item: any) => ({
-            subCategoryId: item.id,
-            quantity: item.quantity,
-            price: item.price,
-          })),
-        },
+        isActive: true,
       },
       include: {
         orderItems: {
@@ -41,17 +40,144 @@ export async function POST(req: NextRequest, context: { params: Promise<{ compan
       },
     });
 
-    console.log('Created order with full data:', JSON.stringify(order, null, 2));
+    console.log('Existing active order found:', existingOrder ? `ID: ${existingOrder.id}, Items: ${existingOrder.orderItems.length}` : 'None');
+    
+    // Debug: Check all orders for this table
+    const allOrdersForTable = await prisma.order.findMany({
+      where: {
+        tableNumber: tableNumber,
+        companyId,
+      },
+      select: {
+        id: true,
+        tableNumber: true,
+        isActive: true,
+        createdAt: true,
+        totalAmount: true,
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+    console.log('All orders for table', tableNumber, ':', allOrdersForTable);
+    
+    // Debug: Check all active orders for this company
+    const allActiveOrders = await prisma.order.findMany({
+      where: {
+        companyId,
+        isActive: true,
+      },
+      select: {
+        id: true,
+        tableNumber: true,
+        isActive: true,
+        createdAt: true,
+        totalAmount: true,
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+    console.log('All active orders for company:', allActiveOrders);
 
-    // Emit new order event using global io instance
-    if (global.io) {
-      console.log(`Emitting new order to company ${companyId}:`, order.id);
-      global.io.to(companyId).emit('new-order', order);
+    let order;
+    let isNewOrder = false;
+
+    if (existingOrder) {
+      console.log('Adding items to existing order:', existingOrder.id);
+      
+      // Add items to existing order
+      const newOrderItems = cart.map((item: any) => ({
+        subCategoryId: item.id,
+        quantity: item.quantity,
+        price: item.price,
+        orderId: existingOrder.id,
+      }));
+
+      // Create new order items
+      await prisma.orderItem.createMany({
+        data: newOrderItems,
+      });
+
+      // Calculate new total amount
+      const existingTotal = existingOrder.orderItems.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
+      const newItemsTotal = cart.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
+      const updatedTotal = existingTotal + newItemsTotal;
+
+      console.log('Updated total - Existing:', existingTotal, 'New:', newItemsTotal, 'Total:', updatedTotal);
+
+      // Update the existing order with new total and note
+      order = await prisma.order.update({
+        where: { id: existingOrder.id },
+        data: {
+          totalAmount: updatedTotal,
+          note: orderRequest ? 
+            (existingOrder.note ? `${existingOrder.note}; ${orderRequest}` : orderRequest) : 
+            existingOrder.note,
+        },
+        include: {
+          orderItems: {
+            include: {
+              subCategory: {
+                select: { name: true }
+              }
+            }
+          },
+        },
+      });
+
+      console.log('Successfully updated existing order:', order.id);
     } else {
-      console.warn('WebSocket server not available - order created but not emitted');
+      console.log('Creating new order for table:', tableNumber);
+      // Create new order
+      order = await prisma.order.create({
+        data: {
+          tableNumber,
+          totalAmount,
+          isActive: true,
+          companyId,
+          ...(orderRequest ? { note: orderRequest } : {}),
+          orderItems: {
+            create: cart.map((item: any) => ({
+              subCategoryId: item.id,
+              quantity: item.quantity,
+              price: item.price,
+            })),
+          },
+        },
+        include: {
+          orderItems: {
+            include: {
+              subCategory: {
+                select: { name: true }
+              }
+            }
+          },
+        },
+      });
+
+      isNewOrder = true;
+      console.log('Successfully created new order:', order.id, 'Table:', order.tableNumber);
     }
 
-    return NextResponse.json({ orderId: order.id }, { status: 201 });
+    console.log('Order data:', JSON.stringify(order, null, 2));
+
+    // Emit order event using global io instance
+    if (global.io) {
+      if (isNewOrder) {
+        global.io.to(companyId).emit('new-order', order);
+      } else {
+        global.io.to(companyId).emit('order-updated', order);
+      }
+    } else {
+      console.warn('WebSocket server not available - order created/updated but not emitted');
+    }
+
+    return NextResponse.json({ 
+      orderId: order.id, 
+      isNewOrder,
+      message: isNewOrder ? 'Order created successfully' : 'Order updated successfully'
+    }, { status: isNewOrder ? 201 : 200 });
   } catch (error) {
     console.error('[ORDER_POST]', error);
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });

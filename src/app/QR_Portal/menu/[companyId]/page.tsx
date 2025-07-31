@@ -512,7 +512,11 @@ if (company && showWelcoming) {
 
       if (response.ok) {
         const data = await response.json();
-        alert(`✅ Order confirmed!\nOrder ID: ${data.orderId}`);
+        if (data.isNewOrder) {
+          alert(`✅ Order confirmed!\nOrder ID: ${data.orderId}`);
+        } else {
+          alert(`✅ Items added to existing order!\nOrder ID: ${data.orderId}`);
+        }
         clearCart();
         setShowCart(false);
       } else {
