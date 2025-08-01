@@ -1194,7 +1194,8 @@ function ManualMenu({
                 <div
                   key={item.id}
                   className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group hover:-translate-y-1 relative"
-                >
+                style={{ alignSelf: 'start' }}
+               >
                   {/* Product Image */}
                   <div className="aspect-square w-full bg-gray-100 overflow-hidden">
                     {item.menuImageUrl ? (
@@ -1262,7 +1263,7 @@ function ManualMenu({
 
                     {/* Action Buttons */}
                     {selectedItem?.id === item.id && selectedItem.quantity > 0 && item.price && (
-  <div className="flex gap-x-2 mt-3 transition-all duration-300 ease-in-out opacity-100">
+  <div className="flex gap-x-2 mt-3 transition-all duration-300 ease-in-out opacity-100"  >
     <button
       onClick={handleCancelSelection}
       className="flex-1 bg-red-500 text-black py-2 px-3 rounded-lg hover:bg-red-600 transition-colors text-sm font-medium"

@@ -10,9 +10,6 @@ let imageUrl: string | null = null
     const userId = request.cookies.get('userId')?.value
     const role = request.cookies.get('role')?.value
 
-    if (!userId ) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
     
     // Get user's company
     const user = await prisma.user.findUnique({
@@ -110,10 +107,7 @@ if (menuImage && menuImage.size > 0) {
 export async function DELETE(request: NextRequest) {
   try {
     const userId = request.cookies.get('userId')?.value
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
+   
     const { itemId } = Object.fromEntries(new URL(request.url).searchParams)
     if (!itemId) {
       return NextResponse.json({ error: 'Item ID is required' }, { status: 400 })
@@ -160,25 +154,29 @@ export async function DELETE(request: NextRequest) {
 // Update menu item
 export async function PUT(request: NextRequest) {
   try {
-    const userId = request.cookies.get('userId')?.value
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const { searchParams } = new URL(request.url);
+    const itemId = searchParams.get('itemId');
+    const userId = searchParams.get('userId');
 
-    const { searchParams } = new URL(request.url)
-    const itemId = searchParams.get('itemId')
     if (!itemId) {
-      return NextResponse.json({ error: 'Item ID is required' }, { status: 400 })
+      return NextResponse.json({ error: 'Item ID is required' }, { status: 400 });
     }
 
+    if (!userId) {
+      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+    }
+
+    // Fetch user and their company
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: { company: true }
-    })
+    });
+
     if (!user?.company) {
-      return NextResponse.json({ error: 'Company not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Company not found' }, { status: 404 });
     }
 
+    // Validate item exists for this company
     const item = await prisma.subCategory.findFirst({
       where: {
         id: itemId,
@@ -186,70 +184,77 @@ export async function PUT(request: NextRequest) {
           companyId: user.company.id
         }
       }
-    })
+    });
+
     if (!item) {
-      return NextResponse.json({ error: 'Item not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Item not found' }, { status: 404 });
     }
 
-    const formData = await request.formData()
-    const name = formData.get('name') as string
-    const price = formData.get('price') as string
-    const menuImage = formData.get('menuImage') as File | null
+    const formData = await request.formData();
+    const name = formData.get('name') as string;
+    const price = formData.get('price') as string;
+    const menuImage = formData.get('menuImage') as File | null;
 
     if (!name) {
-      return NextResponse.json({ error: 'Name is required' }, { status: 400 })
+      return NextResponse.json({ error: 'Name is required' }, { status: 400 });
     }
 
-    const updateData: any = { name }
+    const updateData: any = { name };
+
     if (price) {
-      updateData.price = parseFloat(price)
+      updateData.price = parseFloat(price);
     }
 
+    // Upload new image to Supabase
     if (menuImage && menuImage.size > 0) {
-      const supabase = createClient(process.env.DB_URL!, process.env.ROLE_KEY!)
+      const supabase = createClient(process.env.DB_URL!, process.env.ROLE_KEY!);
 
-      // DELETE OLD IMAGE
+      // Delete old image if it exists
       if (item.menuImageUrl) {
-        const oldPath = item.menuImageUrl.split('/').slice(-2).join('/')
-        const { error: deleteError } = await supabase.storage.from('qrmenu').remove([oldPath])
-        if (deleteError) console.warn('Failed to delete old image:', deleteError.message)
+        const oldPath = item.menuImageUrl.split('/').slice(-2).join('/');
+        const { error: deleteError } = await supabase.storage.from('qrmenu').remove([oldPath]);
+        if (deleteError) {
+          console.warn('Failed to delete old image:', deleteError.message);
+        }
       }
 
-      const arrayBuffer = await menuImage.arrayBuffer()
-      const buffer = Buffer.from(arrayBuffer)
+      const arrayBuffer = await menuImage.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
 
-      const fileName = `items/${Date.now()}-${menuImage.name}`
-      const { data, error } = await supabase.storage
+      const fileName = `items/${Date.now()}-${menuImage.name}`;
+      const { error: uploadError } = await supabase.storage
         .from('qrmenu')
         .upload(fileName, buffer, {
           contentType: menuImage.type,
           upsert: true
-        })
+        });
 
-      if (error) {
-        console.error('Image upload error:', error)
-        return NextResponse.json({ error: 'Failed to upload image' }, { status: 500 })
+      if (uploadError) {
+        console.error('Image upload error:', uploadError);
+        return NextResponse.json({ error: 'Failed to upload image' }, { status: 500 });
       }
 
-      const { data: publicUrlData } = supabase.storage.from('qrmenu').getPublicUrl(fileName)
-      const imageUrl = publicUrlData?.publicUrl
+      const { data: publicUrlData } = supabase.storage.from('qrmenu').getPublicUrl(fileName);
+      const imageUrl = publicUrlData?.publicUrl;
+
       if (imageUrl) {
-        updateData.menuImageUrl = imageUrl
+        updateData.menuImageUrl = imageUrl;
       }
     }
 
+    // Update item
     const updatedItem = await prisma.subCategory.update({
       where: { id: itemId },
       data: updateData
-    })
+    });
 
     return NextResponse.json({
       success: true,
       item: updatedItem,
       message: 'Item updated successfully'
-    })
+    });
   } catch (error) {
-    console.error('Update item error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('Update item error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

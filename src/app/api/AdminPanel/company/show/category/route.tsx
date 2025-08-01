@@ -7,9 +7,7 @@ export async function POST(request: NextRequest) {
     const userId = request.cookies.get('userId')?.value
     const role = request.cookies.get('role')?.value
 
-    if (!userId ) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+   
     
     // Get user's company
     const user = await prisma.user.findUnique({
@@ -73,9 +71,7 @@ export async function DELETE(request: NextRequest) {
     const userId = request.cookies.get('userId')?.value
     const role = request.cookies.get('role')?.value
 
-    if (!userId ) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+  
 
     const { searchParams } = new URL(request.url)
     const categoryId = searchParams.get('categoryId')

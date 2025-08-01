@@ -158,7 +158,7 @@ const fetchUserIdFromCId = async (cId: number) => {
       if (categoryForm.backgroundImage) {
         formData.append('backgroundImage', categoryForm.backgroundImage)
       }
-      formData.append('id', userId)
+      const userId = localStorage.getItem('userId');
 
       const res = await fetch('/api/AdminPanel/company/show/category', {
         method: 'POST',
@@ -192,7 +192,7 @@ const fetchUserIdFromCId = async (cId: number) => {
       if (itemForm.menuImage) {
         formData.append('menuImage', itemForm.menuImage)
       }
-      formData.append('id', userId)
+      const userId = localStorage.getItem('userId');
 
       const res = await fetch('/api/AdminPanel/company/show/item', {
         method: 'POST',
@@ -332,7 +332,7 @@ const fetchUserIdFromCId = async (cId: number) => {
     if (editItemForm.menuImage) {
       formData.append('menuImage', editItemForm.menuImage)
     }
-
+    const userId = localStorage.getItem('userId');
     const res = await fetch(`/api/AdminPanel/company/show/item?itemId=${editingItem.id}&userId=${userId}`, {
       method: 'PUT',
       body: formData,
