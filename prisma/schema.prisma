@@ -121,6 +121,7 @@ model OrderItem {
   subCategoryId  String
   quantity       Int
   price          Float         // price at the time of order
+  isPaid         Boolean       @default(false) 
   subCategory    SubCategory   @relation(fields: [subCategoryId], references: [id])
   order          Order         @relation(fields: [orderId], references: [id])
 
