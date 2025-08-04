@@ -4,8 +4,6 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { QRCodeSVG } from 'qrcode.react'
 import { io } from "socket.io-client";
-import GlobalOrderBanner from '@/app/components/CompanyComponents/globalOrderComponents';
-
 interface UserData {
   id: string
   cId: number
@@ -76,12 +74,14 @@ export default function UserDashboard() {
   const router = useRouter()
   const [userData, setUserData] = useState<UserData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'pdf' | 'manual' | 'theme' | 'preview' | 'profile'| 'contactUs' | ''>('')
+  const [activeTab, setActiveTab] = useState<'pdf' | 'manual' | 'theme' | 'preview' | 'profile'| 'contactUs' | 'analytics' | ''>('')
   const [menuType, setMenuType] = useState<'pdf' | 'manual' | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [newOrderNotification, setNewOrderNotification] = useState(false)
   const [notificationMessage, setNotificationMessage] = useState('')
   const [newOrderCount, setNewOrderCount] = useState(0)
+  const [showActionBar, setShowActionBar] = useState(true)
+  const [activeSection, setActiveSection] = useState<string>('')
 
   const [theme, setTheme] = useState<Theme>({
     backgroundColor: '#ffffff',
@@ -373,9 +373,16 @@ export default function UserDashboard() {
               className="h-full w-full object-contain rounded"
             />
           </div>
-          <div className="text-white font-bold text-xl sm:text-2xl whitespace-nowrap truncate min-w-0">
+          <button
+            onClick={() => {
+              setActiveTab('');
+              setShowActionBar(true);
+              setActiveSection('');
+            }}
+            className="text-white font-bold text-xl sm:text-2xl whitespace-nowrap truncate min-w-0 hover:text-gray-200 transition-colors cursor-pointer"
+          >
             {userData?.company?.C_Name || ''}
-          </div>
+          </button>
         </div>
 
         {/* Center: Search bar */}
@@ -496,86 +503,127 @@ export default function UserDashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Menu Section */}
-        <div className="mb-8">
-          <div className="flex justify-center">
-            <button 
-              onClick={() => {
-                setActiveTab('preview');
-                setTimeout(() => menuRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-              }}
-              className="bg-gradient-to-r from-purple-400 to-purple-400 hover:from-purple-400 hover:to-purple-500 text-gray-800 font-semibold py-4 px-12 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 text-xl"
-            >
-              Menu
-            </button>
+                {/* Action Buttons Bar */}
+        <div className="bg-white rounded-xl shadow-lg p-4 mb-8">
+          <div className="flex items-center">
+            {/* Hamburger Button - Only visible when collapsed, always on left */}
+            {!showActionBar && (
+              <button
+                onClick={() => setShowActionBar(!showActionBar)}
+                className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                aria-label="Toggle Menu"
+              >
+                <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+            )}
+
+            {/* Centered Content */}
+            <div className="flex-1 flex justify-center">
+              {/* Active Section Name - Shows when bar is collapsed */}
+              {!showActionBar && activeSection && (
+                <div className="flex items-center space-x-2 px-4 py-2 bg-gray-50 rounded-lg border border-gray-200">
+                  <span className="text-gray-700 font-medium">{activeSection}</span>
+                </div>
+              )}
+
+              {/* Action Buttons - Conditionally visible */}
+              {showActionBar && (
+                <div className="flex flex-wrap gap-4">
+                {/* Menu Button */}
+                <button 
+                  onClick={() => {
+                    setActiveTab('preview');
+                    setActiveSection('Menu');
+                    setTimeout(() => menuRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+                    setShowActionBar(false); // Collapse after click
+                  }}
+                  className="flex items-center space-x-3 px-6 py-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors text-gray-700 border border-purple-200"
+                >
+                  <span className="text-2xl">🍽️</span>
+                  <span className="font-medium">Menu</span>
+                </button>
+
+                {/* PDF Upload Button */}
+                <button
+                  onClick={() => {
+                    setMenuType('pdf');
+                    setActiveTab('pdf');
+                    setActiveSection('PDF Upload');
+                    setTimeout(() => pdfRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+                    setShowActionBar(false); // Collapse after click
+                  }}
+                  className="flex items-center space-x-3 px-6 py-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors text-gray-700 border border-blue-200"
+                >
+                  <span className="text-2xl">📄</span>
+                  <span className="font-medium">PDF Upload</span>
+                </button>
+
+                {/* Manual Menu Button */}
+                <button
+                  onClick={() => {
+                    setMenuType('manual');
+                    setActiveTab('manual');
+                    setActiveSection('Manual Menu');
+                    setTimeout(() => manualRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+                    setShowActionBar(false); // Collapse after click
+                  }}
+                  className="flex items-center space-x-3 px-6 py-3 bg-green-50 hover:bg-green-100 rounded-lg transition-colors text-gray-700 border border-green-200"
+                >
+                  <span className="text-2xl">⚙️</span>
+                  <span className="font-medium">Manual Menu</span>
+                </button>
+
+                {/* Theme Settings Button */}
+                <button
+                  onClick={() => {
+                    setActiveTab('theme');
+                    setActiveSection('Theme Settings');
+                    setTimeout(() => themeRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+                    setShowActionBar(false); // Collapse after click
+                  }}
+                  className="flex items-center space-x-3 px-6 py-3 bg-yellow-50 hover:bg-yellow-100 rounded-lg transition-colors text-gray-700 border border-yellow-200"
+                >
+                  <span className="text-2xl">🎨</span>
+                  <span className="font-medium">Theme Settings</span>
+                </button>
+
+                {/* Order System Button */}
+                <button
+                  onClick={() => {
+                    router.push('/QR_Portal/order_system');
+                    setActiveSection('Order System');
+                    setShowActionBar(false); // Collapse after click
+                  }}
+                  className="flex items-center space-x-3 px-6 py-3 bg-red-50 hover:bg-red-100 rounded-lg transition-colors text-gray-700 border border-red-200 relative"
+                >
+                  <span className="text-2xl">📝</span>
+                  <span className="font-medium">Order System</span>
+                  {newOrderNotification && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-2 py-1 rounded-full animate-pulse">
+                      NEW!
+                    </span>
+                  )}
+                </button>
+
+                {/* Analytics Button */}
+                <button
+                  onClick={() => {
+                    setActiveTab('analytics');
+                    setActiveSection('Analytics');
+                    setShowActionBar(false); // Collapse after click
+                  }}
+                  className="flex items-center space-x-3 px-6 py-3 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors text-gray-700 border border-indigo-200"
+                >
+                  <span className="text-2xl">📊</span>
+                  <span className="font-medium">Analytics</span>
+                </button>
+              </div>
+            )}
+            </div>
           </div>
         </div>
-
-       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 justify-center max-w-4xl mx-auto">
-  {/* PDF Upload Card */}
-  <div
-    onClick={() => {
-      setMenuType('pdf');
-      setActiveTab('pdf');
-      setTimeout(() => pdfRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-    }}
-    className="bg-gradient-to-br from-pink-400 to-pink-300 hover:from-pink-300 hover:to-pink-400 rounded-xl p-8 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-  >
-    <div className="text-center">
-      <div className="text-3xl mb-4">📄</div>
-      <h3 className="text-xl font-semibold text-gray-800">PDF Upload</h3>
-    </div>
-  </div>
-
-  {/* Manual Upload Card (first one) */}
-  <div
-    onClick={() => {
-      setMenuType('manual');
-      setActiveTab('manual');
-      setTimeout(() => manualRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-    }}
-    className="bg-gradient-to-br from-pink-400 to-pink-300 hover:from-pink-300 hover:to-pink-400 rounded-xl p-8 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-  >
-    <div className="text-center">
-      <div className="text-3xl mb-4">⚙️</div>
-      <h3 className="text-xl font-semibold text-gray-800">Manual Menu</h3>
-    </div>
-  </div>
-
-  {/* Theme Settings Card */}
-  <div
-    onClick={() => {
-      setActiveTab('theme');
-      setTimeout(() => themeRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-    }}
-  
-    className="bg-gradient-to-br from-pink-400 to-pink-300 hover:from-pink-300 hover:to-pink-400 rounded-xl p-8 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-  >
-    <div className="text-center">
-      <div className="text-3xl mb-4">🎨</div>
-      <h3 className="text-xl font-semibold text-gray-800">Theme Settings</h3>
-    </div>
-  </div>
-
-  {/* Centered Second "Order System" Card */}
-  <div className="col-span-1 md:col-span-1 lg:col-start-2 relative">
-  <div
-    onClick={() => {
-      router.push('/QR_Portal/order_system');
-    }}
-    className="bg-gradient-to-br from-pink-400 to-pink-300 hover:from-pink-300 hover:to-pink-400 rounded-xl p-8 cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-  >
-    <div className="text-center">
-      <div className="text-3xl mb-4">📝</div>
-      <h3 className="text-xl font-semibold text-gray-800">Order system</h3>
-    </div>
-    {newOrderNotification && (
-      <div className="absolute top-2 right-2 bg-red-500 text-white rounded-full px-2 py-1 text-xs font-bold shadow animate-pulse">
-        NEW!
-      </div>
-    )}
-  </div>
-</div>
-</div>
 
 
 
@@ -629,6 +677,7 @@ export default function UserDashboard() {
             </div>
           )}
           {activeTab === 'contactUs' && <GetStartedPage userData={userData} />}
+          {activeTab === 'analytics' && <AnalyticsSection userData={userData} />}
           {/* Default Welcome Screen */}
           {!activeTab && (
             <div className="text-center py-12">
@@ -2715,6 +2764,253 @@ function ThemeSettingsSection({ userData }: { userData: UserData | null }) {
             )}
           </div>
         )}
+      </div>
+    </div>
+  )
+}
+
+// Analytics Component
+function AnalyticsSection({ userData }: { userData: UserData | null }) {
+  const [analyticsData, setAnalyticsData] = useState({
+    totalOrders: 0,
+    totalRevenue: 0,
+    averageOrderValue: 0,
+    popularDishes: [] as Array<{name: string, orders: number, revenue: number}>,
+    recentOrders: [] as Array<{id: string, customerName: string, totalAmount: number, status: string, createdAt: string}>,
+    monthlyRevenue: [] as Array<{month: string, revenue: number}>,
+    loading: true
+  })
+
+  useEffect(() => {
+    fetchAnalyticsData()
+  }, [])
+
+  const fetchAnalyticsData = async () => {
+    try {
+      // Fetch orders from the order system
+      const ordersResponse = await fetch('/api/QR_Panel/user/order', {
+        credentials: 'include'
+      })
+      
+      if (ordersResponse.ok) {
+        const orders = await ordersResponse.json()
+        
+        // Calculate analytics from real order data
+        const totalOrders = orders.length
+        const totalRevenue = orders.reduce((sum: number, order: any) => sum + order.totalAmount, 0)
+        const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0
+        
+        // Calculate popular dishes
+        const dishCounts: { [key: string]: { orders: number, revenue: number } } = {}
+        orders.forEach((order: any) => {
+          order.orderItems.forEach((item: any) => {
+            const dishName = item.subCategory?.name || 'Unknown Dish'
+            if (!dishCounts[dishName]) {
+              dishCounts[dishName] = { orders: 0, revenue: 0 }
+            }
+            dishCounts[dishName].orders += item.quantity
+            dishCounts[dishName].revenue += item.price * item.quantity
+          })
+        })
+        
+        const popularDishes = Object.entries(dishCounts)
+          .map(([name, data]) => ({ name, orders: data.orders, revenue: data.revenue }))
+          .sort((a, b) => b.orders - a.orders)
+          .slice(0, 5)
+        
+        // Get recent orders
+        const recentOrders = orders
+          .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+          .slice(0, 5)
+          .map((order: any) => ({
+            id: order.id,
+            customerName: order.customerName,
+            totalAmount: order.totalAmount,
+            status: order.status,
+            createdAt: order.createdAt
+          }))
+        
+        // Calculate monthly revenue
+        const monthlyRevenue: { [key: string]: number } = {}
+        orders.forEach((order: any) => {
+          const date = new Date(order.createdAt)
+          const month = date.toLocaleDateString('en-US', { month: 'short' })
+          monthlyRevenue[month] = (monthlyRevenue[month] || 0) + order.totalAmount
+        })
+        
+        const monthlyRevenueArray = Object.entries(monthlyRevenue)
+          .map(([month, revenue]) => ({ month, revenue }))
+          .sort((a, b) => {
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+            return months.indexOf(a.month) - months.indexOf(b.month)
+          })
+        
+        setAnalyticsData({
+          totalOrders,
+          totalRevenue,
+          averageOrderValue,
+          popularDishes,
+          recentOrders,
+          monthlyRevenue: monthlyRevenueArray,
+          loading: false
+        })
+      } else {
+        // Fallback to mock data if API fails
+        setAnalyticsData({
+          totalOrders: 0,
+          totalRevenue: 0,
+          averageOrderValue: 0,
+          popularDishes: [],
+          recentOrders: [],
+          monthlyRevenue: [],
+          loading: false
+        })
+      }
+    } catch (error) {
+      console.error('Error fetching analytics:', error)
+      setAnalyticsData(prev => ({ ...prev, loading: false }))
+    }
+  }
+
+  if (analyticsData.loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-semibold text-gray-800">Restaurant Analytics</h2>
+        <button
+          onClick={fetchAnalyticsData}
+          className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+        >
+          🔄 Refresh
+        </button>
+      </div>
+
+      {/* Key Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+          <div className="flex items-center">
+            <div className="p-3 bg-blue-100 rounded-lg">
+              <span className="text-2xl">📊</span>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Total Orders</p>
+              <p className="text-2xl font-bold text-gray-900">{analyticsData.totalOrders}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+          <div className="flex items-center">
+            <div className="p-3 bg-green-100 rounded-lg">
+              <span className="text-2xl">💰</span>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+              <p className="text-2xl font-bold text-gray-900">${analyticsData.totalRevenue.toFixed(2)}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+          <div className="flex items-center">
+            <div className="p-3 bg-purple-100 rounded-lg">
+              <span className="text-2xl">📈</span>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Avg Order Value</p>
+              <p className="text-2xl font-bold text-gray-900">${analyticsData.averageOrderValue.toFixed(2)}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-orange-500">
+          <div className="flex items-center">
+            <div className="p-3 bg-orange-100 rounded-lg">
+              <span className="text-2xl">🔥</span>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Popular Dishes</p>
+              <p className="text-2xl font-bold text-gray-900">{analyticsData.popularDishes.length}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Popular Dishes */}
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <h3 className="text-xl font-semibold text-gray-800 mb-4">🍽️ Most Popular Dishes</h3>
+        <div className="space-y-4">
+          {analyticsData.popularDishes.map((dish, index) => (
+            <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center space-x-4">
+                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                  <span className="text-sm font-bold text-purple-600">{index + 1}</span>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">{dish.name}</p>
+                  <p className="text-sm text-gray-600">{dish.orders} orders</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="font-semibold text-green-600">${dish.revenue.toFixed(2)}</p>
+                <p className="text-sm text-gray-500">revenue</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Recent Orders */}
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <h3 className="text-xl font-semibold text-gray-800 mb-4">📋 Recent Orders</h3>
+        <div className="space-y-3">
+          {analyticsData.recentOrders.map((order) => (
+            <div key={order.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div>
+                <p className="font-medium text-gray-900">{order.customerName}</p>
+                <p className="text-sm text-gray-600">
+                  {new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString()}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="font-semibold text-gray-900">${order.totalAmount.toFixed(2)}</p>
+                <span className={`px-2 py-1 text-xs rounded-full ${
+                  order.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                }`}>
+                  {order.status}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Monthly Revenue Chart */}
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <h3 className="text-xl font-semibold text-gray-800 mb-4">📊 Monthly Revenue</h3>
+        <div className="flex items-end space-x-4 h-48">
+          {analyticsData.monthlyRevenue.map((month, index) => {
+            const maxRevenue = Math.max(...analyticsData.monthlyRevenue.map(m => m.revenue))
+            const height = (month.revenue / maxRevenue) * 100
+            return (
+              <div key={index} className="flex-1 flex flex-col items-center">
+                <div 
+                  className="w-full bg-gradient-to-t from-purple-500 to-purple-300 rounded-t-lg transition-all hover:from-purple-600 hover:to-purple-400"
+                  style={{ height: `${height}%` }}
+                ></div>
+                <p className="text-sm font-medium text-gray-600 mt-2">{month.month}</p>
+                <p className="text-xs text-gray-500">${month.revenue.toFixed(0)}</p>
+              </div>
+            )
+          })}
+        </div>
       </div>
     </div>
   )

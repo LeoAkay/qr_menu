@@ -408,7 +408,7 @@ const handlePayCountChange = (itemId: string, delta: number, max: number) => {
       <div className="flex items-center justify-center space-x-2">
         <button
           onClick={() => handlePayCountChange(item.id, -1, unpaid)}
-          className="px-2 py-1 bg-gray-200 rounded disabled:opacity-50"
+          className="px-2 py-1 bg-gray-400 rounded disabled:opacity-50"
           disabled={payCount <= 0}
         >
           -
@@ -416,7 +416,7 @@ const handlePayCountChange = (itemId: string, delta: number, max: number) => {
         <span className="w-4 text-center">{payCount}</span>
         <button
           onClick={() => handlePayCountChange(item.id, 1, unpaid)}
-          className="px-2 py-1 bg-gray-300 rounded disabled:opacity-50"
+          className="px-2 py-1 bg-green-500 rounded disabled:opacity-50 hover:bg-green-600"
           disabled={payCount >= unpaid}
         >
           +
@@ -475,7 +475,7 @@ const handlePayCountChange = (itemId: string, delta: number, max: number) => {
     fetchOrders(); // Refresh UI
   }}
 >
-  Paid
+  Pay All
 </button>
                 </div>
               </div>
