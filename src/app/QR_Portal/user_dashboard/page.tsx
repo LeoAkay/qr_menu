@@ -52,8 +52,6 @@ interface Theme {
 
 interface Order {
   id: string
-  customerName: string
-  customerPhone: string
   tableNumber?: string
   note?: string
   orderItems: Array<{
@@ -2776,101 +2774,94 @@ function AnalyticsSection({ userData }: { userData: UserData | null }) {
     totalRevenue: 0,
     averageOrderValue: 0,
     popularDishes: [] as Array<{name: string, orders: number, revenue: number}>,
-    recentOrders: [] as Array<{id: string, customerName: string, totalAmount: number, status: string, createdAt: string}>,
+    recentOrders: [] as Array<{id: string, tableNumber: number, totalAmount: number, status: string, createdAt: string}>,
     monthlyRevenue: [] as Array<{month: string, revenue: number}>,
     loading: true
   })
 
-  useEffect(() => {
-    fetchAnalyticsData()
-  }, [])
+ useEffect(() => {
+  if (userData?.id) {
+    fetchAnalyticsData();
+  }
+}, [userData])
+
 
   const fetchAnalyticsData = async () => {
-    try {
-      // Fetch orders from the order system
-      const ordersResponse = await fetch('/api/QR_Panel/user/order', {
-        credentials: 'include'
-      })
-      
-      if (ordersResponse.ok) {
-        const orders = await ordersResponse.json()
-        
-        // Calculate analytics from real order data
-        const totalOrders = orders.length
-        const totalRevenue = orders.reduce((sum: number, order: any) => sum + order.totalAmount, 0)
-        const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0
-        
-        // Calculate popular dishes
-        const dishCounts: { [key: string]: { orders: number, revenue: number } } = {}
-        orders.forEach((order: any) => {
-          order.orderItems.forEach((item: any) => {
-            const dishName = item.subCategory?.name || 'Unknown Dish'
-            if (!dishCounts[dishName]) {
-              dishCounts[dishName] = { orders: 0, revenue: 0 }
-            }
-            dishCounts[dishName].orders += item.quantity
-            dishCounts[dishName].revenue += item.price * item.quantity
-          })
-        })
-        
-        const popularDishes = Object.entries(dishCounts)
-          .map(([name, data]) => ({ name, orders: data.orders, revenue: data.revenue }))
-          .sort((a, b) => b.orders - a.orders)
-          .slice(0, 5)
-        
-        // Get recent orders
-        const recentOrders = orders
-          .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-          .slice(0, 5)
-          .map((order: any) => ({
-            id: order.id,
-            customerName: order.customerName,
-            totalAmount: order.totalAmount,
-            status: order.status,
-            createdAt: order.createdAt
-          }))
-        
-        // Calculate monthly revenue
-        const monthlyRevenue: { [key: string]: number } = {}
-        orders.forEach((order: any) => {
-          const date = new Date(order.createdAt)
-          const month = date.toLocaleDateString('en-US', { month: 'short' })
-          monthlyRevenue[month] = (monthlyRevenue[month] || 0) + order.totalAmount
-        })
-        
-        const monthlyRevenueArray = Object.entries(monthlyRevenue)
-          .map(([month, revenue]) => ({ month, revenue }))
-          .sort((a, b) => {
-            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-            return months.indexOf(a.month) - months.indexOf(b.month)
-          })
-        
-        setAnalyticsData({
-          totalOrders,
-          totalRevenue,
-          averageOrderValue,
-          popularDishes,
-          recentOrders,
-          monthlyRevenue: monthlyRevenueArray,
-          loading: false
-        })
-      } else {
-        // Fallback to mock data if API fails
-        setAnalyticsData({
-          totalOrders: 0,
-          totalRevenue: 0,
-          averageOrderValue: 0,
-          popularDishes: [],
-          recentOrders: [],
-          monthlyRevenue: [],
-          loading: false
-        })
-      }
-    } catch (error) {
-      console.error('Error fetching analytics:', error)
-      setAnalyticsData(prev => ({ ...prev, loading: false }))
+  try {
+    const ordersResponse = await fetch(`/api/QR_Panel/analytics/${userData?.id}`, {
+      credentials: 'include'
+    });
+
+    const data = await ordersResponse.json(); // ✅ Only once
+    const orders = data.orders || [];
+
+    if (!ordersResponse.ok) {
+      throw new Error('Failed to fetch orders');
     }
+
+    // Calculate analytics
+    const totalOrders = orders.length;
+    const totalRevenue = orders.reduce((sum: number, order: any) => sum + order.totalAmount, 0);
+    const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+    // Popular dishes
+    const dishCounts: { [key: string]: { orders: number; revenue: number } } = {};
+    orders.forEach((order: any) => {
+      order.orderItems.forEach((item: any) => {
+        const dishName = item.subCategory?.name || 'Unknown Dish';
+        if (!dishCounts[dishName]) {
+          dishCounts[dishName] = { orders: 0, revenue: 0 };
+        }
+        dishCounts[dishName].orders += item.quantity;
+        dishCounts[dishName].revenue += item.price * item.quantity;
+      });
+    });
+
+    const popularDishes = Object.entries(dishCounts)
+      .map(([name, data]) => ({ name, orders: data.orders, revenue: data.revenue }))
+      .sort((a, b) => b.orders - a.orders)
+      .slice(0, 5);
+
+    // Recent orders
+    const recentOrders = orders
+      .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 5)
+      .map((order: any) => ({
+        id: order.id,
+        tableNumber: order.tableNumber,
+        totalAmount: order.totalAmount,
+        createdAt: order.createdAt
+      }));
+
+    // Monthly revenue
+    const monthlyRevenueMap: { [key: string]: number } = {};
+    orders.forEach((order: any) => {
+      const date = new Date(order.createdAt);
+      const month = date.toLocaleDateString('en-US', { month: 'short' });
+      monthlyRevenueMap[month] = (monthlyRevenueMap[month] || 0) + order.totalAmount;
+    });
+
+    const monthlyRevenueArray = Object.entries(monthlyRevenueMap)
+      .map(([month, revenue]) => ({ month, revenue }))
+      .sort((a, b) => {
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        return months.indexOf(a.month) - months.indexOf(b.month);
+      });
+
+    setAnalyticsData({
+      totalOrders,
+      totalRevenue,
+      averageOrderValue,
+      popularDishes,
+      recentOrders,
+      monthlyRevenue: monthlyRevenueArray,
+      loading: false
+    });
+  } catch (error) {
+    console.error('Error fetching analytics:', error);
+    setAnalyticsData(prev => ({ ...prev, loading: false }));
   }
+};
 
   if (analyticsData.loading) {
     return (
@@ -2893,55 +2884,34 @@ function AnalyticsSection({ userData }: { userData: UserData | null }) {
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
-          <div className="flex items-center">
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <span className="text-2xl">📊</span>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Orders</p>
-              <p className="text-2xl font-bold text-gray-900">{analyticsData.totalOrders}</p>
-            </div>
-          </div>
+      <div className="flex justify-center">
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+      <div className="flex items-center">
+        <div className="p-3 bg-blue-100 rounded-lg">
+          <span className="text-2xl">📊</span>
         </div>
-
-        <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
-          <div className="flex items-center">
-            <div className="p-3 bg-green-100 rounded-lg">
-              <span className="text-2xl">💰</span>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">${analyticsData.totalRevenue.toFixed(2)}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
-          <div className="flex items-center">
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <span className="text-2xl">📈</span>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Avg Order Value</p>
-              <p className="text-2xl font-bold text-gray-900">${analyticsData.averageOrderValue.toFixed(2)}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-orange-500">
-          <div className="flex items-center">
-            <div className="p-3 bg-orange-100 rounded-lg">
-              <span className="text-2xl">🔥</span>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Popular Dishes</p>
-              <p className="text-2xl font-bold text-gray-900">{analyticsData.popularDishes.length}</p>
-            </div>
-          </div>
+        <div className="ml-4">
+          <p className="text-sm font-medium text-gray-600">Total Orders</p>
+          <p className="text-2xl font-bold text-gray-900">{analyticsData.totalOrders}</p>
         </div>
       </div>
+    </div>
+
+    <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+      <div className="flex items-center">
+        <div className="p-3 bg-green-100 rounded-lg">
+          <span className="text-2xl">💰</span>
+        </div>
+        <div className="ml-4">
+          <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+          <p className="text-2xl font-bold text-gray-900">₺{analyticsData.totalRevenue.toFixed(2)}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 
       {/* Popular Dishes */}
       <div className="bg-white rounded-xl shadow-lg p-6">
@@ -2959,7 +2929,7 @@ function AnalyticsSection({ userData }: { userData: UserData | null }) {
                 </div>
               </div>
               <div className="text-right">
-                <p className="font-semibold text-green-600">${dish.revenue.toFixed(2)}</p>
+                <p className="font-semibold text-green-600">₺{dish.revenue.toFixed(2)}</p>
                 <p className="text-sm text-gray-500">revenue</p>
               </div>
             </div>
@@ -2974,18 +2944,13 @@ function AnalyticsSection({ userData }: { userData: UserData | null }) {
           {analyticsData.recentOrders.map((order) => (
             <div key={order.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div>
-                <p className="font-medium text-gray-900">{order.customerName}</p>
+                <p className="font-medium text-gray-900">{order.tableNumber}</p>
                 <p className="text-sm text-gray-600">
                   {new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString()}
                 </p>
               </div>
               <div className="text-right">
-                <p className="font-semibold text-gray-900">${order.totalAmount.toFixed(2)}</p>
-                <span className={`px-2 py-1 text-xs rounded-full ${
-                  order.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                }`}>
-                  {order.status}
-                </span>
+                <p className="font-semibold text-gray-900">₺{order.totalAmount.toFixed(2)}</p>
               </div>
             </div>
           ))}
@@ -2993,25 +2958,27 @@ function AnalyticsSection({ userData }: { userData: UserData | null }) {
       </div>
 
       {/* Monthly Revenue Chart */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <h3 className="text-xl font-semibold text-gray-800 mb-4">📊 Monthly Revenue</h3>
-        <div className="flex items-end space-x-4 h-48">
-          {analyticsData.monthlyRevenue.map((month, index) => {
-            const maxRevenue = Math.max(...analyticsData.monthlyRevenue.map(m => m.revenue))
-            const height = (month.revenue / maxRevenue) * 100
-            return (
-              <div key={index} className="flex-1 flex flex-col items-center">
-                <div 
-                  className="w-full bg-gradient-to-t from-purple-500 to-purple-300 rounded-t-lg transition-all hover:from-purple-600 hover:to-purple-400"
-                  style={{ height: `${height}%` }}
-                ></div>
-                <p className="text-sm font-medium text-gray-600 mt-2">{month.month}</p>
-                <p className="text-xs text-gray-500">${month.revenue.toFixed(0)}</p>
-              </div>
-            )
-          })}
-        </div>
+   <div className="bg-white rounded-xl shadow-lg p-6">
+      <h3 className="text-xl font-semibold text-gray-800 mb-4">📊 Monthly Revenue</h3>
+      <div className="flex items-end gap-4 justify-center h-48 overflow-x-auto">
+        {analyticsData.monthlyRevenue.map((month, index) => {
+          const maxRevenue = Math.max(...analyticsData.monthlyRevenue.map(m => m.revenue), 1);
+          const barMaxHeight = 192;
+          const barHeight = (month.revenue / maxRevenue) * barMaxHeight;
+
+          return (
+            <div key={index} className="flex flex-col items-center w-[40px]">
+              <div
+                className="w-full bg-gradient-to-t from-purple-500 to-purple-300 rounded-t-lg transition-all hover:from-purple-600 hover:to-purple-400"
+                style={{ height: `${barHeight}px` }}
+              ></div>
+              <p className="text-sm font-medium text-gray-600 mt-2 text-center">{month.month}</p>
+              <p className="text-xs text-gray-500 text-center">₺{month.revenue.toFixed(0)}</p>
+            </div>
+          );
+        })}
       </div>
+    </div>
     </div>
   )
 }
