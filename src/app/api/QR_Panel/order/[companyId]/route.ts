@@ -210,19 +210,54 @@ export async function GET(req: NextRequest, context: { params?: { companyId?: st
   }
 }
 
-export async function PATCH(req: NextRequest, context: { params?: { companyId?: string } } = {}) {
+export async function PATCH(req: NextRequest) {
   try {
-    const { orderId } = await req.json();
+    const { orderId, payCounts, markInactive } = await req.json();
+
     if (!orderId) {
       return NextResponse.json({ message: 'Order ID is required' }, { status: 400 });
     }
-    await prisma.order.update({
-      where: { id: orderId },
-      data: { isActive: false },
-    });
+
+    if (payCounts && typeof payCounts === 'object') {
+      const updatePromises = Object.entries(payCounts).map(async ([itemId, count]) => {
+        const incrementBy = Number(count);
+        if (incrementBy <= 0) return;
+
+        // Increment paidQuantity
+        await prisma.orderItem.update({
+          where: { id: itemId },
+          data: {
+            paidQuantity: { increment: incrementBy },
+          },
+        });
+
+        // Re-fetch and check if fully paid
+        const latest = await prisma.orderItem.findUnique({ where: { id: itemId } });
+        if (latest && latest.paidQuantity >= latest.quantity) {
+          await prisma.orderItem.update({
+            where: { id: itemId },
+            data: { isPaid: true },
+          });
+        }
+      });
+
+      await Promise.all(updatePromises);
+    }
+
+    // Check if all items are fully paid
+    const items = await prisma.orderItem.findMany({ where: { orderId } });
+    const allPaid = items.every(item => item.paidQuantity >= item.quantity);
+
+    if (markInactive || allPaid) {
+      await prisma.order.update({
+        where: { id: orderId },
+        data: { isActive: false },
+      });
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[ORDER_PATCH]', error);
+    console.error('[PATCH_ORDER_PAYMENT]', error);
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
   }
 }

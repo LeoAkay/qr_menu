@@ -20,7 +20,9 @@ interface OrderItem {
   orderId: string;
   subCategoryId: string;
   quantity: number;
+  paidQuantity: number;
   price: number;
+  isPaid: boolean;
   subCategory?: {
     name?: string;
   };
@@ -143,6 +145,19 @@ function OrderSystemSection({ companyId }: { companyId: string }) {
   const socketRef = useRef<any>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [newOrderNotification, setNewOrderNotification] = useState(false);
+
+  const [payCounts, setPayCounts] = useState<Record<string, number>>({});
+
+
+const handlePayCountChange = (itemId: string, delta: number, max: number) => {
+  setPayCounts((prev) => {
+    const current = prev[itemId] || 0;
+    const next = Math.min(max, Math.max(0, current + delta));
+    return { ...prev, [itemId]: next };
+  });
+};
+
+
 
   // Load notification sound
   useEffect(() => {
@@ -380,38 +395,88 @@ function OrderSystemSection({ companyId }: { companyId: string }) {
                 <div>
                   <span className="font-medium text-gray-700">Items:</span>
                   <ul className="mt-2 space-y-1">
-                    {allItems.map((item, idx) => (
-                      <li
-                        key={item.id + '-' + idx}
-                        className="grid grid-cols-3 items-center bg-purple-50 rounded px-2 py-1"
-                      >
-                        <span className="text-gray-800 truncate">{item.subCategory?.name || 'Unknown Item'}</span>
-                        <span className="text-gray-600 text-sm w-20 text-center">
-                          Qty: <span className="font-semibold">{item.quantity}</span>
-                        </span>
-                        <span className="text-green-700 font-semibold text-right">
-                          ₺{item.price.toFixed(2)}
-                        </span>
-                      </li>
-                    ))}
+                    {allItems.map((item) => {
+  const unpaid = item.quantity - item.paidQuantity;
+  const payCount = payCounts[item.id] || 0;
+
+  return (
+    <li key={item.id} className="grid grid-cols-6 items-center gap-2 bg-purple-50 rounded px-2 py-1">
+      <span className="truncate col-span-2">{item.subCategory?.name || 'Unknown'}</span>
+      <span className="text-sm text-center">Qty: {item.quantity}</span>
+      <span className="text-sm text-center text-green-700">Paid: {item.paidQuantity}</span>
+      
+      <div className="flex items-center justify-center space-x-2">
+        <button
+          onClick={() => handlePayCountChange(item.id, -1, unpaid)}
+          className="px-2 py-1 bg-gray-200 rounded disabled:opacity-50"
+          disabled={payCount <= 0}
+        >
+          -
+        </button>
+        <span className="w-4 text-center">{payCount}</span>
+        <button
+          onClick={() => handlePayCountChange(item.id, 1, unpaid)}
+          className="px-2 py-1 bg-gray-300 rounded disabled:opacity-50"
+          disabled={payCount >= unpaid}
+        >
+          +
+        </button>
+      </div>
+
+      <button
+        disabled={payCount === 0}
+        onClick={async () => {
+          await fetch(`/api/QR_Panel/order/${companyId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              orderId: latestOrder.id,
+              paidItemIds: [item.id],
+              payCounts: { [item.id]: payCount },
+            }),
+          });
+          setPayCounts(prev => ({ ...prev, [item.id]: 0 }));
+          fetchOrders();
+        }}
+        className="text-xs bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded disabled:bg-gray-300"
+      >
+        Pay
+      </button>
+    </li>
+  );
+})}
+
+
                   </ul>
                 </div>
                 <div className="flex justify-end mt-4">
                   <button
-                    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-semibold transition"
-                    onClick={async () => {
-                      setOrders(prev => prev.filter(o => o.tableNumber !== Number(tableNumber)));
-                      for (const order of tableOrders) {
-                        await fetch(`/api/QR_Panel/order/${companyId}`, {
-                          method: 'PATCH',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ orderId: order.id }),
-                        });
-                      }
-                    }}
-                  >
-                    Paid
-                  </button>
+  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-semibold transition"
+  onClick={async () => {
+    for (const order of tableOrders) {
+      const fullPayMap = {};
+      for (const item of order.orderItems) {
+  if (!item?.id || item.quantity == null || item.paidQuantity == null) continue;
+  fullPayMap[item.id] = item.quantity - item.paidQuantity;
+}
+
+
+      await fetch(`/api/QR_Panel/order/${companyId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: order.id,
+          payCounts: fullPayMap,
+          markInactive: true, // optional flag to force isActive = false
+        }),
+      });
+    }
+
+    fetchOrders(); // Refresh UI
+  }}
+>
+  Paid
+</button>
                 </div>
               </div>
             );
