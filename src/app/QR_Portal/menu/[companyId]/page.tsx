@@ -829,15 +829,6 @@ if (company && showWelcoming) {
           </div>
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="text-center py-8 px-4 border-t">
-       
-        
-        <p className="text-xs opacity-60 leading-tight">
-         
-        </p>
-      </footer>
     </div>
   )
 }
