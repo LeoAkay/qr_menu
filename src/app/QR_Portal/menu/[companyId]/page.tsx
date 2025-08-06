@@ -496,56 +496,53 @@ if (company && showWelcoming) {
     <div 
       className={` transition-opacity duration-500 ${(showWelcoming || loading) ? 'opacity-0' : 'opacity-100'}`}
       style={{ 
-        backgroundColor: theme.backgroundColor,
-        color: theme.textColor 
+        backgroundColor: getEffectiveMenuType() === 'pdf' ? 'transparent' : theme.backgroundColor,
+        color: theme.textColor,
+        minHeight: getEffectiveMenuType() === 'pdf' ? '100vh' : 'auto'
       }}
     >
-      {/* Header */}
-      <header className="py-2 px-4 text-center bg-opacity-90 backdrop-blur-sm relative">
-        <div className="max-w-4xl mx-auto">
-          {/* Company Logo */}
-          {company.C_Logo_Image && (
-            <div className="mb-1">
-              <img 
-                src={`/api/AdminPanel/company/image/${company.id}/logo?${Date.now()}`}
-                alt="Company Logo"
-                className="max-w-10 max-h-10 mx-auto rounded-lg shadow-lg"
-              />
-            </div>
-          )}
-          
-          <h1 className="text-sm font-bold">
-            {restaurantName}
-          </h1>
-        </div>
-
-        {/* Shopping Cart Icon */}
-        <button
-          onClick={() => setShowCart(true)}
-          className="absolute top-2 right-4 bg-black text-white text-xs p-1 rounded-full shadow-lg hover:bg-gray-800 transition-colors"
-        >
-          <div className="relative">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.1 5A1 1 0 006.9 19H19M9 19a2 2 0 100 4 2 2 0 000-4zm8 0a2 2 0 100 4 2 2 0 000-4z" />
-            </svg>
-            {getTotalItems() > 0 && (
-              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                {getTotalItems()}
-              </span>
+      {/* Header - Hidden for PDF menus */}
+      {getEffectiveMenuType() !== 'pdf' && (
+        <header className="py-2 px-4 text-center bg-opacity-90 backdrop-blur-sm relative">
+          <div className="max-w-4xl mx-auto">
+            {/* Company Logo */}
+            {company.C_Logo_Image && (
+              <div className="mb-1">
+                <img 
+                  src={`/api/AdminPanel/company/image/${company.id}/logo?${Date.now()}`}
+                  alt="Company Logo"
+                  className="max-w-10 max-h-10 mx-auto rounded-lg shadow-lg"
+                />
+              </div>
             )}
+            
+            <h1 className="text-sm font-bold">
+              {restaurantName}
+            </h1>
           </div>
-        </button>
-      </header>
 
-      <div className={`mx-auto ${getEffectiveMenuType() === 'pdf' ? ' h-full max-w-none p-0 ' : 'max-w-4xl px-4'}`}>
-        {getEffectiveMenuType() === 'pdf' && company.pdfMenuUrl ? (
-          <div 
-            className={`w-full h-full flex items-center justify-center transition-all duration-500 ${
-              pdfDisplayMode === 'scroll' 
-                ? 'bg-slate-50 border-t border-slate-200' 
-                : 'bg-orange-50 border-t border-orange-200'
-            }`}
+          {/* Shopping Cart Icon */}
+          <button
+            onClick={() => setShowCart(true)}
+            className="absolute top-2 right-4 bg-black text-white text-xs p-1 rounded-full shadow-lg hover:bg-gray-800 transition-colors"
           >
+            <div className="relative">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.1 5A1 1 0 006.9 19H19M9 19a2 2 0 100 4 2 2 0 000-4zm8 0a2 2 0 100 4 2 2 0 000-4z" />
+              </svg>
+              {getTotalItems() > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {getTotalItems()}
+                </span>
+              )}
+            </div>
+          </button>
+        </header>
+      )}
+
+      <div className={`mx-auto ${getEffectiveMenuType() === 'pdf' ? ' h-full max-w-none p-0' : 'max-w-4xl px-4'}`}>
+        {getEffectiveMenuType() === 'pdf' && company.pdfMenuUrl ? (
+          <div className="w-full h-full flex items-center justify-center bg-transparent">
             <PDFViewer 
               pdfUrl={`/api/AdminPanel/company/pdf/${company.id}?t=${Date.now()}`}
               displayMode={pdfDisplayMode}
@@ -1003,10 +1000,10 @@ function PDFFlipbook({ pdfUrl }: { pdfUrl: string }) {
   }
 
   return (
-    <div className="flex flex-col justify-start items-center w-full  bg-gray-100 px-1">
+    <div className="flex flex-col justify-start items-center w-full">
 
-      <div ref={containerRef} className="w-full max-w-6xl px-1 ">
-        <div className=" relative bg-white rounded-lg shadow-xl">
+      <div ref={containerRef} className="w-full max-w-6xl">
+        <div className="relative">
           <HTMLFlipBook
             width={dimensions.width}
             height={dimensions.height}
@@ -1029,11 +1026,11 @@ function PDFFlipbook({ pdfUrl }: { pdfUrl: string }) {
             maxShadowOpacity={0.5}
             startZIndex={20}
             autoSize={true}
-            className="shadow-2xl "
+            className=""
             style={{}}
           >
             {images.map((src, idx) => (
-              <div key={idx} className="bg-white flex items-start justify-start h-full overflow-hidden shadow-inner">
+              <div key={idx} className="flex items-start justify-start h-full overflow-hidden">
                 <div className="relative w-full h-full  items-start justify-start">
                   <img 
                     src={src} 
@@ -1110,19 +1107,13 @@ function ScrollPDFViewer({ pdfUrl }: { pdfUrl: string }) {
   }
 
   return (
-    <div 
-      className="w-full max-w-4xl mx-auto px-4 py-6 space-y-4 overflow-auto"
-      style={{ 
-        blockSize: `${Math.max(window.innerHeight - 120, 600)}px`
-      }}
-    >
+    <div className="w-full h-full overflow-auto">
       {images.map((src, idx) => (
         <div key={idx} className="w-full flex justify-center">
           <img 
             src={src} 
             alt={`Page ${idx + 1}`} 
-            className="max-w-full h-auto shadow-lg rounded-lg border border-gray-200"
-            style={{ blockSize: 'max(95vh)' }}
+            className="max-w-full h-auto"
           />
         </div>
       ))}
