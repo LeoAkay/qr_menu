@@ -215,13 +215,8 @@ export default function UserDashboard() {
 
     socket.on('new-order', (newOrder: any) => {
       if (newOrder?.tableNumber) {
-        setNotificationMessage(`New order received for Table ${newOrder.tableNumber}!`);
-        setNewOrderNotification(true);
-        
-        // Auto-hide notification after 5 seconds
-        setTimeout(() => {
-          setNewOrderNotification(false);
-        }, 5000);
+        toast.info(`New order received for Table ${newOrder.tableNumber}! 🎉`);
+        return(<ToastContainer/>)
       }
     });
 
@@ -2824,8 +2819,9 @@ function AnalyticsSection({ userData }: { userData: UserData | null }) {
       credentials: 'include'
     });
 
-    const data = await ordersResponse.json(); // ✅ Only once
-    const orders = data.orders || [];
+    const data = await ordersResponse.json(); 
+    const orders = (data.orders || []).filter((order: any) => order.isActive === false);
+
 
     if (!ordersResponse.ok) {
       throw new Error('Failed to fetch orders');
