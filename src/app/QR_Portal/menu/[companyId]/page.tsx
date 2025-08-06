@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import HTMLFlipBook from 'react-pageflip';
-
+import { ToastContainer, toast } from 'react-toastify';
 interface Company {
   id: string
   C_Name: string
@@ -210,19 +210,10 @@ export default function MenuPage() {
     setShowClearCartConfirm(true)
   }
 
-  const handleOrderConfirm = () => {
-    if (!tableNumber.trim()) {
-      alert('Please enter your table number before confirming the order.')
-      return
-    }
-    setPendingAction({ type: 'order' })
-    setShowOrderConfirm(true)
-  }
-
   const handleFinalOrderConfirm = () => {
     if (!tableNumber.trim()) {
-      alert('Please enter your table number before confirming the order.')
-      return
+      toast.warn('Please enter your table number before confirming the order.')
+      return(<ToastContainer/>)
     }
     setPendingAction({ type: 'finalOrder' })
     setShowFinalOrderConfirm(true)
@@ -302,17 +293,17 @@ export default function MenuPage() {
 
       if (response.ok) {
         const data = await response.json();
-        alert(`✅ Order confirmed!\nOrder ID: ${data.orderId}`);
+        toast.success(`✅ Order confirmed`);
         clearCart();
         setShowCart(false);
       } else {
         const error = await response.json();
         console.error('Order failed:', error);
-        alert('❌ Failed to place the order. Please try again.');
+        toast.error('❌ Failed to place the order. Please try again.');
       }
     } catch (err) {
       console.error('Error placing order:', err);
-      alert('❌ Something went wrong. Please try again later.');
+      toast.error('❌ Something went wrong. Please try again later.');
     }
   }
 
