@@ -70,8 +70,9 @@ export default function MenuPage() {
   const [showClearCartConfirm, setShowClearCartConfirm] = useState(false)
   const [showOrderConfirm, setShowOrderConfirm] = useState(false)
   const [showRemoveItemConfirm, setShowRemoveItemConfirm] = useState(false)
+  const [showFinalOrderConfirm, setShowFinalOrderConfirm] = useState(false)
   const [pendingAction, setPendingAction] = useState<{
-    type: 'addToCart' | 'cancel' | 'clearCart' | 'order' | 'removeItem'
+    type: 'addToCart' | 'cancel' | 'clearCart' | 'order' | 'removeItem' | 'finalOrder'
     data?: any
   } | null>(null)
 
@@ -153,6 +154,11 @@ export default function MenuPage() {
     return cart.reduce((total, item) => total + (item.price * item.quantity), 0)
   }
 
+  const getCartItemQuantity = (itemId: string) => {
+    const cartItem = cart.find(item => item.id === itemId)
+    return cartItem ? cartItem.quantity : 0
+  }
+
   const addToCart = (item: { id: string, name: string, price: number, image?: string }, quantity: number) => {
     setCart(prevCart => {
       const existingItem = prevCart.find(cartItem => cartItem.id === item.id)
@@ -213,6 +219,15 @@ export default function MenuPage() {
     setShowOrderConfirm(true)
   }
 
+  const handleFinalOrderConfirm = () => {
+    if (!tableNumber.trim()) {
+      alert('Please enter your table number before confirming the order.')
+      return
+    }
+    setPendingAction({ type: 'finalOrder' })
+    setShowFinalOrderConfirm(true)
+  }
+
   const handleRemoveItemConfirm = (itemId: string, itemName: string) => {
     setPendingAction({ type: 'removeItem', data: { itemId, itemName } })
     setShowRemoveItemConfirm(true)
@@ -236,6 +251,9 @@ export default function MenuPage() {
       case 'order':
         placeOrder()
         break
+      case 'finalOrder':
+        placeOrder()
+        break
       case 'removeItem':
         if (pendingAction.data) {
           updateCartItemQuantity(pendingAction.data.itemId, 0)
@@ -249,6 +267,7 @@ export default function MenuPage() {
     setShowClearCartConfirm(false)
     setShowOrderConfirm(false)
     setShowRemoveItemConfirm(false)
+    setShowFinalOrderConfirm(false)
     setPendingAction(null)
   }
 
@@ -258,6 +277,7 @@ export default function MenuPage() {
     setShowClearCartConfirm(false)
     setShowOrderConfirm(false)
     setShowRemoveItemConfirm(false)
+    setShowFinalOrderConfirm(false)
     setPendingAction(null)
   }
 
@@ -541,6 +561,9 @@ if (company && showWelcoming) {
             addToCart={addToCart}
             onAddToCartConfirm={handleAddToCartConfirm}
             onCancelConfirm={handleCancelConfirm}
+            cart={cart}
+            getCartItemQuantity={getCartItemQuantity}
+            updateCartItemQuantity={updateCartItemQuantity}
           />
         ) : (
           <div className="text-center py-8 h-full">
@@ -660,58 +683,16 @@ if (company && showWelcoming) {
                     Clear Cart
                   </button>
                   <button
-  onClick={async () => {
-    if (!tableNumber.trim()) {
-      alert('Please enter your table number before confirming the order.');
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/QR_Panel/order/${companyId}`, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({
-    tableNumber: parseInt(tableNumber),
-    orderRequest: orderRequest.trim(),
-    cart: cart.map(item => ({
-      id: item.id,
-      quantity: item.quantity,
-      price: item.price,
-    })),
-    totalAmount: getTotalPrice(),
-  }),
-});
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.isNewOrder) {
-          alert(`✅ Order confirmed!\nOrder ID: ${data.orderId}`);
-        } else {
-          alert(`✅ Items added to existing order!\nOrder ID: ${data.orderId}`);
-        }
-        clearCart();
-        setShowCart(false);
-      } else {
-        const error = await response.json();
-        console.error('Order failed:', error);
-        alert('❌ Failed to place the order. Please try again.');
-      }
-    } catch (err) {
-      console.error('Error placing order:', err);
-      alert('❌ Something went wrong. Please try again later.');
-    }
-  }}
-  disabled={!tableNumber.trim()}
-  className={`flex-1 py-2 rounded-lg transition-colors ${
-    tableNumber.trim()
-      ? 'bg-green-500 text-white hover:bg-green-600'
-      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-  }`}
->
-  Confirm Order
-</button>
+                    onClick={handleFinalOrderConfirm}
+                    disabled={!tableNumber.trim()}
+                    className={`flex-1 py-2 rounded-lg transition-colors ${
+                      tableNumber.trim()
+                        ? 'bg-green-500 text-white hover:bg-green-600'
+                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    }`}
+                  >
+                    Confirm Order
+                  </button>
 
                 </div>
               </div>
@@ -775,6 +756,80 @@ if (company && showWelcoming) {
         onCancel={cancelPendingAction}
         confirmColor="bg-red-500 hover:bg-red-600"
       />
+
+      {/* Final Order Confirmation Dialog */}
+      <div className={`fixed inset-0 z-[60] flex items-center justify-center p-4 backdrop-blur-sm ${showFinalOrderConfirm ? 'block' : 'hidden'}`}>
+        <div className="bg-white rounded-lg max-w-md w-full shadow-xl border border-gray-200 max-h-[80vh] overflow-y-auto">
+          <div className="p-6">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Final Order Confirmation</h3>
+            
+            {/* Table Number */}
+            <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+              <div className="flex items-center space-x-2">
+                <span className="font-semibold text-blue-800">Table Number:</span>
+                <span className="text-lg font-bold text-blue-900">{tableNumber}</span>
+              </div>
+            </div>
+
+            {/* Order Items */}
+            <div className="mb-4">
+              <h4 className="font-semibold text-gray-800 mb-3">Order Items:</h4>
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {cart.map((item) => (
+                  <div key={item.id} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                    <div className="flex-1">
+                      <span className="font-medium text-gray-800">{item.name}</span>
+                      <span className="text-sm text-gray-600 ml-2">x{item.quantity}</span>
+                    </div>
+                    <span className="font-bold text-gray-900">₺{(item.price * item.quantity).toFixed(2)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Special Requests */}
+            {orderRequest.trim() && (
+              <div className="mb-4 p-3 bg-yellow-50 rounded-lg">
+                <div className="flex items-start space-x-2">
+                  <svg className="w-5 h-5 text-yellow-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <div>
+                    <span className="font-semibold text-yellow-800">Special Requests:</span>
+                    <p className="text-sm text-yellow-700 mt-1">{orderRequest}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Total */}
+            <div className="mb-6 p-3 bg-green-50 rounded-lg">
+              <div className="flex justify-between items-center">
+                <span className="font-semibold text-green-800">Total Amount:</span>
+                <span className="text-xl font-bold text-green-900">₺{getTotalPrice().toFixed(2)}</span>
+              </div>
+              <div className="text-sm text-green-700 mt-1">
+                {getTotalItems()} item{getTotalItems() !== 1 ? 's' : ''}
+              </div>
+            </div>
+
+            <div className="flex space-x-3">
+              <button
+                onClick={cancelPendingAction}
+                className="flex-1 px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                Review Order
+              </button>
+              <button
+                onClick={executePendingAction}
+                className="flex-1 px-4 py-2 text-white bg-green-500 rounded-lg hover:bg-green-600 transition-colors"
+              >
+                Place Order
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Footer */}
       <footer className="text-center py-8 px-4 border-t">
@@ -1045,7 +1100,10 @@ function ManualMenu({
   setSelectedItem,
   addToCart,
   onAddToCartConfirm,
-  onCancelConfirm
+  onCancelConfirm,
+  cart,
+  getCartItemQuantity,
+  updateCartItemQuantity
 }: { 
   categories: Company['Main_Categories']
   theme: { backgroundColor?: string; textColor?: string; logoAreaColor?: string; style?: string }
@@ -1054,6 +1112,9 @@ function ManualMenu({
   addToCart: (item: { id: string, name: string, price: number, image?: string }, quantity: number) => void
   onAddToCartConfirm: (item: any) => void
   onCancelConfirm: () => void
+  cart: CartItem[]
+  getCartItemQuantity: (itemId: string) => number
+  updateCartItemQuantity: (id: string, quantity: number) => void
 }) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const sortedCategories = [...(categories || [])].sort((a, b) => a.categoryNo - b.categoryNo)
@@ -1071,24 +1132,20 @@ function ManualMenu({
 
   const currentCategory = getCurrentCategory()
 
-  const handleQuantityChange = (itemId: string, change: number) => {
-    const currentQuantity = selectedItem?.id === itemId ? selectedItem.quantity : 0
-    const newQuantity = Math.max(0, currentQuantity + change)
-    if (newQuantity === 0) {
-      setSelectedItem(null)
-    } else {
-      setSelectedItem({ id: itemId, quantity: newQuantity })
-    }
-  }
-
   const handleAddToCart = (item: any) => {
-    if (!selectedItem || selectedItem.id !== item.id) return
-    
-    onAddToCartConfirm({ item, quantity: selectedItem.quantity })
+    addToCart({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      image: item.menuImageUrl
+    }, 1)
   }
 
-  const handleCancelSelection = () => {
-    onCancelConfirm()
+  const handleRemoveFromCart = (itemId: string) => {
+    const currentQuantity = getCartItemQuantity(itemId)
+    if (currentQuantity > 0) {
+      updateCartItemQuantity(itemId, currentQuantity - 1)
+    }
   }
 
   if (sortedCategories.length === 0) {
@@ -1196,16 +1253,16 @@ function ManualMenu({
                     {item.price && item.stock && (
                       <div className="flex items-center justify-center space-x-3">
                         <button
-                          onClick={() => handleQuantityChange(item.id, -1)}
+                          onClick={() => handleRemoveFromCart(item.id)}
                           className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors"
                         >
                           -
                         </button>
                         <span className="w-8 text-center font-bold">
-                          {selectedItem?.id === item.id ? selectedItem.quantity : 0}
+                          {getCartItemQuantity(item.id)}
                         </span>
                         <button
-                          onClick={() => handleQuantityChange(item.id, 1)}
+                          onClick={() => handleAddToCart(item)}
                           className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors"
                         >
                           +
@@ -1214,22 +1271,7 @@ function ManualMenu({
                     )}
 
                     {/* Action Buttons */}
-                    {selectedItem?.id === item.id && selectedItem.quantity > 0 && item.price && (
-  <div className="flex gap-x-2 mt-3 transition-all duration-300 ease-in-out opacity-100"  >
-    <button
-      onClick={handleCancelSelection}
-      className="flex-1 bg-red-500 text-black py-2 px-3 rounded-lg hover:bg-red-600 transition-colors text-sm font-medium"
-    >
-     ✖️
-    </button>
-    <button
-      onClick={() => handleAddToCart(item)}
-      className="flex-1 bg-green-500 text-black py-2 px-3 rounded-lg hover:bg-green-600 transition-colors text-sm font-medium"
-    >
-     🛒
-    </button>
-  </div>
-)}
+                    {/* Removed - no longer needed with direct cart controls */}
 
                   </div>
                 </div>

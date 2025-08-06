@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { QRCodeSVG } from 'qrcode.react'
 import { io } from "socket.io-client";
+import { ToastContainer, toast } from 'react-toastify';
 interface UserData {
   id: string
   cId: number
@@ -24,7 +25,7 @@ interface UserData {
     Welcoming_Page?: any
     Main_Categories?: Array<{
       id: string
-      name: string
+      Mname: string
       categoryNo: number
       subCategories: Array<{
         id: string
@@ -92,6 +93,7 @@ export default function UserDashboard() {
 
   const menuRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
+  
   useEffect(() => {
     if (!userData?.company?.id) return;
     const interval = setInterval(async () => {
@@ -128,6 +130,60 @@ export default function UserDashboard() {
   useEffect(() => {
     checkAuth()
   }, [])
+
+  // Handle navigation from order system page
+  useEffect(() => {
+    const targetSection = localStorage.getItem('targetSection')
+    if (targetSection && userData) {
+      // Clear the target section from localStorage
+      localStorage.removeItem('targetSection')
+      
+      // Navigate to the appropriate section
+      switch (targetSection) {
+        case 'dashboard':
+          setActiveTab('')
+          setShowActionBar(true)
+          setActiveSection('')
+          break
+        case 'pdf':
+          setMenuType('pdf')
+          setActiveTab('pdf')
+          setActiveSection('PDF Upload')
+          setTimeout(() => pdfRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
+          setShowActionBar(false)
+          break
+        case 'manual':
+          setMenuType('manual')
+          setActiveTab('manual')
+          setActiveSection('Manual Menu')
+          setTimeout(() => manualRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
+          setShowActionBar(false)
+          break
+        case 'theme':
+          setActiveTab('theme')
+          setActiveSection('Theme Settings')
+          setTimeout(() => themeRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
+          setShowActionBar(false)
+          break
+        case 'analytics':
+          setActiveTab('analytics')
+          setActiveSection('Analytics')
+          setShowActionBar(false)
+          break
+        case 'profile':
+          setActiveTab('profile')
+          setActiveSection('Profile')
+          setTimeout(() => profileRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
+          setShowActionBar(false)
+          break
+        case 'contactUs':
+          setActiveTab('contactUs')
+          setActiveSection('Contact Us')
+          setShowActionBar(false)
+          break
+      }
+    }
+  }, [userData])
 
   // WebSocket connection for new order notifications
   useEffect(() => {
@@ -298,11 +354,11 @@ export default function UserDashboard() {
         }
         img.src = url
       } else {
-        alert('QR code not found. Please try again.')
+        toast.error('QR code not found. Please try again.')
       }
     } catch (error) {
       console.error('QR download error:', error)
-      alert('Failed to download QR code. Please try again.')
+      toast.error('Failed to download QR code. Please try again.')
     }
   }
 
@@ -744,7 +800,7 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
     if (file && file.type === 'application/pdf') {
       setSelectedFile(file)
     } else {
-      alert('Please select a valid PDF file')
+     toast.error('Please select a valid PDF file')
     }
   }
 
@@ -781,17 +837,17 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
       const data = await res.json()
 
       if (res.ok) {
-        alert('PDF uploaded successfully!')
+        toast.success('PDF uploaded successfully!')
         setSelectedFile(null)
         // Refresh page data
         window.location.reload()
       } else {
         console.error('Upload failed:', data)
-        alert(data.error || 'Upload failed. Please try again.')
+        toast.error(data.error || 'Upload failed. Please try again.')
       }
     } catch (error) {
       console.error('Upload error:', error)
-      alert('Network error. Please check your connection and try again.')
+      toast.error('Network error. Please check your connection and try again.')
     } finally {
       setUploading(false)
     }
@@ -810,15 +866,15 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
       })
 
       if (res.ok) {
-        alert('PDF successfully deleted!')
+        toast.success('PDF successfully deleted!')
         window.location.reload()
       } else {
         const data = await res.json()
-        alert(data.error || 'Failed to delete PDF. Please try again.')
+       toast.error(data.error || 'Failed to delete PDF. Please try again.')
       }
     } catch (error) {
       console.error('Delete error:', error)
-      alert('Network error. Please check your connection.')
+      toast.error('Network error. Please check your connection.')
     } finally {
       setDeleting(false)
     }
@@ -836,22 +892,22 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
       })
 
       if (res.ok) {
-        alert('Theme settings saved!')
+        toast.success('Theme settings saved!')
         // Refresh page to show updated theme
         window.location.reload()
       } else {
         const data = await res.json()
-        alert(data.error || 'Failed to save theme')
+       toast.error(data.error || 'Failed to save theme')
       }
     } catch (error) {
       console.error('Theme save error:', error)
-      alert('Network error. Please try again.')
+      toast.error('Network error. Please try again.')
     }
   }
 
   const handleImageUpload = async () => {
     if (!selectedLogo && !selectedWelcoming) {
-      alert('Please select at least one image')
+      toast.error('Please select at least one image')
       return
     }
 
@@ -875,42 +931,18 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
       const data = await res.json()
 
       if (res.ok) {
-        alert('Images uploaded successfully!')
+        toast.success('Images uploaded successfully!')
         setSelectedLogo(null)
         setSelectedWelcoming(null)
         window.location.reload()
       } else {
-        alert(data.error || 'Image upload failed')
+        toast.error(data.error || 'Image upload failed')
       }
     } catch (error) {
       console.error('Image upload error:', error)
-      alert('Network error. Please try again.')
+      toast.error('Network error. Please try again.')
     } finally {
       setUploadingImages(false)
-    }
-  }
-
-  const handleLogoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp']
-      if (allowedTypes.includes(file.type)) {
-        setSelectedLogo(file)
-      } else {
-        alert('Please select a valid image file (JPEG, PNG, WebP)')
-      }
-    }
-  }
-
-  const handleWelcomingSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp']
-      if (allowedTypes.includes(file.type)) {
-        setSelectedWelcoming(file)
-      } else {
-        alert('Please select a valid image file (JPEG, PNG, WebP)')
-      }
     }
   }
 
@@ -928,14 +960,14 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
       const data = await res.json()
 
       if (res.ok) {
-        alert(data.message)
+        toast.success(data.message)
         window.location.reload()
       } else {
-        alert(data.error || 'Failed to delete image')
+        toast.error(data.error || 'Failed to delete image')
       }
     } catch (error) {
       console.error('Image delete error:', error)
-      alert('Network error. Please try again.')
+      toast.error('Network error. Please try again.')
     }
   }
 
@@ -1110,14 +1142,14 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
                       })
                       const data = await res.json()
                       if (res.ok) {
-                        alert(`QR URL fixed!\nOld: ${data.oldUrl}\nNew: ${data.newUrl}`)
+                        toast.success(`QR URL fixed!\nOld: ${data.oldUrl}\nNew: ${data.newUrl}`)
                         window.location.reload()
                       } else {
-                        alert(data.error || 'Failed to fix URL')
+                        toast.error(data.error || 'Failed to fix URL')
                       }
                     } catch (error) {
                       console.error('Fix URL error:', error)
-                      alert('Failed to fix URL')
+                      toast.error('Failed to fix URL')
                     }
                   }}
                   className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition-colors"
@@ -1141,13 +1173,13 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
                   })
                   const data = await res.json()
                   if (res.ok) {
-                    alert(`PDF display mode saved!\nNew QR URL: ${data.qrUrl}`)
+                    toast.success(`PDF display mode saved!\nNew QR URL: ${data.qrUrl}`)
                     window.location.reload()
                   } else {
-                    alert(data.error || 'Failed to update QR code')
+                    toast.error(data.error || 'Failed to update QR code')
                   }
                 } catch (error) {
-                  alert('Network error. Please try again.')
+                  toast.error('Network error. Please try again.')
                 }
               }}
               className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium transition-colors shadow-lg"
@@ -1229,17 +1261,17 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
       })
 
       if (res.ok) {
-        alert('Category added successfully!')
+        toast.success('Category added successfully!')
         setCategoryForm({ name: '',})
         setShowCategoryForm(false)
         fetchCategories()
       } else {
         const data = await res.json()
-        alert(data.error || 'Failed to add category')
+        toast.error(data.error || 'Failed to add category')
       }
     } catch (error) {
       console.error('Add category error:', error)
-      alert('Network error. Please try again.')
+      toast.error('Network error. Please try again.')
     }
   }
 
@@ -1264,7 +1296,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
       })
 
       if (res.ok) {
-        alert('Item added successfully!')
+        toast.success('Item added successfully!')
         setItemForm({
           name: '', price: '',stock:true, menuImage: null
         })
@@ -1272,11 +1304,11 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
         fetchCategories()
       } else {
         const data = await res.json()
-        alert(data.error || 'Failed to add item')
+        toast.error(data.error || 'Failed to add item')
       }
     } catch (error) {
       console.error('Add item error:', error)
-      alert('Network error. Please try again.')
+      toast.error('Network error. Please try again.')
     }
   }
 
@@ -1292,15 +1324,15 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
       })
 
       if (res.ok) {
-        alert('Category deleted successfully!')
+        toast.success('Category deleted successfully!')
         fetchCategories()
       } else {
         const data = await res.json()
-        alert(data.error || 'Failed to delete category')
+        toast.error(data.error || 'Failed to delete category')
       }
     } catch (error) {
       console.error('Delete category error:', error)
-      alert('Network error. Please try again.')
+      toast.error('Network error. Please try again.')
     }
   }
 
@@ -1316,15 +1348,15 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
       })
 
       if (res.ok) {
-        alert('Item deleted successfully!')
+        toast.success('Item deleted successfully!')
         fetchCategories()
       } else {
         const data = await res.json()
-        alert(data.error || 'Failed to delete item')
+        toast.error(data.error || 'Failed to delete item')
       }
     } catch (error) {
       console.error('Delete item error:', error)
-      alert('Network error. Please try again.')
+      toast.error('Network error. Please try again.')
     }
   }
 
@@ -1352,7 +1384,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
 
     try {
       const formData = new FormData()
-      formData.append('name','')
+      formData.append('name',editCategoryForm.name)
       
 
       const res = await fetch(`/api/QR_Panel/user/manual-menu/category?categoryId=${editingCategory.id}`, {
@@ -1362,18 +1394,18 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
       })
 
       if (res.ok) {
-        alert('Category updated successfully!')
+        toast.success('Category updated successfully!')
         setEditCategoryForm({ name: ''})
         setShowEditCategoryForm(false)
         setEditingCategory(null)
         fetchCategories()
       } else {
         const data = await res.json()
-        alert(data.error || 'Failed to update category')
+        toast.error(data.error || 'Failed to update category')
       }
     } catch (error) {
       console.error('Update category error:', error)
-      alert('Network error. Please try again.')
+      toast.error('Network error. Please try again.')
     }
   }
 
@@ -1397,18 +1429,18 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
       })
 
       if (res.ok) {
-        alert('Item updated successfully!')
+        toast.success('Item updated successfully!')
         setEditItemForm({ name: '', price: '',stock:true, menuImage: null })
         setShowEditItemForm(false)
         setEditingItem(null)
         fetchCategories()
       } else {
         const data = await res.json()
-        alert(data.error || 'Failed to update item')
+        toast.error(data.error || 'Failed to update item')
       }
     } catch (error) {
       console.error('Update item error:', error)
-      alert('Network error. Please try again.')
+      toast.error('Network error. Please try again.')
     }
   }
 
@@ -1848,16 +1880,16 @@ function PreviewSection({
       if (res.ok) {
         const data = await res.json()
         setSelectedMenuType(menuType)
-        alert(`Menu type updated to ${menuType}!\nNew QR URL: ${data.qrUrl}`)
+        toast.success(`Menu type updated to ${menuType}!\nNew QR URL: ${data.qrUrl}`)
         // Refresh page to update QR code
         window.location.reload()
       } else {
         const data = await res.json()
-        alert(data.error || 'Failed to update menu type')
+        toast.error(data.error || 'Failed to update menu type')
       }
     } catch (error) {
       console.error('Menu type update error:', error)
-      alert('Network error. Please try again.')
+      toast.error('Network error. Please try again.')
     } finally {
       setUpdating(false)
     }
@@ -2032,7 +2064,7 @@ function GetStartedPage({ userData }: { userData: UserData | null }) {
         message: '',
       })
     } else {
-      alert('Error sending message.')
+      toast.error('Error sending message.')
     }
   }
     return (
@@ -2136,18 +2168,18 @@ const [showResetDropdown, setShowResetDropdown] = useState(false)
     const data = await res.json()
 
     if (res.ok) {
-      alert(data.message || 'Password updated successfully!')
+      toast.success(data.message || 'Password updated successfully!')
       // Optionally clear password fields here:
       setOldPassword('')
       setNewPassword('')
       setConfirmPassword('')
       setShowResetDropdown(false)
     } else {
-      alert(data.error || 'Password update failed')
+      toast.error(data.error || 'Password update failed')
     }
   } catch (error) {
     console.error('Password update error:', error)
-    alert('Network error. Please try again.')
+    toast.error('Network error. Please try again.')
   } finally {
     setLoading(false)
   }
@@ -2174,15 +2206,15 @@ const [showResetDropdown, setShowResetDropdown] = useState(false)
       
 
       if (res.ok) {
-        alert('Profile updated successfully!')
+        toast.success('Profile updated successfully!')
         window.location.reload()
       } else {
         const data = await res.json()
-        alert(data.error || 'Update failed')
+        toast.error(data.error || 'Update failed')
       }
     } catch (error) {
       console.error('Profile update error:', error)
-      alert('Network error. Please try again.')
+      toast.error('Network error. Please try again.')
     } finally {
       setSaving(false)
     }
@@ -2426,14 +2458,14 @@ function ThemeSettingsSection({ userData }: { userData: UserData | null }) {
         credentials: 'include'
       })
       if (res.ok) {
-        alert('Theme settings saved!')
+        toast.success('Theme settings saved!')
         window.location.reload()
       } else {
         const data = await res.json()
-        alert(data.error || 'Failed to save theme')
+        toast.error(data.error || 'Failed to save theme')
       }
     } catch (error) {
-      alert('Network error. Please try again.')
+      toast.error('Network error. Please try again.')
     }
   }
 
@@ -2444,7 +2476,7 @@ function ThemeSettingsSection({ userData }: { userData: UserData | null }) {
       if (allowedTypes.includes(file.type)) {
         setSelectedLogo(file)
       } else {
-        alert('Please select a valid image file (JPEG, PNG, WebP)')
+        toast.warn('Please select a valid image file (JPEG, PNG, WebP)')
       }
     }
   }
@@ -2456,14 +2488,14 @@ function ThemeSettingsSection({ userData }: { userData: UserData | null }) {
       if (allowedTypes.includes(file.type)) {
         setSelectedWelcoming(file)
       } else {
-        alert('Please select a valid image file (JPEG, PNG, WebP)')
+        toast.warn('Please select a valid image file (JPEG, PNG, WebP)')
       }
     }
   }
 
   const handleImageUpload = async () => {
     if (!selectedLogo && !selectedWelcoming) {
-      alert('Please select at least one image')
+      toast.warn('Please select at least one image')
       return
     }
     setUploadingImages(true)
@@ -2478,15 +2510,15 @@ function ThemeSettingsSection({ userData }: { userData: UserData | null }) {
       })
       const data = await res.json()
       if (res.ok) {
-        alert('Images uploaded successfully!')
+        toast.success('Images uploaded successfully!')
         setSelectedLogo(null)
         setSelectedWelcoming(null)
         window.location.reload()
       } else {
-        alert(data.error || 'Image upload failed')
+        toast.error(data.error || 'Image upload failed')
       }
     } catch (error) {
-      alert('Network error. Please try again.')
+      toast.error('Network error. Please try again.')
     } finally {
       setUploadingImages(false)
     }
@@ -2501,13 +2533,13 @@ function ThemeSettingsSection({ userData }: { userData: UserData | null }) {
       })
       const data = await res.json()
       if (res.ok) {
-        alert(data.message)
+        toast.success(data.message)
         window.location.reload()
       } else {
-        alert(data.error || 'Failed to delete image')
+        toast.error(data.error || 'Failed to delete image')
       }
     } catch (error) {
-      alert('Network error. Please try again.')
+      toast.error('Network error. Please try again.')
     }
   }
 
@@ -2944,7 +2976,7 @@ function AnalyticsSection({ userData }: { userData: UserData | null }) {
           {analyticsData.recentOrders.map((order) => (
             <div key={order.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div>
-                <p className="font-medium text-gray-900">{order.tableNumber}</p>
+                <p className="font-medium text-gray-900">Table no: {order.tableNumber}</p>
                 <p className="text-sm text-gray-600">
                   {new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString()}
                 </p>
@@ -2969,7 +3001,7 @@ function AnalyticsSection({ userData }: { userData: UserData | null }) {
           return (
             <div key={index} className="flex flex-col items-center w-[40px]">
               <div
-                className="w-full bg-gradient-to-t from-purple-500 to-purple-300 rounded-t-lg transition-all hover:from-purple-600 hover:to-purple-400"
+                className="w-full bg-gradient-to-t from-purple-500 to-purple-300 rounded-t-lg transition-all"
                 style={{ height: `${barHeight}px` }}
               ></div>
               <p className="text-sm font-medium text-gray-600 mt-2 text-center">{month.month}</p>

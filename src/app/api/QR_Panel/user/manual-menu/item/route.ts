@@ -8,7 +8,6 @@ export async function POST(request: NextRequest) {
 let imageUrl: string | null = null
   try {
     const userId = request.cookies.get('userId')?.value
-    const role = request.cookies.get('role')?.value
 
     if (!userId ) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

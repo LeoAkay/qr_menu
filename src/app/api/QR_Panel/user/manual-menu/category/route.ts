@@ -5,7 +5,6 @@ import { prisma } from '../../../../../lib/prisma'
 export async function POST(request: NextRequest) {
   try {
     const userId = request.cookies.get('userId')?.value
-    const role = request.cookies.get('role')?.value
 
     if (!userId ) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -71,7 +70,6 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const userId = request.cookies.get('userId')?.value
-    const role = request.cookies.get('role')?.value
 
     if (!userId ) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -130,9 +128,8 @@ export async function DELETE(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const userId = request.cookies.get('userId')?.value
-    const role = request.cookies.get('role')?.value
 
-    if (!userId || role) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
