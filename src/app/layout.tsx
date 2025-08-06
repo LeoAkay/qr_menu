@@ -1,6 +1,7 @@
 import './global.css'
 import type { Metadata } from 'next'
 import Script from 'next/script'
+import { ToastContainer } from 'react-toastify';
 
 export const metadata: Metadata = {
   title: 'Admin Panel',
@@ -32,6 +33,7 @@ export default function RootLayout({
       </head>
       <body className={`bubble-bg`}>
         {children}
+        <ToastContainer/>
       </body>
     </html>
   )
