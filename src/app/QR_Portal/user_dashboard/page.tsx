@@ -5,6 +5,15 @@ import { useRouter } from 'next/navigation'
 import { QRCodeSVG } from 'qrcode.react'
 import { io } from "socket.io-client";
 import { ToastContainer, toast } from 'react-toastify';
+
+// Utility function to format prices with thousand separators
+const formatPrice = (price: number): string => {
+  return price.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+};
+
 interface UserData {
   id: string
   cId: number
@@ -79,7 +88,6 @@ export default function UserDashboard() {
   const [newOrderNotification, setNewOrderNotification] = useState(false)
   const [notificationMessage, setNotificationMessage] = useState('')
   const [newOrderCount, setNewOrderCount] = useState(0)
-  const [showActionBar, setShowActionBar] = useState(true)
   const [activeSection, setActiveSection] = useState<string>('')
 
   const [theme, setTheme] = useState<Theme>({
@@ -90,6 +98,10 @@ export default function UserDashboard() {
   const pdfRef = useRef<HTMLDivElement>(null);
   const manualRef = useRef<HTMLDivElement>(null);
   const themeRef = useRef<HTMLDivElement>(null);
+  const analyticsRef = useRef<HTMLDivElement>(null);
+  const [manualLoaded, setManualLoaded] = useState(false);
+  const [themeLoaded, setThemeLoaded] = useState(false);
+  const [analyticsLoaded, setAnalyticsLoaded] = useState(false);
 
   const menuRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -142,7 +154,6 @@ export default function UserDashboard() {
       switch (targetSection) {
         case 'dashboard':
           setActiveTab('')
-          setShowActionBar(true)
           setActiveSection('')
           break
         case 'pdf':
@@ -150,36 +161,35 @@ export default function UserDashboard() {
           setActiveTab('pdf')
           setActiveSection('PDF Upload')
           setTimeout(() => pdfRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
-          setShowActionBar(false)
           break
         case 'manual':
           setMenuType('manual')
           setActiveTab('manual')
           setActiveSection('Manual Menu')
           setTimeout(() => manualRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
-          setShowActionBar(false)
           break
         case 'theme':
           setActiveTab('theme')
           setActiveSection('Theme Settings')
           setTimeout(() => themeRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
-          setShowActionBar(false)
           break
         case 'analytics':
           setActiveTab('analytics')
           setActiveSection('Analytics')
-          setShowActionBar(false)
+          break
+        case 'preview':
+          setActiveTab('preview')
+          setActiveSection('Preview & QR Code')
+          setTimeout(() => menuRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
           break
         case 'profile':
           setActiveTab('profile')
           setActiveSection('Profile')
           setTimeout(() => profileRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
-          setShowActionBar(false)
           break
         case 'contactUs':
           setActiveTab('contactUs')
           setActiveSection('Contact Us')
-          setShowActionBar(false)
           break
       }
     }
@@ -370,6 +380,25 @@ export default function UserDashboard() {
     }
   };
 
+  useEffect(() => {
+    if (manualLoaded) {
+      manualRef.current?.scrollIntoView({ behavior: 'smooth' });
+      setManualLoaded(false);
+    }
+  }, [manualLoaded]);
+  useEffect(() => {
+    if (themeLoaded) {
+      themeRef.current?.scrollIntoView({ behavior: 'smooth' });
+      setThemeLoaded(false);
+    }
+  }, [themeLoaded]);
+  useEffect(() => {
+    if (analyticsLoaded) {
+      analyticsRef.current?.scrollIntoView({ behavior: 'smooth' });
+      setAnalyticsLoaded(false);
+    }
+  }, [analyticsLoaded]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -430,7 +459,6 @@ export default function UserDashboard() {
           <button
             onClick={() => {
               setActiveTab('');
-              setShowActionBar(true);
               setActiveSection('');
             }}
             className="text-white font-bold text-xl sm:text-2xl whitespace-nowrap truncate min-w-0 hover:text-gray-200 transition-colors cursor-pointer"
@@ -560,45 +588,20 @@ export default function UserDashboard() {
                 {/* Action Buttons Bar */}
         <div className="bg-white rounded-xl shadow-lg p-4 mb-8">
           <div className="flex items-center">
-            {/* Hamburger Button - Only visible when collapsed, always on left */}
-            {!showActionBar && (
-              <button
-                onClick={() => setShowActionBar(!showActionBar)}
-                className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                aria-label="Toggle Menu"
-              >
-                <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-            )}
-
-            {/* Centered Content */}
             <div className="flex-1 flex justify-center">
-              {/* Active Section Name - Shows when bar is collapsed */}
-              {!showActionBar && activeSection && (
-                <div className="flex items-center space-x-2 px-4 py-2 bg-gray-50 rounded-lg border border-gray-200">
-                  <span className="text-gray-700 font-medium">{activeSection}</span>
-                </div>
-              )}
-
-              {/* Action Buttons - Conditionally visible */}
-              {showActionBar && (
-                <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-4">
                 {/* Menu Button */}
                 <button 
                   onClick={() => {
                     setActiveTab('preview');
                     setActiveSection('Menu');
                     setTimeout(() => menuRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-                    setShowActionBar(false); // Collapse after click
                   }}
                   className="flex items-center space-x-3 px-6 py-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors text-gray-700 border border-purple-200"
                 >
                   <span className="text-2xl">🍽️</span>
                   <span className="font-medium">Menu</span>
                 </button>
-
                 {/* PDF Upload Button */}
                 <button
                   onClick={() => {
@@ -606,14 +609,12 @@ export default function UserDashboard() {
                     setActiveTab('pdf');
                     setActiveSection('PDF Upload');
                     setTimeout(() => pdfRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-                    setShowActionBar(false); // Collapse after click
                   }}
                   className="flex items-center space-x-3 px-6 py-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors text-gray-700 border border-blue-200"
                 >
                   <span className="text-2xl">📄</span>
                   <span className="font-medium">PDF Upload</span>
                 </button>
-
                 {/* Manual Menu Button */}
                 <button
                   onClick={() => {
@@ -621,52 +622,40 @@ export default function UserDashboard() {
                     setActiveTab('manual');
                     setActiveSection('Manual Menu');
                     setTimeout(() => manualRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-                    setShowActionBar(false); // Collapse after click
                   }}
                   className="flex items-center space-x-3 px-6 py-3 bg-green-50 hover:bg-green-100 rounded-lg transition-colors text-gray-700 border border-green-200"
                 >
                   <span className="text-2xl">⚙️</span>
                   <span className="font-medium">Manual Menu</span>
                 </button>
-
                 {/* Theme Settings Button */}
                 <button
                   onClick={() => {
                     setActiveTab('theme');
                     setActiveSection('Theme Settings');
                     setTimeout(() => themeRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-                    setShowActionBar(false); // Collapse after click
                   }}
                   className="flex items-center space-x-3 px-6 py-3 bg-yellow-50 hover:bg-yellow-100 rounded-lg transition-colors text-gray-700 border border-yellow-200"
                 >
                   <span className="text-2xl">🎨</span>
                   <span className="font-medium">Theme Settings</span>
                 </button>
-
                 {/* Order System Button */}
                 <button
                   onClick={() => {
                     router.push('/QR_Portal/order_system');
                     setActiveSection('Order System');
-                    setShowActionBar(false); // Collapse after click
                   }}
-                  className="flex items-center space-x-3 px-6 py-3 bg-red-50 hover:bg-red-100 rounded-lg transition-colors text-gray-700 border border-red-200 relative"
+                  className="flex items-center space-x-3 px-6 py-3 bg-red-50 hover:bg-red-100 rounded-lg transition-colors text-gray-700 border border-red-200"
                 >
-                  <span className="text-2xl">📝</span>
+                  <span className="text-2xl">🛒</span>
                   <span className="font-medium">Order System</span>
-                  {newOrderNotification && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-2 py-1 rounded-full animate-pulse">
-                      NEW!
-                    </span>
-                  )}
                 </button>
-
                 {/* Analytics Button */}
                 <button
                   onClick={() => {
                     setActiveTab('analytics');
                     setActiveSection('Analytics');
-                    setShowActionBar(false); // Collapse after click
                   }}
                   className="flex items-center space-x-3 px-6 py-3 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors text-gray-700 border border-indigo-200"
                 >
@@ -674,7 +663,6 @@ export default function UserDashboard() {
                   <span className="font-medium">Analytics</span>
                 </button>
               </div>
-            )}
             </div>
           </div>
         </div>
@@ -706,12 +694,19 @@ export default function UserDashboard() {
 
               {activeTab === 'manual' && (
   <div ref={manualRef}>
-    <ManualMenuSection searchQuery={searchQuery} onSearchHandled={() => setSearchQuery('')} />
+    <ManualMenuSection
+      searchQuery={searchQuery}
+      onSearchHandled={() => setSearchQuery('')}
+      onLoaded={() => setManualLoaded(true)}
+    />
   </div>
 )}
               {activeTab === 'theme' && (
   <div ref={themeRef}>
-    <ThemeSettingsSection userData={userData} />
+    <ThemeSettingsSection
+      userData={userData}
+      onLoaded={() => setThemeLoaded(true)}
+    />
   </div>
 )}
 
@@ -731,7 +726,14 @@ export default function UserDashboard() {
             </div>
           )}
           {activeTab === 'contactUs' && <GetStartedPage userData={userData} />}
-          {activeTab === 'analytics' && <AnalyticsSection userData={userData} />}
+          {activeTab === 'analytics' && (
+  <div ref={analyticsRef}>
+    <AnalyticsSection
+      userData={userData}
+      onLoaded={() => setAnalyticsLoaded(true)}
+    />
+  </div>
+)}
           {/* Default Welcome Screen */}
           {!activeTab && (
             <div className="text-center py-12">
@@ -1194,7 +1196,7 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
 }
 
 // Manual Menu Component
-function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: string, onSearchHandled?: () => void }) {
+function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQuery?: string, onSearchHandled?: () => void, onLoaded?: () => void }) {
   const [categories, setCategories] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [editingCategory, setEditingCategory] = useState<any>(null)
@@ -1227,6 +1229,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
     stock: true,
     menuImage: null as File | null
   });
+  const hasCalledOnLoaded = useRef(false);
 
   useEffect(() => {
     fetchCategories()
@@ -1471,6 +1474,13 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
     }
   }, [searchQuery, categories]);
 
+  useEffect(() => {
+    if (!loading && !hasCalledOnLoaded.current) {
+      onLoaded?.();
+      hasCalledOnLoaded.current = true;
+    }
+  }, [loading, onLoaded]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -1671,7 +1681,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
                          <div className="flex items-center space-x-3">
                            <h4 className="font-semibold text-gray-800">{item.name}</h4>
                            {item.price && (
-                             <span className="text-green-600 font-bold">₺{item.price}</span>
+                             <span className="text-green-600 font-bold">₺{formatPrice(item.price)}</span>
                            )}
                            {item.stock ? (
                             <span className='text-green-600 font-bold'>Available</span>
@@ -2424,7 +2434,7 @@ const [showResetDropdown, setShowResetDropdown] = useState(false)
 } 
 
 // Theme Settings Section
-function ThemeSettingsSection({ userData }: { userData: UserData | null }) {
+function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | null, onLoaded?: () => void }) {
   const [showThemeOptions, setShowThemeOptions] = useState(false)
   const [showImageOptions, setShowImageOptions] = useState(false)
   const [selectedLogo, setSelectedLogo] = useState<File | null>(null)
@@ -2434,20 +2444,21 @@ function ThemeSettingsSection({ userData }: { userData: UserData | null }) {
     backgroundColor: userData?.company?.Themes?.[0]?.backgroundColor || '#ffffff',
     textColor: userData?.company?.Themes?.[0]?.textColor || '#000000',
     logoAreaColor: userData?.company?.Themes?.[0]?.logoAreaColor || '#f8f9fa',
-    style: userData?.company?.Themes?.[0]?.style || 'modern'
-  })
+    style: userData?.company?.Themes?.[0]?.style || 'modern',
+  });
+  const [loading, setLoading] = useState(true);
+  const hasCalledOnLoaded = useRef(false);
 
   useEffect(() => {
-    if (userData?.company?.Themes?.[0]) {
-      const theme = userData.company.Themes[0]
-      setThemeSettings({
-        backgroundColor: theme.backgroundColor || '#ffffff',
-        textColor: theme.textColor || '#000000',
-        logoAreaColor: theme.logoAreaColor || '#f8f9fa',
-        style: theme.style || 'modern'
-      })
+    setLoading(false);
+  }, [userData]);
+
+  useEffect(() => {
+    if (!loading && !hasCalledOnLoaded.current) {
+      onLoaded?.();
+      hasCalledOnLoaded.current = true;
     }
-  }, [userData])
+  }, [loading, onLoaded]);
 
   const handleSaveTheme = async () => {
     try {
@@ -2800,7 +2811,7 @@ function ThemeSettingsSection({ userData }: { userData: UserData | null }) {
 }
 
 // Analytics Component
-function AnalyticsSection({ userData }: { userData: UserData | null }) {
+function AnalyticsSection({ userData, onLoaded }: { userData: UserData | null, onLoaded?: () => void }) {
   const [analyticsData, setAnalyticsData] = useState({
     totalOrders: 0,
     totalRevenue: 0,
@@ -2810,6 +2821,7 @@ function AnalyticsSection({ userData }: { userData: UserData | null }) {
     monthlyRevenue: [] as Array<{month: string, revenue: number}>,
     loading: true
   })
+  const hasCalledOnLoaded = useRef(false);
 
  useEffect(() => {
   if (userData?.id) {
@@ -2895,6 +2907,13 @@ function AnalyticsSection({ userData }: { userData: UserData | null }) {
   }
 };
 
+  useEffect(() => {
+    if (!analyticsData.loading && !hasCalledOnLoaded.current) {
+      onLoaded?.();
+      hasCalledOnLoaded.current = true;
+    }
+  }, [analyticsData.loading, onLoaded]);
+
   if (analyticsData.loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -2937,7 +2956,7 @@ function AnalyticsSection({ userData }: { userData: UserData | null }) {
         </div>
         <div className="ml-4">
           <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-          <p className="text-2xl font-bold text-gray-900">₺{analyticsData.totalRevenue.toFixed(2)}</p>
+          <p className="text-2xl font-bold text-gray-900">₺{formatPrice(analyticsData.totalRevenue)}</p>
         </div>
       </div>
     </div>
@@ -2961,7 +2980,7 @@ function AnalyticsSection({ userData }: { userData: UserData | null }) {
                 </div>
               </div>
               <div className="text-right">
-                <p className="font-semibold text-green-600">₺{dish.revenue.toFixed(2)}</p>
+                <p className="font-semibold text-green-600">₺{formatPrice(dish.revenue)}</p>
                 <p className="text-sm text-gray-500">revenue</p>
               </div>
             </div>
@@ -2982,7 +3001,7 @@ function AnalyticsSection({ userData }: { userData: UserData | null }) {
                 </p>
               </div>
               <div className="text-right">
-                <p className="font-semibold text-gray-900">₺{order.totalAmount.toFixed(2)}</p>
+                <p className="font-semibold text-gray-900">₺{formatPrice(order.totalAmount)}</p>
               </div>
             </div>
           ))}
@@ -3005,7 +3024,7 @@ function AnalyticsSection({ userData }: { userData: UserData | null }) {
                 style={{ height: `${barHeight}px` }}
               ></div>
               <p className="text-sm font-medium text-gray-600 mt-2 text-center">{month.month}</p>
-              <p className="text-xs text-gray-500 text-center">₺{month.revenue.toFixed(0)}</p>
+              <p className="text-xs text-gray-500 text-center">₺{formatPrice(month.revenue)}</p>
             </div>
           );
         })}

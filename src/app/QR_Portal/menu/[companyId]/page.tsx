@@ -4,6 +4,14 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import HTMLFlipBook from 'react-pageflip';
 
+// Utility function to format prices with thousand separators
+const formatPrice = (price: number): string => {
+  return price.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+};
+
 interface Company {
   id: string
   C_Name: string
@@ -637,7 +645,7 @@ if (company && showWelcoming) {
                     <div key={item.id} className="flex items-center space-x-3 bg-gray-50 p-3 rounded-lg">
                       <div className="flex-1">
                         <h3 className="font-medium">{item.name}</h3>
-                        <p className="text-sm text-gray-600">₺{item.price.toFixed(2)} each</p>
+                        <p className="text-sm text-gray-600">₺{formatPrice(item.price)} each</p>
                       </div>
                       <div className="flex items-center space-x-2">
                         <button
@@ -661,7 +669,7 @@ if (company && showWelcoming) {
                         </button>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold">₺{(item.price * item.quantity).toFixed(2)}</p>
+                        <p className="font-bold">₺{formatPrice(item.price * item.quantity)}</p>
                       </div>
                     </div>
                   ))}
@@ -672,7 +680,7 @@ if (company && showWelcoming) {
             {cart.length > 0 && (
               <div className="p-4 border-t">
                 <div className="flex justify-between items-center mb-4">
-                  <span className="text-lg font-bold">Total: ₺{getTotalPrice().toFixed(2)}</span>
+                  <span className="text-lg font-bold">Total: ₺{formatPrice(getTotalPrice())}</span>
                   <span className="text-sm text-gray-600">{getTotalItems()} items</span>
                 </div>
                 <div className="flex space-x-2">
@@ -738,7 +746,7 @@ if (company && showWelcoming) {
       <ConfirmationDialog
         isOpen={showOrderConfirm}
         title="Confirm Order"
-        message={`Are you sure you want to place this order for ₺${getTotalPrice().toFixed(2)}? You cannot cancel after this confirmation. This is your final confirmation.`}
+        message={`Are you sure you want to place this order for ₺${formatPrice(getTotalPrice())}? You cannot cancel after this confirmation. This is your final confirmation.`}
         confirmText="Yes, Place Order"
         cancelText="Review Order"
         onConfirm={executePendingAction}
@@ -781,7 +789,7 @@ if (company && showWelcoming) {
                       <span className="font-medium text-gray-800">{item.name}</span>
                       <span className="text-sm text-gray-600 ml-2">x{item.quantity}</span>
                     </div>
-                    <span className="font-bold text-gray-900">₺{(item.price * item.quantity).toFixed(2)}</span>
+                    <span className="font-bold text-gray-900">₺{formatPrice(item.price * item.quantity)}</span>
                   </div>
                 ))}
               </div>
@@ -806,7 +814,7 @@ if (company && showWelcoming) {
             <div className="mb-6 p-3 bg-green-50 rounded-lg">
               <div className="flex justify-between items-center">
                 <span className="font-semibold text-green-800">Total Amount:</span>
-                <span className="text-xl font-bold text-green-900">₺{getTotalPrice().toFixed(2)}</span>
+                <span className="text-xl font-bold text-green-900">₺{formatPrice(getTotalPrice())}</span>
               </div>
               <div className="text-sm text-green-700 mt-1">
                 {getTotalItems()} item{getTotalItems() !== 1 ? 's' : ''}
@@ -1282,7 +1290,7 @@ function ManualMenu({
                       {item.stock ? (
                         item.price ? (
                           <span className="text-lg font-bold text-green-600">
-                            ₺{item.price.toFixed(2)}
+                            ₺{formatPrice(item.price)}
                           </span>
                         ) : (
                           <span className="text-sm text-gray-500">Price not set</span>

@@ -3,6 +3,14 @@
 import { useState, useEffect, useRef } from 'react' 
 import { useRouter, useSearchParams } from 'next/navigation'
 
+// Utility function to format prices with thousand separators
+const formatPrice = (price: number): string => {
+  return price.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+};
+
 export default function EditCompanyForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -690,7 +698,7 @@ return (
                          <div className="flex items-center space-x-3">
                            <h4 className="font-semibold text-gray-800">{item.name}</h4>
                            {item.price && (
-                             <span className="text-green-600 font-bold">₺{item.price}</span>
+                             <span className="text-green-600 font-bold">₺{formatPrice(item.price)}</span>
                            )}
                          </div>
                        </div>
