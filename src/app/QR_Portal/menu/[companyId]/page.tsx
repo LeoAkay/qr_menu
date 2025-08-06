@@ -486,7 +486,7 @@ if (company && showWelcoming) {
 
   return (
     <div 
-      className={`min-h-screen transition-opacity duration-500 ${(showWelcoming || loading) ? 'opacity-0' : 'opacity-100'}`}
+      className={` transition-opacity duration-500 ${(showWelcoming || loading) ? 'opacity-0' : 'opacity-100'}`}
       style={{ 
         backgroundColor: theme.backgroundColor,
         color: theme.textColor 
@@ -501,12 +501,12 @@ if (company && showWelcoming) {
               <img 
                 src={`/api/AdminPanel/company/image/${company.id}/logo?${Date.now()}`}
                 alt="Company Logo"
-                className="max-w-16 max-h-16 mx-auto rounded-lg shadow-lg"
+                className="max-w-10 max-h-10 mx-auto rounded-lg shadow-lg"
               />
             </div>
           )}
           
-          <h1 className="text-2xl font-bold">
+          <h1 className="text-sm font-bold">
             {restaurantName}
           </h1>
         </div>
@@ -514,10 +514,10 @@ if (company && showWelcoming) {
         {/* Shopping Cart Icon */}
         <button
           onClick={() => setShowCart(true)}
-          className="absolute top-2 right-4 bg-black text-white p-3 rounded-full shadow-lg hover:bg-gray-800 transition-colors"
+          className="absolute top-2 right-4 bg-black text-white text-xs p-1 rounded-full shadow-lg hover:bg-gray-800 transition-colors"
         >
           <div className="relative">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.1 5A1 1 0 006.9 19H19M9 19a2 2 0 100 4 2 2 0 000-4zm8 0a2 2 0 100 4 2 2 0 000-4z" />
             </svg>
             {getTotalItems() > 0 && (
@@ -529,7 +529,7 @@ if (company && showWelcoming) {
         </button>
       </header>
 
-      <div className={`mx-auto ${getEffectiveMenuType() === 'pdf' ? ' h-full max-w-none p-0 min-h-screen' : 'max-w-4xl px-4'}`}>
+      <div className={`mx-auto ${getEffectiveMenuType() === 'pdf' ? ' h-full max-w-none p-0 ' : 'max-w-4xl px-4'}`}>
         {getEffectiveMenuType() === 'pdf' && company.pdfMenuUrl ? (
           <div 
             className={`w-full h-full flex items-center justify-center transition-all duration-500 ${
@@ -823,59 +823,11 @@ if (company && showWelcoming) {
       </div>
 
       {/* Footer */}
-      <footer className="text-center py-1 px-4 border-t mt-1">
-        {/* Social Media Links */}
-        {(theme.facebookUrl || theme.instagramUrl || theme.xUrl) && (
-          <div className="mb-1">
-            <h3 className="text-xs font-medium mb-1 opacity-80">Follow Us</h3>
-            <div className="flex justify-center space-x-2">
-              {theme.facebookUrl && (
-                <a
-                  href={theme.facebookUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center w-8 h-8 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-all duration-300 hover:scale-110 shadow-sm"
-                  title="Facebook"
-                >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                  </svg>
-                </a>
-              )}
-              
-              {theme.instagramUrl && (
-                <a
-                  href={theme.instagramUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full transition-all duration-300 hover:scale-110 shadow-sm"
-                  title="Instagram"
-                >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-                  </svg>
-                </a>
-              )}
-              
-              {theme.xUrl && (
-                <a
-                  href={theme.xUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center w-8 h-8 bg-black hover:bg-gray-800 text-white rounded-full transition-all duration-300 hover:scale-110 shadow-sm"
-                  title="X (Twitter)"
-                >
-                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                  </svg>
-                </a>
-              )}
-            </div>
-          </div>
-        )}
+      <footer className="text-center py-8 px-4 border-t">
+       
         
         <p className="text-xs opacity-60 leading-tight">
-          Powered by QR Menu System
+         
         </p>
       </footer>
     </div>
@@ -996,17 +948,17 @@ function PDFFlipbook({ pdfUrl }: { pdfUrl: string }) {
   }
 
   return (
-    <div className="flex flex-col justify-center items-center w-full min-h-screen bg-gray-100 px-4 py-8">
+    <div className="flex flex-col justify-start items-center w-full  bg-gray-100 px-1">
 
-      <div ref={containerRef} className="w-full max-w-6xl mx-auto px-4">
-        <div className="relative bg-white rounded-lg shadow-xl">
+      <div ref={containerRef} className="w-full max-w-6xl px-1 ">
+        <div className=" relative bg-white rounded-lg shadow-xl">
           <HTMLFlipBook
             width={dimensions.width}
             height={dimensions.height}
             size="stretch"
-            minWidth={320}
+            minWidth={400}
             maxWidth={1600}
-            minHeight={400}
+            minHeight={600}
             maxHeight={2000}
             showCover={true}
             drawShadow={true}
@@ -1022,16 +974,16 @@ function PDFFlipbook({ pdfUrl }: { pdfUrl: string }) {
             maxShadowOpacity={0.5}
             startZIndex={20}
             autoSize={true}
-            className="shadow-2xl mx-auto"
+            className="shadow-2xl "
             style={{}}
           >
             {images.map((src, idx) => (
-              <div key={idx} className="bg-white flex items-center justify-center h-full overflow-hidden shadow-inner">
-                <div className="relative w-full h-full">
+              <div key={idx} className="bg-white flex items-start justify-start h-full overflow-hidden shadow-inner">
+                <div className="relative w-full h-full  items-start justify-start">
                   <img 
                     src={src} 
                     alt={`Page ${idx + 1}`} 
-                    className="absolute inset-0 w-full h-full object-contain "
+                    className="absolute inset-0 w-full h-full "
                     draggable="false"
                     loading={idx < 2 ? "eager" : "lazy"} // Preload first two pages
                   />
@@ -1198,7 +1150,7 @@ function ManualMenu({
   }
 
   return (
-  <div className="min-h-screen">
+  <div className="">
     {/* Category Selection Tabs */}
     <div className="sticky top-0 z-10 bg-white bg-opacity-95 backdrop-blur-sm border-b border-gray-200 py-4 mb-6 rounded-full">
       <div className="flex justify-center">
