@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { io } from 'socket.io-client'
+import { toast } from 'react-toastify';
+
 
 // Utility function to format prices with thousand separators
 const formatPrice = (price: number): string => {
@@ -290,6 +292,14 @@ const handlePayCountChange = (itemId: string, delta: number, max: number) => {
     }
   };
 
+  useEffect(() => {
+  if (newOrderNotification) {
+    toast.success('New Order! 🎉', {
+      position: 'top-right',
+      autoClose: 10000,
+    })
+  }
+}, [newOrderNotification])
   // WebSocket connection + fetch initial orders
   useEffect(() => {
     const socketUrl = window.location.origin;
@@ -379,7 +389,7 @@ const handlePayCountChange = (itemId: string, delta: number, max: number) => {
 
   // Group orders by table number
   const groupedOrders = activeOrders.reduce<Record<string, Order[]>>((acc, order) => {
-    const key = String(order.tableNumber);
+    const key = String(order.createdAt);
     if (!acc[key]) acc[key] = [];
     acc[key].push(order);
     return acc;
@@ -409,7 +419,6 @@ const handlePayCountChange = (itemId: string, delta: number, max: number) => {
       </div>
     );
   }
-
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -431,11 +440,6 @@ const handlePayCountChange = (itemId: string, delta: number, max: number) => {
             }`}></div>
             <span className="capitalize">{connectionStatus}</span>
           </div>
-          {newOrderNotification && (
-            <div className="bg-green-100 border border-green-300 text-green-700 px-3 py-1 rounded-full text-sm animate-pulse">
-              New Order! 🎉
-            </div>
-          )}
         </div>
       </div>
 
@@ -447,24 +451,24 @@ const handlePayCountChange = (itemId: string, delta: number, max: number) => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {Object.entries(groupedOrders).map(([tableNumber, tableOrders]) => {
-            const allItems = tableOrders.flatMap(order => order.orderItems);
-            const totalAmount = tableOrders.reduce((sum, o) => sum + o.totalAmount, 0);
-            const latestOrder = tableOrders[0];
+          {Object.entries(groupedOrders).map(([createdAt, tableOrders]) => {
+  const allItems = tableOrders.flatMap(order => order.orderItems);
+  const totalAmount = tableOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+  const latestOrder = tableOrders[0];
 
-            return (
-              <div
-                key={tableNumber}
-                className="bg-white rounded-xl shadow-lg p-6 border border-purple-100 hover:shadow-xl transition-shadow duration-200"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-lg font-semibold text-purple-700">
-                    Table #{tableNumber}
-                  </span>
-                  <span className="text-sm text-gray-500">
-                    {new Date(latestOrder.createdAt).toLocaleString()}
-                  </span>
-                </div>
+  return (
+    <div
+      key={createdAt}
+      className="bg-white rounded-xl shadow-lg p-6 border border-purple-100 hover:shadow-xl transition-shadow duration-200"
+    >
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-lg font-semibold text-purple-700">
+          Table #{latestOrder.tableNumber}
+        </span>
+        <span className="text-sm text-gray-500">
+          {new Date(latestOrder.createdAt).toLocaleString()}
+        </span>
+      </div>
                 <div className="mb-2 flex items-center justify-between">
                   <span className="font-medium text-gray-700">Total:</span>
                   <span className="font-bold text-green-600">₺{formatPrice(totalAmount)}</span>
