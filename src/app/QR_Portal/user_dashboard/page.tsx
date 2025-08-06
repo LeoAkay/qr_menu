@@ -92,6 +92,7 @@ export default function UserDashboard() {
 
   const menuRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
+  
   useEffect(() => {
     if (!userData?.company?.id) return;
     const interval = setInterval(async () => {
@@ -128,6 +129,60 @@ export default function UserDashboard() {
   useEffect(() => {
     checkAuth()
   }, [])
+
+  // Handle navigation from order system page
+  useEffect(() => {
+    const targetSection = localStorage.getItem('targetSection')
+    if (targetSection && userData) {
+      // Clear the target section from localStorage
+      localStorage.removeItem('targetSection')
+      
+      // Navigate to the appropriate section
+      switch (targetSection) {
+        case 'dashboard':
+          setActiveTab('')
+          setShowActionBar(true)
+          setActiveSection('')
+          break
+        case 'pdf':
+          setMenuType('pdf')
+          setActiveTab('pdf')
+          setActiveSection('PDF Upload')
+          setTimeout(() => pdfRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
+          setShowActionBar(false)
+          break
+        case 'manual':
+          setMenuType('manual')
+          setActiveTab('manual')
+          setActiveSection('Manual Menu')
+          setTimeout(() => manualRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
+          setShowActionBar(false)
+          break
+        case 'theme':
+          setActiveTab('theme')
+          setActiveSection('Theme Settings')
+          setTimeout(() => themeRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
+          setShowActionBar(false)
+          break
+        case 'analytics':
+          setActiveTab('analytics')
+          setActiveSection('Analytics')
+          setShowActionBar(false)
+          break
+        case 'profile':
+          setActiveTab('profile')
+          setActiveSection('Profile')
+          setTimeout(() => profileRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
+          setShowActionBar(false)
+          break
+        case 'contactUs':
+          setActiveTab('contactUs')
+          setActiveSection('Contact Us')
+          setShowActionBar(false)
+          break
+      }
+    }
+  }, [userData])
 
   // WebSocket connection for new order notifications
   useEffect(() => {
@@ -2944,7 +2999,7 @@ function AnalyticsSection({ userData }: { userData: UserData | null }) {
           {analyticsData.recentOrders.map((order) => (
             <div key={order.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div>
-                <p className="font-medium text-gray-900">{order.tableNumber}</p>
+                <p className="font-medium text-gray-900">Table no: {order.tableNumber}</p>
                 <p className="text-sm text-gray-600">
                   {new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString()}
                 </p>

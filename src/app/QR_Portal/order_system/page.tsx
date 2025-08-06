@@ -51,9 +51,25 @@ export default function OrderSystemPage() {
   const router = useRouter()
   const [userData, setUserData] = useState<UserData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [showDropdown, setShowDropdown] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     checkAuth()
+  }, [])
+
+  // Handle clicking outside dropdown to close it
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
   }, [])
 
   const checkAuth = async () => {
@@ -82,7 +98,12 @@ export default function OrderSystemPage() {
     }
   }
 
-
+  const navigateToSection = (section: string) => {
+    // Store the target section in localStorage so the dashboard knows where to navigate
+    localStorage.setItem('targetSection', section)
+    router.push('/QR_Portal/user_dashboard')
+    setShowDropdown(false)
+  }
 
   if (loading) {
     return (
@@ -112,18 +133,77 @@ export default function OrderSystemPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-4">
-              <button
-                onClick={() => router.push('/QR_Portal/user_dashboard')}
-                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-              >
-                Back to Dashboard
-              </button>
-              <h1 className="text-2xl font-bold text-black-800">Order System</h1>
+              {/* Dropdown Menu */}
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setShowDropdown(!showDropdown)}
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2"
+                >
+                  <svg 
+                    className="w-6 h-6" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
+                
+                {showDropdown && (
+                  <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                    <div className="py-2">
+                      <button
+                        className="w-full text-left px-4 py-3 bg-purple-200 flex items-center space-x-3 transition-colors cursor-default"
+                      >
+                        <span className="text-2xl">📝</span>
+                        <span className="font-medium text-gray-700">Order System</span>
+                      </button>
+                      
+                      <button
+                        onClick={() => navigateToSection('dashboard')}
+                        className="w-full text-left px-4 py-3 bg-blue-200 hover:bg-blue-300 flex items-center space-x-3 transition-colors"
+                      >
+                        <span className="text-2xl">🏠</span>
+                        <span className="font-medium text-gray-700">Dashboard</span>
+                      </button>
+                      
+                      <button
+                        onClick={() => navigateToSection('pdf')}
+                        className="w-full text-left px-4 py-3 bg-green-200 hover:bg-green-300 flex items-center space-x-3 transition-colors"
+                      >
+                        <span className="text-2xl">📄</span>
+                        <span className="font-medium text-gray-700">PDF Upload</span>
+                      </button>
+                      
+                      <button
+                        onClick={() => navigateToSection('manual')}
+                        className="w-full text-left px-4 py-3 bg-yellow-200 hover:bg-yellow-300 flex items-center space-x-3 transition-colors"
+                      >
+                        <span className="text-2xl">⚙️</span>
+                        <span className="font-medium text-gray-700">Manual Menu</span>
+                      </button>
+                      
+                      <button
+                        onClick={() => navigateToSection('theme')}
+                        className="w-full text-left px-4 py-3 bg-pink-200 hover:bg-pink-300 flex items-center space-x-3 transition-colors"
+                      >
+                        <span className="text-2xl">🎨</span>
+                        <span className="font-medium text-gray-700">Theme Settings</span>
+                      </button>
+                      
+                      <button
+                        onClick={() => navigateToSection('analytics')}
+                        className="w-full text-left px-4 py-3 bg-indigo-200 hover:bg-indigo-300 flex items-center space-x-3 transition-colors"
+                      >
+                        <span className="text-2xl">📊</span>
+                        <span className="font-medium text-gray-700">Analytics</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
               
-            </div>
-            <div className="flex items-center space-x-4">
-             
-             
+              <h1 className="text-2xl font-bold text-black-800">Order System</h1>
             </div>
           </div>
         </div>
