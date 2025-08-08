@@ -1104,7 +1104,7 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
                   <svg className="w-4 h-4 text-orange-600 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z" />
                   </svg>
-                  <span className="text-orange-600">Premium</span>
+                  
                 </div>
                 {pdfDisplayMode === 'flipbook' && (
                   <div className="mt-3 text-purple-600 font-medium flex items-center justify-center">
@@ -1151,7 +1151,7 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
                   <svg className="w-4 h-4 text-slate-600 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                   </svg>
-                  <span className="text-slate-600">Simple</span>
+                  
                 </div>
                 {pdfDisplayMode === 'scroll' && (
                   <div className="mt-3 text-purple-600 font-medium flex items-center justify-center">
