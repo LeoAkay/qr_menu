@@ -39,6 +39,7 @@ interface UserData {
       subCategories: Array<{
         id: string
         name: string
+        description?: string
         orderNo: number
         stock:boolean      }>
     }>
@@ -1260,6 +1261,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
   const [itemForm, setItemForm] = useState({
     name: '',
     price: '',
+    description: '',
     stock: true,
     menuImage: null as File | null
   });
@@ -1270,6 +1272,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
   const [editItemForm, setEditItemForm] = useState({
     name: '',
     price: '',
+    description: '',
     stock: true,
     menuImage: null as File | null
   });
@@ -1329,6 +1332,9 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
       if (itemForm.price) {
         formData.append('price', itemForm.price)
       }
+      if (itemForm.description) {
+        formData.append('description', itemForm.description)
+      }
       formData.append('mainCategoryId', categoryId)
       if (itemForm.menuImage) {
         formData.append('menuImage', itemForm.menuImage)
@@ -1345,7 +1351,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
       if (res.ok) {
         toast.success('Item added successfully!')
         setItemForm({
-          name: '', price: '',stock:true, menuImage: null
+          name: '', price: '',description: '',stock:true, menuImage: null
         })
         setShowItemForm(null)
         fetchCategories()
@@ -1420,6 +1426,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
     setEditItemForm({
       name: item.name,
       price: item.price?.toString() || '',
+      description: item.description || '',
       stock: item.stock?.true,
       menuImage: null
     })
@@ -1465,6 +1472,9 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
       if (editItemForm.price) {
         formData.append('price', editItemForm.price)
       }
+      if (editItemForm.description) {
+        formData.append('description', editItemForm.description)
+      }
       if (editItemForm.menuImage) {
         formData.append('menuImage', editItemForm.menuImage)
       }
@@ -1477,7 +1487,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
 
       if (res.ok) {
         toast.success('Item updated successfully!')
-        setEditItemForm({ name: '', price: '',stock:true, menuImage: null })
+        setEditItemForm({ name: '', price: '',description: '',stock:true, menuImage: null })
         setShowEditItemForm(false)
         setEditingItem(null)
         fetchCategories()
@@ -1710,6 +1720,16 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
                         placeholder="e.g., 19.99"
                       />
                     </div>
+                     <div>
+                      <label className="block text-sm font-medium mb-1">Item Description</label>
+                      <input
+                        type="text"
+                        value={itemForm.description}
+                        onChange={(e) => setItemForm({...itemForm, description: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                        placeholder="e.g., Grilled Chicken"
+                      />
+                    </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">Item Image (Optional)</label>
                       <input
@@ -1823,6 +1843,16 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
                                placeholder="e.g., 19.99"
                              />
                            </div>
+                            <div>
+                      <label className="block text-sm font-medium mb-1">Item Description</label>
+                      <input
+                        type="text"
+                        value={editItemForm.description}
+                        onChange={(e) => setEditItemForm({...editItemForm, description: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                        placeholder="e.g., Chocolate Cake with nutella filling"
+                      />
+                    </div>
                            <div>
                              <label className="block text-sm font-medium mb-2">Item Image (Optional - Leave empty to keep current)</label>
                              <input
@@ -1855,7 +1885,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
                              onClick={() => {
                                setShowEditItemForm(false)
                                setEditingItem(null)
-                               setEditItemForm({ name: '', price: '',stock:true, menuImage: null })
+                               setEditItemForm({ name: '', price: '',description: '',stock:true, menuImage: null })
                              }}
                              className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                            >
@@ -2741,8 +2771,6 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
                 >
                   <option value="modern">Modern</option>
-                  <option value="classic">Klasik</option>
-                  <option value="elegant">Şık</option>
                   <option value="minimal">Minimal</option>
                 </select>
               </div>
