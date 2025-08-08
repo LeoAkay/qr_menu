@@ -6,14 +6,6 @@ import { io } from 'socket.io-client'
 import { toast } from 'react-toastify';
 
 
-// Utility function to format prices with thousand separators
-const formatPrice = (price: number): string => {
-  return price.toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
-};
-
 interface Order {
   id: string;
   tableNumber: number;
@@ -163,11 +155,18 @@ export default function OrderSystemPage() {
                   <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
                     <div className="py-2">
                       <button
-                        onClick={() => navigateToSection('preview')}
+                        className="w-full text-left px-4 py-3 bg-purple-200 flex items-center space-x-3 transition-colors cursor-default"
+                      >
+                        <span className="text-2xl">📝</span>
+                        <span className="font-medium text-gray-700">Order System</span>
+                      </button>
+                      
+                      <button
+                        onClick={() => navigateToSection('dashboard')}
                         className="w-full text-left px-4 py-3 bg-blue-200 hover:bg-blue-300 flex items-center space-x-3 transition-colors"
                       >
-                        <span className="text-2xl">🍽️</span>
-                        <span className="font-medium text-gray-700">Menu</span>
+                        <span className="text-2xl">🏠</span>
+                        <span className="font-medium text-gray-700">Dashboard</span>
                       </button>
                       
                       <button
@@ -471,7 +470,7 @@ const handlePayCountChange = (itemId: string, delta: number, max: number) => {
       </div>
                 <div className="mb-2 flex items-center justify-between">
                   <span className="font-medium text-gray-700">Total:</span>
-                  <span className="font-bold text-green-600">₺{formatPrice(totalAmount)}</span>
+                  <span className="font-bold text-green-600">₺{totalAmount.toFixed(2)}</span>
                 </div>
                 <div className="mb-2 text-sm text-gray-600 italic">
                   <span className="font-medium text-purple-600">Special Notes:</span>{' '}
@@ -539,7 +538,7 @@ const handlePayCountChange = (itemId: string, delta: number, max: number) => {
   className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-semibold transition"
   onClick={async () => {
     for (const order of tableOrders) {
-      const fullPayMap: Record<string, number> = {};
+      const fullPayMap = {};
       for (const item of order.orderItems) {
   if (!item?.id || item.quantity == null || item.paidQuantity == null) continue;
   fullPayMap[item.id] = item.quantity - item.paidQuantity;

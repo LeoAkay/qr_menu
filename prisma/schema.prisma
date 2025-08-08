@@ -44,18 +44,19 @@ model Company {
   updater         User?           @relation("UpdatedCompanies", fields: [updatedBy], references: [id])
   user            User            @relation(fields: [userId], references: [id])
   Main_Categories MainCategory[]
-  orders          Order[]
   Password_resets PasswordReset[]
   Themes          Theme[]
+
+  orders Order[]
 }
 
 model MainCategory {
-  id            String        @id @default(uuid())
-  companyId     String
-  name          String
-  categoryNo    Int
-  company       Company       @relation(fields: [companyId], references: [id])
-  subCategories SubCategory[]
+  id              String        @id @default(uuid())
+  companyId       String
+  name            String
+  categoryNo      Int
+  company         Company       @relation(fields: [companyId], references: [id])
+  subCategories   SubCategory[]
 
   @@index([companyId])
 }
@@ -76,13 +77,13 @@ model SubCategory {
   name           String
   orderNo        Int
   mainCategoryId String
-  menuImageUrl   String?
+  menuImageUrl  String?
   price          Float?
   stock          Boolean      @default(true)
-  orderItems     OrderItem[]
   mainCategory   MainCategory @relation(fields: [mainCategoryId], references: [id])
 
   @@index([mainCategoryId])
+  orderItems OrderItem[]
 }
 
 model Theme {
@@ -99,32 +100,31 @@ model Theme {
 
   @@index([companyId])
 }
-
 model Order {
-  id          String      @id @default(uuid())
-  tableNumber Int
-  companyId   String
-  createdAt   DateTime    @default(now())
-  isActive    Boolean     @default(false)
-  totalAmount Float
-  note        String?
-  company     Company     @relation(fields: [companyId], references: [id])
-  orderItems  OrderItem[]
+  id             String        @id @default(uuid())
+  tableNumber    Int
+  companyId      String
+  createdAt      DateTime      @default(now())
+  isActive       Boolean        @default(false)
+  totalAmount    Float
+  note           String?
+  company        Company       @relation(fields: [companyId], references: [id])
+  orderItems     OrderItem[]
 
   @@index([companyId])
   @@index([tableNumber])
 }
 
 model OrderItem {
-  id            String      @id @default(uuid())
-  orderId       String
-  subCategoryId String
-  quantity      Int
-  price         Float
-  isPaid        Boolean     @default(false)
-  paidQuantity  Int         @default(0)
-  order         Order       @relation(fields: [orderId], references: [id])
-  subCategory   SubCategory @relation(fields: [subCategoryId], references: [id])
+  id             String        @id @default(uuid())
+  orderId        String
+  subCategoryId  String
+  quantity       Int
+  paidQuantity Int      @default(0)
+  price          Float         // price at the time of order
+  isPaid         Boolean       @default(false) 
+  subCategory    SubCategory   @relation(fields: [subCategoryId], references: [id])
+  order          Order         @relation(fields: [orderId], references: [id])
 
   @@index([orderId])
   @@index([subCategoryId])
