@@ -513,7 +513,7 @@ if (company && showWelcoming) {
                 <img 
                   src={`/api/AdminPanel/company/image/${company.id}/logo?${Date.now()}`}
                   alt="Company Logo"
-                  className="max-w-12 max-h-12 mx-auto rounded-lg shadow-lg"
+                  className="max-w-16 max-h-16 mx-auto rounded-lg shadow-lg"
                 />
               </div>
             )}
@@ -522,11 +522,12 @@ if (company && showWelcoming) {
               {restaurantName}
             </h1>
           </div>
-
-          {/* Shopping Cart Icon */}
+        </header>
+      )}
+ {/* Shopping Cart Icon */}
           <button
             onClick={() => setShowCart(true)}
-            className="absolute top-2 right-4 bg-black text-white text-xs p-1 rounded-full shadow-lg hover:bg-gray-800 transition-colors"
+            className="fixed bottom-4 right-4 z-50 bg-black text-white text-base p-3 rounded-full shadow-xl hover:bg-gray-900 transition-colors focus:outline-none focus:ring-4 focus:ring-black/50"
           >
             <div className="relative">
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -539,9 +540,6 @@ if (company && showWelcoming) {
               )}
             </div>
           </button>
-        </header>
-      )}
-
       <div className={`mx-auto ${getEffectiveMenuType() === 'pdf' ? ' h-full max-w-none p-0' : 'max-w-4xl px-4'}`}>
         {getEffectiveMenuType() === 'pdf' && company.pdfMenuUrl ? (
           <div className="w-full h-screen flex items-center justify-center bg-transparent">
@@ -1415,6 +1413,14 @@ function ManualMenu({
 }) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const sortedCategories = [...(categories || [])].sort((a, b) => a.categoryNo - b.categoryNo)
+  const [expandedDescriptions, setExpandedDescriptions] = useState<{ [key: string]: boolean }>({});
+const toggleDescription = (itemId: string) => {
+  setExpandedDescriptions((prev) => ({
+    ...prev,
+    [itemId]: !prev[itemId],
+  }));
+};
+
 
   // Show first category by default
   useEffect(() => {
@@ -1458,25 +1464,27 @@ function ManualMenu({
   return (
   <div className="">
     {/* Category Selection Tabs */}
-    <div className="bg-white bg-opacity-95 backdrop-blur-sm border-b border-gray-200 py-4 mb-6 rounded-full">
-      <div className="flex justify-center">
-        <div className="flex flex-wrap justify-center gap-2 px-4">
-          {sortedCategories.map((category) => (
-            <button
-              key={category.id}
-              onClick={() => setSelectedCategory(category.id)}
-              className={`px-6 py-3 rounded-full font-medium text-sm transition-all ${
-                selectedCategory === category.id
-                  ? 'bg-black text-white shadow-lg'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {category.name}
-            </button>
-          ))}
-        </div>
-      </div>
+{/* Category Selection Tabs */}
+{/* Category Selection Tabs */}
+<div className="bg-white bg-opacity-90 backdrop-blur-sm border border-gray-200 py-3 mb-4 mx-auto rounded-full shadow-sm overflow-hidden max-w-4xl px-4">
+  <div className="overflow-x-auto no-scrollbar">
+    <div className="flex gap-3 min-w-max items-center">
+      {sortedCategories.map((category) => (
+        <button
+          key={category.id}
+          onClick={() => setSelectedCategory(category.id)}
+          className={`px-5 py-2 rounded-full font-medium text-sm sm:text-base whitespace-nowrap transition-all ${
+            selectedCategory === category.id
+              ? 'bg-black text-white shadow'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          {category.name}
+        </button>
+      ))}
     </div>
+  </div>
+</div>
 
     {/* Selected Category Content */}
     {currentCategory && (
@@ -1491,17 +1499,18 @@ function ManualMenu({
           <div className="w-20 h-1 bg-black mx-auto rounded"></div>
         </div>
 
-        {currentCategory.subCategories && currentCategory.subCategories.length > 0 ? (
-  <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 items-stretch">
+{currentCategory.subCategories && currentCategory.subCategories.length > 0 ? (
+  <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(160px,1fr))]">
     {[...currentCategory.subCategories]
       .sort((a, b) => a.orderNo - b.orderNo)
       .map((item) => (
         <div
           key={item.id}
-          className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group hover:-translate-y-1 relative flex flex-col"
+          className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-transform duration-300 overflow-hidden group hover:-translate-y-1 flex flex-col"
+          style={expandedDescriptions?.[item.id] ? { alignSelf: 'start' } : {}}
         >
-          {/* Product Image */}
-          <div className="aspect-square w-full bg-gray-100 overflow-hidden flex-shrink-0">
+          {/* Image */}
+          <div className="aspect-square w-full bg-gray-100 overflow-hidden relative">
             {item.menuImageUrl ? (
               <img
                 src={`/api/QR_Panel/user/manual-menu/image/${item.id}`}
@@ -1511,26 +1520,43 @@ function ManualMenu({
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
                 <div className="text-gray-400 text-center">
-                  <div className="text-4xl mb-2">🍽️</div>
+                  <div className="text-5xl mb-2">🍽️</div>
                   <div className="text-sm">No Image</div>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Product Info */}
+          {/* Info */}
           <div className="p-4 flex flex-col flex-1">
-            <h3 className="font-bold text-lg text-gray-800 mb-4 line-clamp-2">
+            <h3 className="font-bold text-lg text-gray-800 mb-2 line-clamp-2">
               {item.name}
             </h3>
-             <p className="text-sm text-gray-600 italic tracking-wide leading-snug line-clamp-3">
-    {item.description}
-  </p>
 
-            {/* Bottom Price & Controls */}
-            <div className="mt-auto">
-              {/* Price & Availability */}
-              <div className="flex items-center justify-between mb-3">
+            {/* Improved Description */}
+            <div className="relative">
+              <div
+                className={`text-sm text-gray-600 italic tracking-wide leading-snug transition-all duration-300 ease-in-out overflow-hidden ${
+                  expandedDescriptions?.[item.id] ? 'max-h-[500px]' : 'max-h-[4.5rem]'
+                }`}
+                style={{ whiteSpace: 'pre-wrap' }}
+              >
+                {item.description}
+              </div>
+
+              {item.description && item.description.length > 100 && (
+                <button
+                  onClick={() => toggleDescription(item.id)}
+                  className="text-blue-500 text-xs mt-1 font-medium hover:underline focus:outline-none"
+                >
+                  {expandedDescriptions?.[item.id] ? 'Show less' : 'Read more'}
+                </button>
+              )}
+            </div>
+
+            {/* Price and Cart */}
+            <div className="mt-auto pt-4 border-t flex items-center justify-between">
+              <div>
                 {item.stock ? (
                   item.price ? (
                     <span className="text-lg font-bold text-green-600">
@@ -1540,51 +1566,60 @@ function ManualMenu({
                     <span className="text-sm text-gray-500">Price not set</span>
                   )
                 ) : (
-                  <span className="text-sm font-medium text-red-500">Out of Stock</span>
-                )}
-
-                <div
-                  className={`w-3 h-3 rounded-full ${
-                    item.stock ? 'bg-green-500' : 'bg-red-500'
-                  }`}
-                  title={item.stock ? 'Available' : 'Out of Stock'}
-                ></div>
-              </div>
-
-              {/* Quantity Controls */}
-              {item.price && item.stock && (
-                <div className="flex items-center justify-center space-x-3">
-                  <button
-                    onClick={() => handleRemoveFromCart(item.id)}
-                    className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors"
-                  >
-                    -
-                  </button>
-                  <span className="w-8 text-center font-bold">
-                    {getCartItemQuantity(item.id)}
+                  <span className="text-sm font-semibold text-red-500">
+                    Out of Stock
                   </span>
-                  <button
-                    onClick={() => handleAddToCart(item)}
-                    className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors"
-                  >
-                    +
-                  </button>
-                </div>
-              )}
+                )}
+              </div>
+              <div
+                className={`w-3 h-3 rounded-full ${
+                  item.stock ? 'bg-green-500' : 'bg-red-500'
+                }`}
+                title={item.stock ? 'Available' : 'Out of Stock'}
+              ></div>
             </div>
+
+{item.price && item.stock && (
+  <div className="pt-2 flex items-center justify-center gap-6">
+    <button
+      onClick={() => handleRemoveFromCart(item.id)}
+      className="w-12 h-12 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-2xl font-bold"
+      aria-label="Remove item"
+    >
+      –
+    </button>
+    <span className="text-lg font-semibold w-10 text-center">
+      {getCartItemQuantity(item.id)}
+    </span>
+    <button
+      onClick={() => handleAddToCart(item)}
+      className="w-12 h-12 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-2xl font-bold"
+      aria-label="Add item"
+    >
+      +
+    </button>
+  </div>
+)}
+
           </div>
         </div>
       ))}
   </div>
-        ) : (
-          <div className="text-center py-16">
-            <div className="text-6xl mb-4">🍽️</div>
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">No Items Yet</h3>
-            <p className="text-gray-500">Items will appear here once they are added to this category.</p>
-          </div>
-        )}
+) : (
+  <div className="text-center py-20">
+    <div className="text-6xl mb-4">🍽️</div>
+    <h3 className="text-2xl font-semibold text-gray-700 mb-2">No Items Yet</h3>
+    <p className="text-gray-500">
+      Items will appear here once they are added to this category.
+    </p>
+  </div>
+)}
+
+
       </div>
     )}
   </div>
 )
 }
+
+
