@@ -643,7 +643,7 @@ export default function UserDashboard() {
                   }}
                   className="flex items-center space-x-3 px-6 py-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors text-gray-700 border border-purple-200"
                 >
-                  <span className="text-2xl">🛒</span>
+                  <span className="text-3xl">🛒</span>
                   <span className="font-medium">Order System</span>
                 </button>
                 {/* Analytics Button */}
@@ -1250,6 +1250,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
   const [showEditItemForm, setShowEditItemForm] = useState(false)
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [highlightedItemId, setHighlightedItemId] = useState<string | null>(null);
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const itemRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   // Restore missing state
   const [categoryForm, setCategoryForm] = useState({
@@ -1490,6 +1491,18 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
     }
   }
 
+  const toggleCategoryExpansion = (categoryId: string) => {
+    setExpandedCategories(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(categoryId)) {
+        newSet.delete(categoryId);
+      } else {
+        newSet.add(categoryId);
+      }
+      return newSet;
+    });
+  }
+
   useEffect(() => {
     if (searchQuery && categories.length > 0) {
       let foundCat = null;
@@ -1590,7 +1603,18 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
           {categories.map((category) => (
                          <div key={category.id} className={`border border-gray-200 rounded-xl p-6 bg-white ${selectedCategoryId === category.id ? 'ring-2 ring-purple-400' : ''}`}>
                <div className="flex justify-between items-center mb-4">
-                 <h3 className="text-xl font-semibold text-gray-800">{category.name}</h3>
+                 <div className="flex items-center space-x-3 flex-1 cursor-pointer" onClick={() => toggleCategoryExpansion(category.id)}>
+                   <h3 className="text-xl font-semibold text-gray-800">{category.name}</h3>
+                   <span className="text-gray-500 text-sm">({category.subCategories?.length || 0} items)</span>
+                   <svg 
+                     className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${expandedCategories.has(category.id) ? 'rotate-180' : ''}`} 
+                     fill="none" 
+                     stroke="currentColor" 
+                     viewBox="0 0 24 24"
+                   >
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                   </svg>
+                 </div>
                  <div className="flex space-x-2">
                    <button
                      onClick={() => setShowItemForm(showItemForm === category.id ? null : category.id)}
@@ -1725,7 +1749,8 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
               )}
 
               {/* Items List */}
-              <div className="space-y-3">
+              {expandedCategories.has(category.id) && (
+                <div className="space-y-3">
                                  {category.subCategories?.map((item: any) => (
                    <div key={item.id} ref={el => { itemRefs.current[item.id] = el; }} className={`border border-gray-100 rounded-lg p-4 bg-gray-50 ${highlightedItemId === item.id ? 'ring-4 ring-purple-400' : ''}`}>
                      <div className="flex justify-between items-start">
@@ -1840,12 +1865,13 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
                        </div>
                      )}
                    </div>
-                 )) || (
+                 )                ) || (
                   <p className="text-gray-500 text-sm text-center py-4">
                     No items yet. Click "Add Item" to add your first menu item.
                   </p>
                 )}
-              </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -2929,6 +2955,9 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
 
 // Analytics Component
 function AnalyticsSection({ userData, onLoaded }: { userData: UserData | null, onLoaded?: () => void }) {
+  const [filterPeriod, setFilterPeriod] = useState<'daily' | 'weekly' | 'monthly' | 'total'>('total');
+  const [showPopularDishes, setShowPopularDishes] = useState(false);
+  const [showRecentOrders, setShowRecentOrders] = useState(false);
   const [analyticsData, setAnalyticsData] = useState({
     totalOrders: 0,
     totalRevenue: 0,
@@ -2944,7 +2973,7 @@ function AnalyticsSection({ userData, onLoaded }: { userData: UserData | null, o
   if (userData?.id) {
     fetchAnalyticsData();
   }
-}, [userData])
+}, [userData, filterPeriod])
 
 
   const fetchAnalyticsData = async () => {
@@ -2954,21 +2983,40 @@ function AnalyticsSection({ userData, onLoaded }: { userData: UserData | null, o
     });
 
     const data = await ordersResponse.json(); 
-    const orders = (data.orders || []).filter((order: any) => order.isActive === false);
-
+    let orders = (data.orders || []).filter((order: any) => order.isActive === false);
 
     if (!ordersResponse.ok) {
       throw new Error('Failed to fetch orders');
     }
 
+    // Filter orders based on selected period
+    const now = new Date();
+    const filteredOrders = orders.filter((order: any) => {
+      const orderDate = new Date(order.createdAt);
+      const diffTime = now.getTime() - orderDate.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      switch (filterPeriod) {
+        case 'daily':
+          return diffDays <= 1;
+        case 'weekly':
+          return diffDays <= 7;
+        case 'monthly':
+          return diffDays <= 30;
+        case 'total':
+        default:
+          return true;
+      }
+    });
+
     // Calculate analytics
-    const totalOrders = orders.length;
-    const totalRevenue = orders.reduce((sum: number, order: any) => sum + order.totalAmount, 0);
+    const totalOrders = filteredOrders.length;
+    const totalRevenue = filteredOrders.reduce((sum: number, order: any) => sum + order.totalAmount, 0);
     const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
     // Popular dishes
     const dishCounts: { [key: string]: { orders: number; revenue: number } } = {};
-    orders.forEach((order: any) => {
+    filteredOrders.forEach((order: any) => {
       order.orderItems.forEach((item: any) => {
         const dishName = item.subCategory?.name || 'Unknown Dish';
         if (!dishCounts[dishName]) {
@@ -2985,7 +3033,7 @@ function AnalyticsSection({ userData, onLoaded }: { userData: UserData | null, o
       .slice(0, 5);
 
     // Recent orders
-    const recentOrders = orders
+    const recentOrders = filteredOrders
       .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       .slice(0, 5)
       .map((order: any) => ({
@@ -2997,7 +3045,7 @@ function AnalyticsSection({ userData, onLoaded }: { userData: UserData | null, o
 
     // Monthly revenue
     const monthlyRevenueMap: { [key: string]: number } = {};
-    orders.forEach((order: any) => {
+    filteredOrders.forEach((order: any) => {
       const date = new Date(order.createdAt);
       const month = date.toLocaleDateString('en-US', { month: 'short' });
       monthlyRevenueMap[month] = (monthlyRevenueMap[month] || 0) + order.totalAmount;
@@ -3052,6 +3100,52 @@ function AnalyticsSection({ userData, onLoaded }: { userData: UserData | null, o
         </button>
       </div>
 
+      {/* Filter Period Buttons */}
+      <div className="bg-white rounded-xl shadow-lg p-4">
+        <div className="flex flex-wrap gap-2 justify-center">
+          <button
+            onClick={() => setFilterPeriod('daily')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              filterPeriod === 'daily'
+                ? 'bg-purple-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            📅 Daily
+          </button>
+          <button
+            onClick={() => setFilterPeriod('weekly')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              filterPeriod === 'weekly'
+                ? 'bg-purple-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            📊 Weekly
+          </button>
+          <button
+            onClick={() => setFilterPeriod('monthly')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              filterPeriod === 'monthly'
+                ? 'bg-purple-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            📈 Monthly
+          </button>
+          <button
+            onClick={() => setFilterPeriod('total')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              filterPeriod === 'total'
+                ? 'bg-purple-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            📋 Total
+          </button>
+        </div>
+      </div>
+
       {/* Key Metrics */}
       <div className="flex justify-center">
   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -3061,7 +3155,11 @@ function AnalyticsSection({ userData, onLoaded }: { userData: UserData | null, o
           <span className="text-2xl">📊</span>
         </div>
         <div className="ml-4">
-          <p className="text-sm font-medium text-gray-600">Total Orders</p>
+          <p className="text-sm font-medium text-gray-600">
+            {filterPeriod === 'daily' ? 'Daily Orders' : 
+             filterPeriod === 'weekly' ? 'Weekly Orders' : 
+             filterPeriod === 'monthly' ? 'Monthly Orders' : 'Total Orders'}
+          </p>
           <p className="text-2xl font-bold text-gray-900">{analyticsData.totalOrders}</p>
         </div>
       </div>
@@ -3073,7 +3171,11 @@ function AnalyticsSection({ userData, onLoaded }: { userData: UserData | null, o
           <span className="text-2xl">💰</span>
         </div>
         <div className="ml-4">
-          <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+          <p className="text-sm font-medium text-gray-600">
+            {filterPeriod === 'daily' ? 'Daily Revenue' : 
+             filterPeriod === 'weekly' ? 'Weekly Revenue' : 
+             filterPeriod === 'monthly' ? 'Monthly Revenue' : 'Total Revenue'}
+          </p>
           <p className="text-2xl font-bold text-gray-900">₺{formatPrice(analyticsData.totalRevenue)}</p>
         </div>
       </div>
@@ -3084,51 +3186,90 @@ function AnalyticsSection({ userData, onLoaded }: { userData: UserData | null, o
 
       {/* Popular Dishes */}
       <div className="bg-white rounded-xl shadow-lg p-6">
-        <h3 className="text-xl font-semibold text-gray-800 mb-4">🍽️ Most Popular Dishes</h3>
-        <div className="space-y-4">
-          {analyticsData.popularDishes.map((dish, index) => (
-            <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-center space-x-4">
-                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                  <span className="text-sm font-bold text-purple-600">{index + 1}</span>
+        <button
+          onClick={() => setShowPopularDishes(!showPopularDishes)}
+          className="w-full flex items-center justify-between text-xl font-semibold text-gray-800 mb-4 hover:text-purple-600 transition-colors"
+        >
+          <span>
+            🍽️ Most Popular Dishes 
+            {filterPeriod !== 'total' && ` (${filterPeriod.charAt(0).toUpperCase() + filterPeriod.slice(1)})`}
+          </span>
+          <svg 
+            className={`w-6 h-6 transition-transform ${showPopularDishes ? 'rotate-180' : ''}`} 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        {showPopularDishes && (
+          <div className="space-y-4">
+            {analyticsData.popularDishes.map((dish, index) => (
+              <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center space-x-4">
+                  <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                    <span className="text-sm font-bold text-purple-600">{index + 1}</span>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">{dish.name}</p>
+                    <p className="text-sm text-gray-600">{dish.orders} orders</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-gray-900">{dish.name}</p>
-                  <p className="text-sm text-gray-600">{dish.orders} orders</p>
+                <div className="text-right">
+                  <p className="font-semibold text-green-600">₺{formatPrice(dish.revenue)}</p>
+                  <p className="text-sm text-gray-500">revenue</p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="font-semibold text-green-600">₺{formatPrice(dish.revenue)}</p>
-                <p className="text-sm text-gray-500">revenue</p>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Recent Orders */}
       <div className="bg-white rounded-xl shadow-lg p-6">
-        <h3 className="text-xl font-semibold text-gray-800 mb-4">📋 Recent Orders</h3>
-        <div className="space-y-3">
-          {analyticsData.recentOrders.map((order) => (
-            <div key={order.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <div>
-                <p className="font-medium text-gray-900">Table no: {order.tableNumber}</p>
-                <p className="text-sm text-gray-600">
-                  {new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString()}
-                </p>
+        <button
+          onClick={() => setShowRecentOrders(!showRecentOrders)}
+          className="w-full flex items-center justify-between text-xl font-semibold text-gray-800 mb-4 hover:text-purple-600 transition-colors"
+        >
+          <span>
+            📋 Recent Orders
+            {filterPeriod !== 'total' && ` (${filterPeriod.charAt(0).toUpperCase() + filterPeriod.slice(1)})`}
+          </span>
+          <svg 
+            className={`w-6 h-6 transition-transform ${showRecentOrders ? 'rotate-180' : ''}`} 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        {showRecentOrders && (
+          <div className="space-y-3">
+            {analyticsData.recentOrders.map((order) => (
+              <div key={order.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <p className="font-medium text-gray-900">Table no: {order.tableNumber}</p>
+                  <p className="text-sm text-gray-600">
+                    {new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString()}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="font-semibold text-gray-900">₺{formatPrice(order.totalAmount)}</p>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="font-semibold text-gray-900">₺{formatPrice(order.totalAmount)}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Monthly Revenue Chart */}
    <div className="bg-white rounded-xl shadow-lg p-6">
-      <h3 className="text-xl font-semibold text-gray-800 mb-4">📊 Monthly Revenue</h3>
+      <h3 className="text-xl font-semibold text-gray-800 mb-4">
+        📊 Revenue
+        {filterPeriod !== 'total' && ` (${filterPeriod.charAt(0).toUpperCase() + filterPeriod.slice(1)})`}
+      </h3>
       <div className="flex items-end gap-4 justify-center h-48 overflow-x-auto">
         {analyticsData.monthlyRevenue.map((month, index) => {
           const maxRevenue = Math.max(...analyticsData.monthlyRevenue.map(m => m.revenue), 1);

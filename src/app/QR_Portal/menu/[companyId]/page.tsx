@@ -512,7 +512,7 @@ if (company && showWelcoming) {
                 <img 
                   src={`/api/AdminPanel/company/image/${company.id}/logo?${Date.now()}`}
                   alt="Company Logo"
-                  className="max-w-11 max-h-11 mx-auto rounded-lg shadow-lg"
+                  className="max-w-12 max-h-12 mx-auto rounded-lg shadow-lg"
                 />
               </div>
             )}
@@ -543,7 +543,7 @@ if (company && showWelcoming) {
 
       <div className={`mx-auto ${getEffectiveMenuType() === 'pdf' ? ' h-full max-w-none p-0' : 'max-w-4xl px-4'}`}>
         {getEffectiveMenuType() === 'pdf' && company.pdfMenuUrl ? (
-          <div className="w-full h-full flex items-center justify-center bg-transparent">
+          <div className="w-full h-screen flex items-center justify-center bg-transparent">
             <PDFViewer 
               pdfUrl={`/api/AdminPanel/company/pdf/${company.id}?t=${Date.now()}`}
               displayMode={pdfDisplayMode}
@@ -625,7 +625,7 @@ if (company && showWelcoming) {
 
               {cart.length === 0 ? (
                 <div className="text-center py-8">
-                  <div className="text-4xl mb-4">🛒</div>
+                  <div className="text-5xl mb-4">🛒</div>
                   <p className="text-gray-500">Your cart is empty</p>
                 </div>
               ) : (
@@ -892,7 +892,11 @@ function PDFFlipbook({ pdfUrl }: { pdfUrl: string }) {
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [dimensions, setDimensions] = useState({ width: 800, height: 1200 });
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [inputPage, setInputPage] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
+  const flipBookRef = useRef<any>(null);
 
   // Responsive boyutlandırma
   useEffect(() => {
@@ -947,6 +951,7 @@ function PDFFlipbook({ pdfUrl }: { pdfUrl: string }) {
           setLoading(false);
           return;
         }
+        
 
         const loadingTask = pdfjsLib.getDocument(pdfUrl);
         const pdf = await loadingTask.promise;
@@ -981,6 +986,8 @@ function PDFFlipbook({ pdfUrl }: { pdfUrl: string }) {
 
         if (!cancelled) {
           setImages(imgs);
+          setTotalPages(imgs.length);
+          setCurrentPage(0); // Reset current page when new PDF is loaded
           setLoading(false);
         }
       } catch (err) {
@@ -992,6 +999,66 @@ function PDFFlipbook({ pdfUrl }: { pdfUrl: string }) {
     return () => { cancelled = true; };
   }, [pdfUrl]);
 
+  // Sayfa değiştirme fonksiyonları
+  const goToPage = (pageNumber: number) => {
+    if (flipBookRef.current && pageNumber >= 0 && pageNumber < totalPages) {
+      try {
+        flipBookRef.current.pageFlip().turnToPage(pageNumber);
+        setCurrentPage(pageNumber);
+      } catch (error) {
+        console.error('Error turning to page:', error);
+      }
+    }
+  };
+
+  const nextPage = () => {
+    if (flipBookRef.current && currentPage < totalPages - 1) {
+      try {
+        flipBookRef.current.pageFlip().flipNext();
+      } catch (error) {
+        console.error('Error flipping to next page:', error);
+      }
+    }
+  };
+
+  const prevPage = () => {
+    if (flipBookRef.current && currentPage > 0) {
+      try {
+        flipBookRef.current.pageFlip().flipPrev();
+      } catch (error) {
+        console.error('Error flipping to previous page:', error);
+      }
+    }
+  };
+
+  const handlePageInput = (e: React.FormEvent) => {
+    e.preventDefault();
+    const pageNum = parseInt(inputPage) - 1; // Convert to 0-based index
+    if (pageNum >= 0 && pageNum < totalPages) {
+      goToPage(pageNum);
+      setInputPage('');
+    }
+  };
+
+  const onFlip = (e: any) => {
+    // HTMLFlipBook returns the current page in e.data
+    const newPage = e.data;
+    if (typeof newPage === 'number' && newPage >= 0 && newPage < totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
+  // Handle flipbook state changes
+  const onChangeState = (e: any) => {
+    // Additional state handling if needed
+    // console.log('Flipbook state changed:', e);
+  };
+
+  const onChangeOrientation = (e: any) => {
+    // Handle orientation changes
+    // console.log('Flipbook orientation changed:', e);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
@@ -1001,21 +1068,22 @@ function PDFFlipbook({ pdfUrl }: { pdfUrl: string }) {
   }
 
   return (
-    <div className="flex flex-col justify-start items-center w-full">
+    <div className="flex flex-col justify-start items-center w-full h-full relative">
 
-      <div ref={containerRef} className="w-full max-w-6xl">
-        <div className="relative">
+      <div ref={containerRef} className="w-full max-w-6xl ">
+        <div className="relative ">
           <HTMLFlipBook
+            ref={flipBookRef}
             width={dimensions.width}
             height={dimensions.height}
             size="stretch"
-            minWidth={400}
+            minWidth={500}
             maxWidth={1600}
-            minHeight={600}
+            minHeight={700}
             maxHeight={2000}
             showCover={true}
             drawShadow={true}
-            flippingTime={1000}
+            flippingTime={800}
             usePortrait={true}
             startPage={0}
             useMouseEvents={true}
@@ -1026,9 +1094,12 @@ function PDFFlipbook({ pdfUrl }: { pdfUrl: string }) {
             swipeDistance={30}
             maxShadowOpacity={0.5}
             startZIndex={20}
-            autoSize={true}
+            autoSize={false}
             className=""
             style={{}}
+            onFlip={onFlip}
+            onChangeOrientation={onChangeOrientation}
+            onChangeState={onChangeState}
           >
             {images.map((src, idx) => (
               <div key={idx} className="flex items-start justify-start h-full overflow-hidden">
@@ -1046,6 +1117,65 @@ function PDFFlipbook({ pdfUrl }: { pdfUrl: string }) {
           </HTMLFlipBook>
         </div>
       </div>
+      {/* Floating Navigation Controls - Positioned over the menu */}
+      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-2 flex items-center justify-center space-x-2 z-30 border border-gray-200">
+        {/* Previous Page Button */}
+        <button
+          onClick={prevPage}
+          disabled={currentPage === 0}
+          className={`p-2 rounded-md transition-colors ${
+            currentPage === 0
+              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              : 'bg-blue-500 text-white hover:bg-blue-600'
+          }`}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        {/* Page Input */}
+        <form onSubmit={handlePageInput} className="flex items-center space-x-1">
+          <span className="text-gray-600 text-xs font-medium">Page</span>
+          <input
+            type="number"
+            value={inputPage}
+            onChange={e => setInputPage(e.target.value)}
+            min={1}
+            max={totalPages}
+            placeholder={`${currentPage + 1}`}
+            className="w-10 px-1 py-1 border border-gray-300 rounded text-center text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+          />
+          <span className="text-gray-600 text-xs">/{totalPages}</span>
+          <button
+            type="submit"
+            disabled={!inputPage}
+            className={`px-2 py-1 rounded text-xs transition-colors ${
+              !inputPage 
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-blue-500 text-white hover:bg-blue-600'
+            }`}
+          >
+            Go
+          </button>
+        </form>
+
+        {/* Next Page Button */}
+        <button
+          onClick={nextPage}
+          disabled={currentPage === totalPages - 1}
+          className={`p-2 rounded-md transition-colors ${
+            currentPage === totalPages - 1
+              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              : 'bg-blue-500 text-white hover:bg-blue-600'
+          }`}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+
     </div>
   );
 }
@@ -1054,6 +1184,9 @@ function PDFFlipbook({ pdfUrl }: { pdfUrl: string }) {
 function ScrollPDFViewer({ pdfUrl }: { pdfUrl: string }) {
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [inputPage, setInputPage] = useState('');
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -1096,6 +1229,72 @@ function ScrollPDFViewer({ pdfUrl }: { pdfUrl: string }) {
     return () => { cancelled = true; };
   }, [pdfUrl]);
 
+  // Scroll to specific page
+  const scrollToPage = (pageIndex: number) => {
+    if (containerRef.current && pageIndex >= 0 && pageIndex < images.length) {
+      const pageElement = containerRef.current.children[pageIndex] as HTMLElement;
+      if (pageElement) {
+        pageElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        });
+        setCurrentPage(pageIndex);
+      }
+    }
+  };
+
+  // Navigation functions
+  const nextPage = () => {
+    if (currentPage < images.length - 1) {
+      scrollToPage(currentPage + 1);
+    }
+  };
+
+  const prevPage = () => {
+    if (currentPage > 0) {
+      scrollToPage(currentPage - 1);
+    }
+  };
+
+  const handlePageInput = (e: React.FormEvent) => {
+    e.preventDefault();
+    const pageNum = parseInt(inputPage) - 1; // Convert to 0-based index
+    if (pageNum >= 0 && pageNum < images.length) {
+      scrollToPage(pageNum);
+      setInputPage('');
+    }
+  };
+
+  // Track current page based on scroll position
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const scrollTop = container.scrollTop;
+      const containerHeight = container.clientHeight;
+      
+      // Find which page is mostly visible
+      let visiblePage = 0;
+      for (let i = 0; i < images.length; i++) {
+        const pageElement = container.children[i] as HTMLElement;
+        if (pageElement) {
+          const rect = pageElement.getBoundingClientRect();
+          const containerRect = container.getBoundingClientRect();
+          
+          // Check if page is in view
+          if (rect.top <= containerRect.top + containerHeight / 2) {
+            visiblePage = i;
+          }
+        }
+      }
+      setCurrentPage(visiblePage);
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [images.length]);
+
   if (loading) {
     return (
       <div className="text-center py-12">
@@ -1108,16 +1307,80 @@ function ScrollPDFViewer({ pdfUrl }: { pdfUrl: string }) {
   }
 
   return (
-    <div className="w-full h-full overflow-auto">
-      {images.map((src, idx) => (
-        <div key={idx} className="w-full flex justify-center">
-          <img 
-            src={src} 
-            alt={`Page ${idx + 1}`} 
-            className="max-w-full h-auto"
+    <div className="relative w-full h-full">
+      <div 
+        ref={containerRef}
+        className="w-full h-full overflow-auto"
+      >
+        {images.map((src, idx) => (
+          <div key={idx} className="w-full flex justify-center">
+            <img 
+              src={src} 
+              alt={`Page ${idx + 1}`} 
+              className="max-w-full h-auto"
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* Floating Navigation Controls - Positioned over the menu */}
+      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-2 flex items-center justify-center space-x-2 z-30 border border-gray-200">
+        {/* Previous Page Button */}
+        <button
+          onClick={prevPage}
+          disabled={currentPage === 0}
+          className={`p-2 rounded-md transition-colors ${
+            currentPage === 0
+              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              : 'bg-blue-500 text-white hover:bg-blue-600'
+          }`}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        {/* Page Input */}
+        <form onSubmit={handlePageInput} className="flex items-center space-x-1">
+          <span className="text-gray-600 text-xs font-medium">Page</span>
+          <input
+            type="number"
+            min="1"
+            max={images.length}
+            value={inputPage}
+            onChange={(e) => setInputPage(e.target.value)}
+            placeholder={`${currentPage + 1}`}
+            className="w-10 px-1 py-1 border border-gray-300 rounded text-center text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
           />
-        </div>
-      ))}
+          <span className="text-gray-600 text-xs">/{images.length}</span>
+          <button
+            type="submit"
+            disabled={!inputPage}
+            className={`px-2 py-1 rounded text-xs transition-colors ${
+              !inputPage 
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-blue-500 text-white hover:bg-blue-600'
+            }`}
+          >
+            Go
+          </button>
+        </form>
+
+        {/* Next Page Button */}
+        <button
+          onClick={nextPage}
+          disabled={currentPage === images.length - 1}
+          className={`p-2 rounded-md transition-colors ${
+            currentPage === images.length - 1
+              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              : 'bg-blue-500 text-white hover:bg-blue-600'
+          }`}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
     </div>
   );
 }
