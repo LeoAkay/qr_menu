@@ -391,7 +391,7 @@ export default function MenuPage() {
     })
   }
 
-  const restaurantName = company.C_Name || company.user?.userName ? `${company.user?.userName}'s Restaurant` : 'Restaurant Menu';
+  const restaurantName = company.C_Name || company.user?.userName ? `${company.user?.userName}` : 'Restaurant Menu';
 
   // Get effective menu type - URL parameter overrides company setting
   const getEffectiveMenuType = () => {
@@ -511,7 +511,7 @@ if (company && showWelcoming) {
                 <img 
                   src={`/api/AdminPanel/company/image/${company.id}/logo?${Date.now()}`}
                   alt="Company Logo"
-                  className="max-w-10 max-h-10 mx-auto rounded-lg shadow-lg"
+                  className="max-w-12 max-h-12 mx-auto rounded-lg shadow-lg"
                 />
               </div>
             )}
@@ -527,7 +527,7 @@ if (company && showWelcoming) {
             className="absolute top-2 right-4 bg-black text-white text-xs p-1 rounded-full shadow-lg hover:bg-gray-800 transition-colors"
           >
             <div className="relative">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.1 5A1 1 0 006.9 19H19M9 19a2 2 0 100 4 2 2 0 000-4zm8 0a2 2 0 100 4 2 2 0 000-4z" />
               </svg>
               {getTotalItems() > 0 && (
@@ -624,7 +624,7 @@ if (company && showWelcoming) {
 
               {cart.length === 0 ? (
                 <div className="text-center py-8">
-                  <div className="text-4xl mb-4">🛒</div>
+                  <div className="text-5xl mb-4">🛒</div>
                   <p className="text-gray-500">Your cart is empty</p>
                 </div>
               ) : (
@@ -1198,7 +1198,7 @@ function ManualMenu({
   return (
   <div className="">
     {/* Category Selection Tabs */}
-    <div className="sticky top-0 z-10 bg-white bg-opacity-95 backdrop-blur-sm border-b border-gray-200 py-4 mb-6 rounded-full">
+    <div className="bg-white bg-opacity-95 backdrop-blur-sm border-b border-gray-200 py-4 mb-6 rounded-full">
       <div className="flex justify-center">
         <div className="flex flex-wrap justify-center gap-2 px-4">
           {sortedCategories.map((category) => (
