@@ -2741,8 +2741,6 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
                 >
                   <option value="modern">Modern</option>
-                  <option value="classic">Klasik</option>
-                  <option value="elegant">Şık</option>
                   <option value="minimal">Minimal</option>
                 </select>
               </div>
