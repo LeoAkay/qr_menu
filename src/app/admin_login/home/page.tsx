@@ -1,6 +1,6 @@
 'use client' 
 
-import LogoutButton from '@/app/components/LogoutButtonForAdminPanel'
+import LogoutButton from '@/app/components/AdminComponents/LogoutButtonForAdminPanel'
 import { useRouter } from 'next/navigation'
 
 export default function AdminHome() {
