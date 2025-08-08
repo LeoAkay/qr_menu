@@ -3,10 +3,24 @@ const { createServer } = require('http');
 const { Server } = require('socket.io');
 const { parse } = require('url');
 const next = require('next');
+const os = require('os'); // <-- Ekledik
 
 const dev = process.env.NODE_ENV !== 'production';
 const app = next({ dev });
 const handle = app.getRequestHandler();
+
+// Aktif IPv4 bulucu fonksiyon
+function getLocalIPv4() {
+  const ifaces = os.networkInterfaces();
+  for (const name of Object.keys(ifaces)) {
+    for (const iface of ifaces[name]) {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        return iface.address;
+      }
+    }
+  }
+  return null;
+}
 
 app.prepare().then(() => {
   const server = express();
@@ -48,9 +62,15 @@ app.prepare().then(() => {
   });
 
   const PORT = process.env.PORT || 3000;
-httpServer.listen(PORT, '0.0.0.0', (err) => {
-  if (err) throw err;
-  console.log(`> Ready on http://0.0.0.0:${PORT}`);
-  console.log('> WebSocket server is running');
+  httpServer.listen(PORT, (err) => {
+    if (err) throw err;
+    const ipv4 = getLocalIPv4();
+    console.log(`> Ready on http://localhost:${PORT}`);
+    if (ipv4) {
+      console.log(`> Ready on http://${ipv4}:${PORT}`);
+    } else {
+      console.log('> No external IPv4 address found');
+    }
+    console.log('> WebSocket server is running');
+  });
 });
-}); 
