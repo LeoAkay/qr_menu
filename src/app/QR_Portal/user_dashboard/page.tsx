@@ -5,6 +5,15 @@ import { useRouter } from 'next/navigation'
 import { QRCodeSVG } from 'qrcode.react'
 import { io } from "socket.io-client";
 import { ToastContainer, toast } from 'react-toastify';
+
+// Utility function to format prices with thousand separators
+const formatPrice = (price: number): string => {
+  return price.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+};
+
 interface UserData {
   id: string
   cId: number
@@ -79,7 +88,6 @@ export default function UserDashboard() {
   const [newOrderNotification, setNewOrderNotification] = useState(false)
   const [notificationMessage, setNotificationMessage] = useState('')
   const [newOrderCount, setNewOrderCount] = useState(0)
-  const [showActionBar, setShowActionBar] = useState(true)
   const [activeSection, setActiveSection] = useState<string>('')
 
   const [theme, setTheme] = useState<Theme>({
@@ -90,6 +98,10 @@ export default function UserDashboard() {
   const pdfRef = useRef<HTMLDivElement>(null);
   const manualRef = useRef<HTMLDivElement>(null);
   const themeRef = useRef<HTMLDivElement>(null);
+  const analyticsRef = useRef<HTMLDivElement>(null);
+  const [manualLoaded, setManualLoaded] = useState(false);
+  const [themeLoaded, setThemeLoaded] = useState(false);
+  const [analyticsLoaded, setAnalyticsLoaded] = useState(false);
 
   const menuRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -142,7 +154,6 @@ export default function UserDashboard() {
       switch (targetSection) {
         case 'dashboard':
           setActiveTab('')
-          setShowActionBar(true)
           setActiveSection('')
           break
         case 'pdf':
@@ -150,36 +161,35 @@ export default function UserDashboard() {
           setActiveTab('pdf')
           setActiveSection('PDF Upload')
           setTimeout(() => pdfRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
-          setShowActionBar(false)
           break
         case 'manual':
           setMenuType('manual')
           setActiveTab('manual')
           setActiveSection('Manual Menu')
           setTimeout(() => manualRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
-          setShowActionBar(false)
           break
         case 'theme':
           setActiveTab('theme')
           setActiveSection('Theme Settings')
           setTimeout(() => themeRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
-          setShowActionBar(false)
           break
         case 'analytics':
           setActiveTab('analytics')
           setActiveSection('Analytics')
-          setShowActionBar(false)
+          break
+        case 'preview':
+          setActiveTab('preview')
+          setActiveSection('Preview & QR Code')
+          setTimeout(() => menuRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
           break
         case 'profile':
           setActiveTab('profile')
           setActiveSection('Profile')
           setTimeout(() => profileRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
-          setShowActionBar(false)
           break
         case 'contactUs':
           setActiveTab('contactUs')
           setActiveSection('Contact Us')
-          setShowActionBar(false)
           break
       }
     }
@@ -215,13 +225,8 @@ export default function UserDashboard() {
 
     socket.on('new-order', (newOrder: any) => {
       if (newOrder?.tableNumber) {
-        setNotificationMessage(`New order received for Table ${newOrder.tableNumber}!`);
-        setNewOrderNotification(true);
-        
-        // Auto-hide notification after 5 seconds
-        setTimeout(() => {
-          setNewOrderNotification(false);
-        }, 5000);
+        toast.info(`New order received for Table ${newOrder.tableNumber}! 🎉`);
+        return(<ToastContainer/>)
       }
     });
 
@@ -370,6 +375,25 @@ export default function UserDashboard() {
     }
   };
 
+  useEffect(() => {
+    if (manualLoaded) {
+      manualRef.current?.scrollIntoView({ behavior: 'smooth' });
+      setManualLoaded(false);
+    }
+  }, [manualLoaded]);
+  useEffect(() => {
+    if (themeLoaded) {
+      themeRef.current?.scrollIntoView({ behavior: 'smooth' });
+      setThemeLoaded(false);
+    }
+  }, [themeLoaded]);
+  useEffect(() => {
+    if (analyticsLoaded) {
+      analyticsRef.current?.scrollIntoView({ behavior: 'smooth' });
+      setAnalyticsLoaded(false);
+    }
+  }, [analyticsLoaded]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -430,7 +454,6 @@ export default function UserDashboard() {
           <button
             onClick={() => {
               setActiveTab('');
-              setShowActionBar(true);
               setActiveSection('');
             }}
             className="text-white font-bold text-xl sm:text-2xl whitespace-nowrap truncate min-w-0 hover:text-gray-200 transition-colors cursor-pointer"
@@ -560,45 +583,20 @@ export default function UserDashboard() {
                 {/* Action Buttons Bar */}
         <div className="bg-white rounded-xl shadow-lg p-4 mb-8">
           <div className="flex items-center">
-            {/* Hamburger Button - Only visible when collapsed, always on left */}
-            {!showActionBar && (
-              <button
-                onClick={() => setShowActionBar(!showActionBar)}
-                className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                aria-label="Toggle Menu"
-              >
-                <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-            )}
-
-            {/* Centered Content */}
             <div className="flex-1 flex justify-center">
-              {/* Active Section Name - Shows when bar is collapsed */}
-              {!showActionBar && activeSection && (
-                <div className="flex items-center space-x-2 px-4 py-2 bg-gray-50 rounded-lg border border-gray-200">
-                  <span className="text-gray-700 font-medium">{activeSection}</span>
-                </div>
-              )}
-
-              {/* Action Buttons - Conditionally visible */}
-              {showActionBar && (
-                <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-4">
                 {/* Menu Button */}
                 <button 
                   onClick={() => {
                     setActiveTab('preview');
                     setActiveSection('Menu');
                     setTimeout(() => menuRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-                    setShowActionBar(false); // Collapse after click
                   }}
                   className="flex items-center space-x-3 px-6 py-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors text-gray-700 border border-purple-200"
                 >
                   <span className="text-2xl">🍽️</span>
                   <span className="font-medium">Menu</span>
                 </button>
-
                 {/* PDF Upload Button */}
                 <button
                   onClick={() => {
@@ -606,14 +604,12 @@ export default function UserDashboard() {
                     setActiveTab('pdf');
                     setActiveSection('PDF Upload');
                     setTimeout(() => pdfRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-                    setShowActionBar(false); // Collapse after click
                   }}
                   className="flex items-center space-x-3 px-6 py-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors text-gray-700 border border-blue-200"
                 >
                   <span className="text-2xl">📄</span>
                   <span className="font-medium">PDF Upload</span>
                 </button>
-
                 {/* Manual Menu Button */}
                 <button
                   onClick={() => {
@@ -621,52 +617,40 @@ export default function UserDashboard() {
                     setActiveTab('manual');
                     setActiveSection('Manual Menu');
                     setTimeout(() => manualRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-                    setShowActionBar(false); // Collapse after click
                   }}
                   className="flex items-center space-x-3 px-6 py-3 bg-green-50 hover:bg-green-100 rounded-lg transition-colors text-gray-700 border border-green-200"
                 >
                   <span className="text-2xl">⚙️</span>
                   <span className="font-medium">Manual Menu</span>
                 </button>
-
                 {/* Theme Settings Button */}
                 <button
                   onClick={() => {
                     setActiveTab('theme');
                     setActiveSection('Theme Settings');
                     setTimeout(() => themeRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-                    setShowActionBar(false); // Collapse after click
                   }}
                   className="flex items-center space-x-3 px-6 py-3 bg-yellow-50 hover:bg-yellow-100 rounded-lg transition-colors text-gray-700 border border-yellow-200"
                 >
                   <span className="text-2xl">🎨</span>
                   <span className="font-medium">Theme Settings</span>
                 </button>
-
                 {/* Order System Button */}
                 <button
                   onClick={() => {
                     router.push('/QR_Portal/order_system');
                     setActiveSection('Order System');
-                    setShowActionBar(false); // Collapse after click
                   }}
-                  className="flex items-center space-x-3 px-6 py-3 bg-red-50 hover:bg-red-100 rounded-lg transition-colors text-gray-700 border border-red-200 relative"
+                  className="flex items-center space-x-3 px-6 py-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors text-gray-700 border border-purple-200"
                 >
-                  <span className="text-2xl">📝</span>
+                  <span className="text-2xl">🛒</span>
                   <span className="font-medium">Order System</span>
-                  {newOrderNotification && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-2 py-1 rounded-full animate-pulse">
-                      NEW!
-                    </span>
-                  )}
                 </button>
-
                 {/* Analytics Button */}
                 <button
                   onClick={() => {
                     setActiveTab('analytics');
                     setActiveSection('Analytics');
-                    setShowActionBar(false); // Collapse after click
                   }}
                   className="flex items-center space-x-3 px-6 py-3 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors text-gray-700 border border-indigo-200"
                 >
@@ -674,7 +658,6 @@ export default function UserDashboard() {
                   <span className="font-medium">Analytics</span>
                 </button>
               </div>
-            )}
             </div>
           </div>
         </div>
@@ -692,8 +675,11 @@ export default function UserDashboard() {
                   <p className="text-gray-600 mb-8">Follow the steps below to upload your PDF menu</p>
                   <button
                     onClick={() => setMenuType('pdf')}
-                    className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-lg font-medium text-lg transition-colors shadow-lg"
+                    className="bg-purple-400 hover:bg-purple-500 text-white px-8 py-3 rounded-lg font-medium text-lg transition-all duration-200 shadow-sm hover:shadow-md"
                   >
+                    <svg className="w-6 h-6 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
                     Start PDF Upload
                   </button>
                 </div>
@@ -706,12 +692,19 @@ export default function UserDashboard() {
 
               {activeTab === 'manual' && (
   <div ref={manualRef}>
-    <ManualMenuSection searchQuery={searchQuery} onSearchHandled={() => setSearchQuery('')} />
+    <ManualMenuSection
+      searchQuery={searchQuery}
+      onSearchHandled={() => setSearchQuery('')}
+      onLoaded={() => setManualLoaded(true)}
+    />
   </div>
 )}
               {activeTab === 'theme' && (
   <div ref={themeRef}>
-    <ThemeSettingsSection userData={userData} />
+    <ThemeSettingsSection
+      userData={userData}
+      onLoaded={() => setThemeLoaded(true)}
+    />
   </div>
 )}
 
@@ -731,7 +724,14 @@ export default function UserDashboard() {
             </div>
           )}
           {activeTab === 'contactUs' && <GetStartedPage userData={userData} />}
-          {activeTab === 'analytics' && <AnalyticsSection userData={userData} />}
+          {activeTab === 'analytics' && (
+  <div ref={analyticsRef}>
+    <AnalyticsSection
+      userData={userData}
+      onLoaded={() => setAnalyticsLoaded(true)}
+    />
+  </div>
+)}
           {/* Default Welcome Screen */}
           {!activeTab && (
             <div className="text-center py-12">
@@ -996,9 +996,24 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
               <button
                 onClick={handleDeletePDF}
                 disabled={deleting}
-                className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:bg-red-400"
+                className="bg-rose-400 hover:bg-rose-500 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 shadow-sm hover:shadow-md disabled:bg-rose-300"
+                title="Delete PDF menu"
               >
-                {deleting ? 'Deleting...' : '🗑️ Delete'}
+                {deleting ? (
+                  <>
+                    <svg className="w-4 h-4 inline mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Delete
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -1031,14 +1046,20 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
           <button
             onClick={handleUpload}
             disabled={uploading}
-            className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-lg font-medium text-lg disabled:bg-gray-400 transition-colors shadow-lg mr-4"
+            className="bg-purple-400 hover:bg-purple-500 text-white px-8 py-3 rounded-lg font-medium text-lg disabled:bg-gray-400 transition-all duration-200 shadow-sm hover:shadow-md mr-4"
           >
+            <svg className="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
             {uploading ? 'Uploading...' : existingPDF ? 'Update PDF' : 'Upload PDF'}
           </button>
           <button
             onClick={() => setSelectedFile(null)}
-            className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+            className="bg-gray-400 hover:bg-gray-500 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-sm hover:shadow-md"
           >
+            <svg className="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
             Cancel
           </button>
         </div>
@@ -1070,17 +1091,27 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
               }`}
             >
               <div className="text-center">
-                <div className="text-4xl mb-3">📖</div>
+                <div className="flex justify-center mb-3">
+                  <svg className="w-12 h-12 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                </div>
                 <h4 className="font-semibold text-gray-800 mb-2">Flipbook Style</h4>
                 <p className="text-sm text-gray-600">
                   Interactive page-turning experience like a real book
                 </p>
-                <div className="mt-2 p-2 bg-orange-50 border border-orange-200 rounded text-xs">
-                  🎨
+                <div className="mt-2 p-2 bg-orange-50 border border-orange-200 rounded text-xs flex items-center justify-center">
+                  <svg className="w-4 h-4 text-orange-600 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z" />
+                  </svg>
+                  <span className="text-orange-600">Premium</span>
                 </div>
                 {pdfDisplayMode === 'flipbook' && (
-                  <div className="mt-3 text-purple-600 font-medium">
-                    ✓ Selected
+                  <div className="mt-3 text-purple-600 font-medium flex items-center justify-center">
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Selected
                   </div>
                 )}
               </div>
@@ -1107,17 +1138,27 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
               }`}
             >
               <div className="text-center">
-                <div className="text-4xl mb-3">📜</div>
+                <div className="flex justify-center mb-3">
+                  <svg className="w-12 h-12 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
                 <h4 className="font-semibold text-gray-800 mb-2">Scroll Style</h4>
                 <p className="text-sm text-gray-600">
                   Traditional continuous scrolling view
                 </p>
-                <div className="mt-2 p-2 bg-slate-50 border border-slate-200 rounded text-xs">
-                  🎨 
+                <div className="mt-2 p-2 bg-slate-50 border border-slate-200 rounded text-xs flex items-center justify-center">
+                  <svg className="w-4 h-4 text-slate-600 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                  </svg>
+                  <span className="text-slate-600">Simple</span>
                 </div>
                 {pdfDisplayMode === 'scroll' && (
-                  <div className="mt-3 text-purple-600 font-medium">
-                    ✓ Selected
+                  <div className="mt-3 text-purple-600 font-medium flex items-center justify-center">
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Selected
                   </div>
                 )}
               </div>
@@ -1182,9 +1223,13 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
                   toast.error('Network error. Please try again.')
                 }
               }}
-              className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium transition-colors shadow-lg"
+              className="bg-purple-400 hover:bg-purple-500 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 shadow-sm hover:shadow-md"
+              title="Save PDF display mode"
             >
-              💾 Save Display Mode
+              <svg className="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Save Display Mode
             </button>
           </div>
         </div>
@@ -1194,7 +1239,7 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
 }
 
 // Manual Menu Component
-function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: string, onSearchHandled?: () => void }) {
+function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQuery?: string, onSearchHandled?: () => void, onLoaded?: () => void }) {
   const [categories, setCategories] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [editingCategory, setEditingCategory] = useState<any>(null)
@@ -1227,6 +1272,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
     stock: true,
     menuImage: null as File | null
   });
+  const hasCalledOnLoaded = useRef(false);
 
   useEffect(() => {
     fetchCategories()
@@ -1471,6 +1517,13 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
     }
   }, [searchQuery, categories]);
 
+  useEffect(() => {
+    if (!loading && !hasCalledOnLoaded.current) {
+      onLoaded?.();
+      hasCalledOnLoaded.current = true;
+    }
+  }, [loading, onLoaded]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -1541,21 +1594,30 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
                  <div className="flex space-x-2">
                    <button
                      onClick={() => setShowItemForm(showItemForm === category.id ? null : category.id)}
-                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm"
+                     className="bg-blue-400 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 text-sm shadow-sm hover:shadow-md"
                    >
-                     + Add Item
+                     <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                     </svg>
+                     Add Item
                    </button>
                    <button
                      onClick={() => handleEditCategory(category)}
-                     className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm"
+                     className="bg-amber-400 hover:bg-amber-500 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 text-sm shadow-sm hover:shadow-md"
                    >
-                     ✏️ Edit
+                     <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                     </svg>
+                     Edit
                    </button>
                    <button
                      onClick={() => handleDeleteCategory(category.id, category.name)}
-                     className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm"
+                     className="bg-rose-400 hover:bg-rose-500 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 text-sm shadow-sm hover:shadow-md"
                    >
-                     🗑️ Delete
+                     <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                     </svg>
+                     Delete
                    </button>
                  </div>
                </div>
@@ -1671,7 +1733,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
                          <div className="flex items-center space-x-3">
                            <h4 className="font-semibold text-gray-800">{item.name}</h4>
                            {item.price && (
-                             <span className="text-green-600 font-bold">₺{item.price}</span>
+                             <span className="text-green-600 font-bold">₺{formatPrice(item.price)}</span>
                            )}
                            {item.stock ? (
                             <span className='text-green-600 font-bold'>Available</span>
@@ -1692,15 +1754,21 @@ function ManualMenuSection({ searchQuery, onSearchHandled }: { searchQuery?: str
                          )}
                          <button
                            onClick={() => handleEditItem(item)}
-                           className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-md font-medium transition-colors text-sm"
+                           className="bg-amber-400 hover:bg-amber-500 text-white p-2 rounded-lg font-medium transition-all duration-200 text-sm shadow-sm hover:shadow-md"
+                           title="Edit item"
                          >
-                           ✏️
+                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                           </svg>
                          </button>
                          <button
                            onClick={() => handleDeleteItem(item.id, item.name)}
-                           className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md font-medium transition-colors text-sm"
+                           className="bg-rose-400 hover:bg-rose-500 text-white p-2 rounded-lg font-medium transition-all duration-200 text-sm shadow-sm hover:shadow-md"
+                           title="Delete item"
                          >
-                           🗑️
+                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                           </svg>
                          </button>
                        </div>
                      </div>
@@ -1908,22 +1976,29 @@ function PreviewSection({
             onClick={() => !updating && handleMenuTypeChange('pdf')}
             className={`border-2 rounded-lg p-4 cursor-pointer transition-all text-center ${
               selectedMenuType === 'pdf' 
-                ? 'border-purple-500 bg-purple-50' 
-                : 'border-gray-300 hover:border-purple-300'
+                ? 'border-purple-400 bg-purple-50' 
+                : 'border-gray-200 hover:border-purple-200'
             } ${updating ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            <div className="text-4xl mb-3">📄</div>
+            <div className="flex justify-center mb-3">
+              <svg className="w-12 h-12 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
             <h4 className="font-semibold text-gray-800 mb-2">PDF Menu</h4>
             <p className="text-sm text-gray-600">
               Show uploaded PDF menu
             </p>
             {selectedMenuType === 'pdf' && (
-              <div className="mt-3 text-purple-600 font-medium">
-                ✓ Active
+              <div className="mt-3 text-purple-500 font-medium flex items-center justify-center">
+                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Active
               </div>
             )}
             {!userData?.company?.pdfMenuUrl && (
-              <div className="mt-2 text-red-500 text-xs">
+              <div className="mt-2 text-rose-400 text-xs">
                 No PDF uploaded yet
               </div>
             )}
@@ -1934,22 +2009,29 @@ function PreviewSection({
             onClick={() => !updating && handleMenuTypeChange('manual')}
             className={`border-2 rounded-lg p-4 cursor-pointer transition-all text-center ${
               selectedMenuType === 'manual' 
-                ? 'border-purple-500 bg-purple-50' 
-                : 'border-gray-300 hover:border-purple-300'
+                ? 'border-purple-400 bg-purple-50' 
+                : 'border-gray-200 hover:border-purple-200'
             } ${updating ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            <div className="text-4xl mb-3">📝</div>
+            <div className="flex justify-center mb-3">
+              <svg className="w-12 h-12 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+              </svg>
+            </div>
             <h4 className="font-semibold text-gray-800 mb-2">Order System</h4>
             <p className="text-sm text-gray-600">
               Show manually created menu
             </p>
             {selectedMenuType === 'manual' && (
-              <div className="mt-3 text-purple-600 font-medium">
-                ✓ Active
+              <div className="mt-3 text-purple-500 font-medium flex items-center justify-center">
+                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Active
               </div>
             )}
             {(!userData?.company?.Main_Categories || userData.company.Main_Categories.length === 0) && (
-              <div className="mt-2 text-red-500 text-xs">
+              <div className="mt-2 text-rose-400 text-xs">
                 No categories created yet
               </div>
             )}
@@ -1958,8 +2040,8 @@ function PreviewSection({
         
         {updating && (
           <div className="text-center mt-4">
-            <div className="inline-flex items-center space-x-2 text-purple-600">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600"></div>
+            <div className="inline-flex items-center space-x-2 text-purple-500">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-500"></div>
               <span>Updating menu type...</span>
             </div>
           </div>
@@ -1969,28 +2051,31 @@ function PreviewSection({
   <div className="flex flex-col lg:flex-row gap-6">
     {/* Menu Preview Box */}
     <div
-      className="border-2 border-gray-200 rounded-xl p-6 flex-1 flex flex-col items-center justify-center min-h-[500px]"
+      className="border-2 border-gray-100 rounded-xl p-6 flex-1 flex flex-col items-center justify-center min-h-[500px] bg-gray-50"
       style={{
         backgroundColor: theme.backgroundColor,
         color: theme.textColor,
       }}
     >
-      <h3 className="text-lg font-medium mb-3 text-gray-700">Menu Preview</h3>
+      <h3 className="text-lg font-medium mb-3 text-gray-600">Menu Preview</h3>
 
       <div className="text-center">
         <h1 className="text-2xl font-bold mb-4">
           {userData?.company?.C_Name || 'Your Restaurant'}
         </h1>
-        <p className="text-base mb-4">Menu preview will appear here</p>
+        <p className="text-base mb-4 text-gray-500">Menu preview will appear here</p>
 
         {userData?.company?.id && (
           <a
             href={`/QR_Portal/menu/${userData.company.id}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg transition-colors font-medium text-lg"
+            className="inline-block bg-purple-400 hover:bg-purple-500 text-white px-6 py-3 rounded-lg transition-all duration-200 font-medium text-lg shadow-sm hover:shadow-md"
           >
-            🔗 Menu Preview
+            <svg className="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+            Menu Preview
           </a>
         )}
       </div>
@@ -1998,32 +2083,35 @@ function PreviewSection({
 
     {/* QR Code Box */}
     <div
-      className="border-2 border-gray-200 rounded-xl p-6 flex-1 flex flex-col items-center justify-center min-h-[500px]"
+      className="border-2 border-gray-100 rounded-xl p-6 flex-1 flex flex-col items-center justify-center min-h-[500px] bg-gray-50"
       style={{
         backgroundColor: theme.backgroundColor,
         color: theme.textColor,
       }}
     >
-      <h3 className="text-lg font-medium mb-3 text-gray-700">QR Code</h3>
+      <h3 className="text-lg font-medium mb-3 text-gray-600">QR Code</h3>
 
       <div className="text-center">
         {qrUrl && (
           <>
             <div
               id="qr-container"
-              className="inline-block p-4 bg-white rounded-xl shadow-lg border-2 border-gray-100"
+              className="inline-block p-4 bg-white rounded-xl shadow-sm border border-gray-100"
             >
               <QRCodeSVG value={qrUrl} size={180} />
             </div>
             <div className="mt-4">
               <button
                 onClick={onDownloadQR}
-                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition-colors font-medium shadow-lg"
+                className="bg-green-400 hover:bg-green-500 text-white px-6 py-3 rounded-lg transition-all duration-200 font-medium shadow-sm hover:shadow-md"
               >
-                📥 Download QR Code
+                <svg className="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Download QR Code
               </button>
             </div>
-            <p className="text-sm text-gray-500 mt-3">Scan to view your menu</p>
+            <p className="text-sm text-gray-400 mt-3">Scan to view your menu</p>
           </>
         )}
       </div>
@@ -2424,7 +2512,7 @@ const [showResetDropdown, setShowResetDropdown] = useState(false)
 } 
 
 // Theme Settings Section
-function ThemeSettingsSection({ userData }: { userData: UserData | null }) {
+function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | null, onLoaded?: () => void }) {
   const [showThemeOptions, setShowThemeOptions] = useState(false)
   const [showImageOptions, setShowImageOptions] = useState(false)
   const [selectedLogo, setSelectedLogo] = useState<File | null>(null)
@@ -2434,20 +2522,21 @@ function ThemeSettingsSection({ userData }: { userData: UserData | null }) {
     backgroundColor: userData?.company?.Themes?.[0]?.backgroundColor || '#ffffff',
     textColor: userData?.company?.Themes?.[0]?.textColor || '#000000',
     logoAreaColor: userData?.company?.Themes?.[0]?.logoAreaColor || '#f8f9fa',
-    style: userData?.company?.Themes?.[0]?.style || 'modern'
-  })
+    style: userData?.company?.Themes?.[0]?.style || 'modern',
+  });
+  const [loading, setLoading] = useState(true);
+  const hasCalledOnLoaded = useRef(false);
 
   useEffect(() => {
-    if (userData?.company?.Themes?.[0]) {
-      const theme = userData.company.Themes[0]
-      setThemeSettings({
-        backgroundColor: theme.backgroundColor || '#ffffff',
-        textColor: theme.textColor || '#000000',
-        logoAreaColor: theme.logoAreaColor || '#f8f9fa',
-        style: theme.style || 'modern'
-      })
+    setLoading(false);
+  }, [userData]);
+
+  useEffect(() => {
+    if (!loading && !hasCalledOnLoaded.current) {
+      onLoaded?.();
+      hasCalledOnLoaded.current = true;
     }
-  }, [userData])
+  }, [loading, onLoaded]);
 
   const handleSaveTheme = async () => {
     try {
@@ -2653,9 +2742,12 @@ function ThemeSettingsSection({ userData }: { userData: UserData | null }) {
             <div className="text-center pt-4">
               <button
                 onClick={handleSaveTheme}
-                className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium transition-colors shadow-lg"
+                className="bg-purple-400 hover:bg-purple-500 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 shadow-sm hover:shadow-md"
               >
-                🎨 Save Theme Settings
+                <svg className="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Save Theme Settings
               </button>
             </div>
           </div>
@@ -2667,9 +2759,23 @@ function ThemeSettingsSection({ userData }: { userData: UserData | null }) {
           <h3 className="text-lg font-semibold text-gray-800">Logo and Welcome Image</h3>
           <button
             onClick={() => setShowImageOptions(!showImageOptions)}
-            className="bg-purple-100 hover:bg-purple-200 text-purple-700 px-4 py-2 rounded-lg transition-colors text-sm font-medium"
+            className="bg-purple-100 hover:bg-purple-200 text-purple-700 px-4 py-2 rounded-lg transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
           >
-            {showImageOptions ? '⬆️ Hide' : '🖼️ Upload Images'}
+            {showImageOptions ? (
+              <>
+                <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                </svg>
+                Hide
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Upload Images
+              </>
+            )}
           </button>
         </div>
         {/* Current Images Display */}
@@ -2687,9 +2793,13 @@ function ThemeSettingsSection({ userData }: { userData: UserData | null }) {
                   />
                   <button
                     onClick={() => handleDeleteImage('logo')}
-                    className="text-xs bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md transition-colors"
+                    className="text-xs bg-rose-400 hover:bg-rose-500 text-white px-3 py-1 rounded-md transition-all duration-200 shadow-sm hover:shadow-md"
+                    title="Delete logo"
                   >
-                    🗑️ Delete
+                    <svg className="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Delete
                   </button>
                 </div>
               )}
@@ -2703,9 +2813,13 @@ function ThemeSettingsSection({ userData }: { userData: UserData | null }) {
                   />
                   <button
                     onClick={() => handleDeleteImage('welcoming')}
-                    className="text-xs bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md transition-colors"
+                    className="text-xs bg-rose-400 hover:bg-rose-500 text-white px-3 py-1 rounded-md transition-all duration-200 shadow-sm hover:shadow-md"
+                    title="Delete welcome image"
                   >
-                    🗑️ Delete
+                    <svg className="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Delete
                   </button>
                 </div>
               )}
@@ -2786,9 +2900,23 @@ function ThemeSettingsSection({ userData }: { userData: UserData | null }) {
                 <button
                   onClick={handleImageUpload}
                   disabled={uploadingImages}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-lg disabled:bg-purple-400"
+                  className="bg-purple-400 hover:bg-purple-500 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-sm hover:shadow-md disabled:bg-purple-300"
                 >
-                  {uploadingImages ? 'Uploading...' : '🖼️ Upload Images'}
+                  {uploadingImages ? (
+                    <>
+                      <svg className="w-5 h-5 inline mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      Upload Images
+                    </>
+                  )}
                 </button>
               </div>
             )}
@@ -2800,7 +2928,7 @@ function ThemeSettingsSection({ userData }: { userData: UserData | null }) {
 }
 
 // Analytics Component
-function AnalyticsSection({ userData }: { userData: UserData | null }) {
+function AnalyticsSection({ userData, onLoaded }: { userData: UserData | null, onLoaded?: () => void }) {
   const [analyticsData, setAnalyticsData] = useState({
     totalOrders: 0,
     totalRevenue: 0,
@@ -2810,6 +2938,7 @@ function AnalyticsSection({ userData }: { userData: UserData | null }) {
     monthlyRevenue: [] as Array<{month: string, revenue: number}>,
     loading: true
   })
+  const hasCalledOnLoaded = useRef(false);
 
  useEffect(() => {
   if (userData?.id) {
@@ -2824,8 +2953,9 @@ function AnalyticsSection({ userData }: { userData: UserData | null }) {
       credentials: 'include'
     });
 
-    const data = await ordersResponse.json(); // ✅ Only once
-    const orders = data.orders || [];
+    const data = await ordersResponse.json(); 
+    const orders = (data.orders || []).filter((order: any) => order.isActive === false);
+
 
     if (!ordersResponse.ok) {
       throw new Error('Failed to fetch orders');
@@ -2895,6 +3025,13 @@ function AnalyticsSection({ userData }: { userData: UserData | null }) {
   }
 };
 
+  useEffect(() => {
+    if (!analyticsData.loading && !hasCalledOnLoaded.current) {
+      onLoaded?.();
+      hasCalledOnLoaded.current = true;
+    }
+  }, [analyticsData.loading, onLoaded]);
+
   if (analyticsData.loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -2937,7 +3074,7 @@ function AnalyticsSection({ userData }: { userData: UserData | null }) {
         </div>
         <div className="ml-4">
           <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-          <p className="text-2xl font-bold text-gray-900">₺{analyticsData.totalRevenue.toFixed(2)}</p>
+          <p className="text-2xl font-bold text-gray-900">₺{formatPrice(analyticsData.totalRevenue)}</p>
         </div>
       </div>
     </div>
@@ -2961,7 +3098,7 @@ function AnalyticsSection({ userData }: { userData: UserData | null }) {
                 </div>
               </div>
               <div className="text-right">
-                <p className="font-semibold text-green-600">₺{dish.revenue.toFixed(2)}</p>
+                <p className="font-semibold text-green-600">₺{formatPrice(dish.revenue)}</p>
                 <p className="text-sm text-gray-500">revenue</p>
               </div>
             </div>
@@ -2982,7 +3119,7 @@ function AnalyticsSection({ userData }: { userData: UserData | null }) {
                 </p>
               </div>
               <div className="text-right">
-                <p className="font-semibold text-gray-900">₺{order.totalAmount.toFixed(2)}</p>
+                <p className="font-semibold text-gray-900">₺{formatPrice(order.totalAmount)}</p>
               </div>
             </div>
           ))}
@@ -3005,7 +3142,7 @@ function AnalyticsSection({ userData }: { userData: UserData | null }) {
                 style={{ height: `${barHeight}px` }}
               ></div>
               <p className="text-sm font-medium text-gray-600 mt-2 text-center">{month.month}</p>
-              <p className="text-xs text-gray-500 text-center">₺{month.revenue.toFixed(0)}</p>
+              <p className="text-xs text-gray-500 text-center">₺{formatPrice(month.revenue)}</p>
             </div>
           );
         })}
