@@ -296,7 +296,8 @@ export default function UserDashboard() {
   const generateQRUrl = () => {
     if (!userData?.company?.id) return '';
     
-    let baseUrl = userData.company.C_QR_URL || `${window.location.origin}/QR_Portal/menu/${userData.company.id}`;
+    // Always use current domain/IP for QR URL generation
+    let baseUrl = `${window.location.origin}/QR_Portal/menu/${userData.company.id}`;
     
     // Add the display mode parameter for PDF menus
     if (menuType === 'pdf') {
@@ -808,7 +809,8 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
   const generateQRUrl = () => {
     if (!userData?.company?.id) return '';
     
-    let baseUrl = userData.company.C_QR_URL || `${window.location.origin}/QR_Portal/menu/${userData.company.id}`;
+    // Always use current domain/IP for QR URL generation
+    let baseUrl = `${window.location.origin}/QR_Portal/menu/${userData.company.id}`;
     
     try {
       const url = new URL(baseUrl);
@@ -1075,11 +1077,11 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
               onClick={() => {
                 setPdfDisplayMode('flipbook');
                 localStorage.setItem('pdfDisplayMode', 'flipbook');
-                const newQrUrl = generateQRUrl();
+                // Update QR URL with new display mode
                 fetch('/api/QR_Panel/user/update-qr-url', {
-                  method: 'PUT',
+                  method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ qrUrl: newQrUrl }),
+                  body: JSON.stringify({ displayMode: 'flipbook' }),
                   credentials: 'include'
                 }).catch(error => {
                   console.error('Update QR URL error:', error);
@@ -1105,7 +1107,7 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
                   <svg className="w-4 h-4 text-orange-600 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z" />
                   </svg>
-                  <span className="text-orange-600">Premium</span>
+                  
                 </div>
                 {pdfDisplayMode === 'flipbook' && (
                   <div className="mt-3 text-purple-600 font-medium flex items-center justify-center">
@@ -1122,11 +1124,11 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
               onClick={() => {
                 setPdfDisplayMode('scroll');
                 localStorage.setItem('pdfDisplayMode', 'scroll');
-                const newQrUrl = generateQRUrl();
+                // Update QR URL with new display mode
                 fetch('/api/QR_Panel/user/update-qr-url', {
-                  method: 'PUT',
+                  method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ qrUrl: newQrUrl }),
+                  body: JSON.stringify({ displayMode: 'scroll' }),
                   credentials: 'include'
                 }).catch(error => {
                   console.error('Update QR URL error:', error);
@@ -1152,7 +1154,7 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
                   <svg className="w-4 h-4 text-slate-600 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                   </svg>
-                  <span className="text-slate-600">Simple</span>
+                  
                 </div>
                 {pdfDisplayMode === 'scroll' && (
                   <div className="mt-3 text-purple-600 font-medium flex items-center justify-center">
@@ -1170,36 +1172,8 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
             <p className="text-sm text-gray-600 mb-2">Current QR URL:</p>
             <code className="text-xs bg-gray-100 px-2 py-1 rounded break-all">
               {generateQRUrl()}
-              {userData?.company?.C_QR_URL || 'No QR URL generated yet'}
             </code>
-            {userData?.company?.C_QR_URL?.includes('localhost') && (
-              <div className="mt-2">
-                <p className="text-xs text-red-600 mb-2">⚠️ URL uses localhost - other devices can't access</p>
-                <button
-                  onClick={async () => {
-                    try {
-                      const res = await fetch('/api/QR_Panel/user/fix-qr-urls', {
-                        method: 'POST',
-                        credentials: 'include'
-                      })
-                      const data = await res.json()
-                      if (res.ok) {
-                        toast.success(`QR URL fixed!\nOld: ${data.oldUrl}\nNew: ${data.newUrl}`)
-                        window.location.reload()
-                      } else {
-                        toast.error(data.error || 'Failed to fix URL')
-                      }
-                    } catch (error) {
-                      console.error('Fix URL error:', error)
-                      toast.error('Failed to fix URL')
-                    }
-                  }}
-                  className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition-colors"
-                >
-                  🔧 Fix for Other Devices
-                </button>
-              </div>
-            )}
+            
           </div>
           {/* Save Display Mode Button */}
           <div className="text-center mt-6">

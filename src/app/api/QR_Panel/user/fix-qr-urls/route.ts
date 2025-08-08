@@ -21,20 +21,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Company not found' }, { status: 404 })
     }
 
-    // Generate new QR URL with network IP
+    // Generate new QR URL with current request host
     const getBaseUrl = () => {
+      // Always use the current request's host for dynamic URL generation
+      const host = request.headers.get('host')
+      const protocol = request.headers.get('x-forwarded-proto') || 
+                      (host?.includes('localhost') ? 'http' : 'https')
+      
+      if (host) {
+        return `${protocol}://${host}`
+      }
+      
+      // Fallback options
       if (process.env.NODE_ENV === 'production') {
         return `https://${process.env.VERCEL_URL || 'localhost:3000'}`
       }
       
-      // For development, try to get the actual network IP from request headers
-      const host = request.headers.get('host')
-      if (host && !host.includes('localhost')) {
-        return `http://${host}`
-      }
-      
-      // Fallback to localhost for direct access
-      return `http://localhost:3000`
+      return 'http://localhost:3000'
     }
 
     // Create new QR URL with current menu type
