@@ -1250,6 +1250,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
   const [showEditItemForm, setShowEditItemForm] = useState(false)
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [highlightedItemId, setHighlightedItemId] = useState<string | null>(null);
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const itemRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   // Restore missing state
   const [categoryForm, setCategoryForm] = useState({
@@ -1490,6 +1491,18 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
     }
   }
 
+  const toggleCategoryExpansion = (categoryId: string) => {
+    setExpandedCategories(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(categoryId)) {
+        newSet.delete(categoryId);
+      } else {
+        newSet.add(categoryId);
+      }
+      return newSet;
+    });
+  }
+
   useEffect(() => {
     if (searchQuery && categories.length > 0) {
       let foundCat = null;
@@ -1590,7 +1603,18 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
           {categories.map((category) => (
                          <div key={category.id} className={`border border-gray-200 rounded-xl p-6 bg-white ${selectedCategoryId === category.id ? 'ring-2 ring-purple-400' : ''}`}>
                <div className="flex justify-between items-center mb-4">
-                 <h3 className="text-xl font-semibold text-gray-800">{category.name}</h3>
+                 <div className="flex items-center space-x-3 flex-1 cursor-pointer" onClick={() => toggleCategoryExpansion(category.id)}>
+                   <h3 className="text-xl font-semibold text-gray-800">{category.name}</h3>
+                   <span className="text-gray-500 text-sm">({category.subCategories?.length || 0} items)</span>
+                   <svg 
+                     className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${expandedCategories.has(category.id) ? 'rotate-180' : ''}`} 
+                     fill="none" 
+                     stroke="currentColor" 
+                     viewBox="0 0 24 24"
+                   >
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                   </svg>
+                 </div>
                  <div className="flex space-x-2">
                    <button
                      onClick={() => setShowItemForm(showItemForm === category.id ? null : category.id)}
@@ -1725,7 +1749,8 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
               )}
 
               {/* Items List */}
-              <div className="space-y-3">
+              {expandedCategories.has(category.id) && (
+                <div className="space-y-3">
                                  {category.subCategories?.map((item: any) => (
                    <div key={item.id} ref={el => { itemRefs.current[item.id] = el; }} className={`border border-gray-100 rounded-lg p-4 bg-gray-50 ${highlightedItemId === item.id ? 'ring-4 ring-purple-400' : ''}`}>
                      <div className="flex justify-between items-start">
@@ -1840,12 +1865,13 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
                        </div>
                      )}
                    </div>
-                 )) || (
+                 )                ) || (
                   <p className="text-gray-500 text-sm text-center py-4">
                     No items yet. Click "Add Item" to add your first menu item.
                   </p>
                 )}
-              </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
