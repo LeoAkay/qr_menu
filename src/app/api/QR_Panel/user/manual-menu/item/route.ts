@@ -90,6 +90,7 @@ if (menuImage && menuImage.size > 0) {
   data: {
     name,
     price: price ? parseFloat(price) : null,
+    description: formData.get('description') as string | null,
     orderNo,
     mainCategoryId,
     menuImageUrl: imageUrl,
@@ -196,6 +197,7 @@ export async function PUT(request: NextRequest) {
     const formData = await request.formData()
     const name = formData.get('name') as string
     const price = formData.get('price') as string
+    const description = formData.get('description') as string | null
     const menuImage = formData.get('menuImage') as File | null
     const stockRaw = formData.get('stock') as string | null;
     const stock = stockRaw === 'true'; 
@@ -206,6 +208,9 @@ export async function PUT(request: NextRequest) {
     const updateData: any = { name }
     if (price) {
       updateData.price = parseFloat(price)
+    }
+    if (description) {
+      updateData.description = description
     }
 
     if (stockRaw !== null) {

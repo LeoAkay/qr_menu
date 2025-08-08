@@ -30,6 +30,7 @@ interface Company {
       orderNo: number
       menuImageUrl?: any
       price?: number
+      description?: string
       stock: boolean
     }>
   }>
@@ -1397,12 +1398,7 @@ function PDFViewer({ pdfUrl, displayMode }: { pdfUrl: string; displayMode: strin
 function ManualMenu({ 
   categories, 
   theme,
-  selectedItem,
-  setSelectedItem,
   addToCart,
-  onAddToCartConfirm,
-  onCancelConfirm,
-  cart,
   getCartItemQuantity,
   updateCartItemQuantity
 }: { 
@@ -1527,6 +1523,9 @@ function ManualMenu({
             <h3 className="font-bold text-lg text-gray-800 mb-4 line-clamp-2">
               {item.name}
             </h3>
+             <p className="text-sm text-gray-600 italic tracking-wide leading-snug line-clamp-3">
+    {item.description}
+  </p>
 
             {/* Bottom Price & Controls */}
             <div className="mt-auto">
