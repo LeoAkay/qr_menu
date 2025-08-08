@@ -1,6 +1,7 @@
 // src/app/api/QR_Panel/order/[companyId]/route.ts
 import { prisma } from '@/app/lib/prisma';
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 
 export async function POST(req: NextRequest, context: { params: Promise<{ companyId: string }> }) {
   const params = await context.params;
@@ -186,10 +187,32 @@ export async function POST(req: NextRequest, context: { params: Promise<{ compan
 export async function GET(req: NextRequest, context: { params?: { companyId?: string } } = {}) {
   const params = context?.params ? await context.params : {};
   const companyId = params.companyId;
+  const cookieStore = await cookies();
+  
+  // Get the authenticated user ID from cookies
+  const authenticatedUserId = cookieStore.get('userId')?.value;
+  const userRole = cookieStore.get('role')?.value;
+
+  // Check if user is authenticated
+  if (!authenticatedUserId || userRole !== 'User') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   if (!companyId) {
     return NextResponse.json({ message: 'Company ID is required' }, { status: 400 });
   }
+
   try {
+    // Verify that the authenticated user belongs to the requested company
+    const user = await prisma.user.findUnique({
+      where: { id: authenticatedUserId },
+      include: { company: true }
+    });
+
+    if (!user || !user.company || user.company.id !== companyId) {
+      return NextResponse.json({ error: 'Forbidden - You can only access your own company\'s orders' }, { status: 403 });
+    }
+
     const orders = await prisma.order.findMany({
       where: { companyId },
       include: {
@@ -211,11 +234,42 @@ export async function GET(req: NextRequest, context: { params?: { companyId?: st
 }
 
 export async function PATCH(req: NextRequest) {
+  const cookieStore = await cookies();
+  
+  // Get the authenticated user ID from cookies
+  const authenticatedUserId = cookieStore.get('userId')?.value;
+  const userRole = cookieStore.get('role')?.value;
+
+  // Check if user is authenticated
+  if (!authenticatedUserId || userRole !== 'User') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const { orderId, payCounts, markInactive } = await req.json();
 
     if (!orderId) {
       return NextResponse.json({ message: 'Order ID is required' }, { status: 400 });
+    }
+
+    // Verify that the authenticated user can access this order
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { company: true }
+    });
+
+    if (!order) {
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    }
+
+    // Get the user to verify they belong to the same company
+    const user = await prisma.user.findUnique({
+      where: { id: authenticatedUserId },
+      include: { company: true }
+    });
+
+    if (!user || !user.company || user.company.id !== order.companyId) {
+      return NextResponse.json({ error: 'Forbidden - You can only modify your own company\'s orders' }, { status: 403 });
     }
 
     if (payCounts && typeof payCounts === 'object') {

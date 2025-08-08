@@ -391,7 +391,8 @@ export default function MenuPage() {
     })
   }
 
-  const restaurantName = company.C_Name || company.user?.userName ? `${company.user?.userName}'s Restaurant` : 'Restaurant Menu';
+  const restaurantName = company.C_Name ?? company.user?.userName ?? 'Restaurant Menu';
+
 
   // Get effective menu type - URL parameter overrides company setting
   const getEffectiveMenuType = () => {
@@ -511,7 +512,7 @@ if (company && showWelcoming) {
                 <img 
                   src={`/api/AdminPanel/company/image/${company.id}/logo?${Date.now()}`}
                   alt="Company Logo"
-                  className="max-w-10 max-h-10 mx-auto rounded-lg shadow-lg"
+                  className="max-w-12 max-h-12 mx-auto rounded-lg shadow-lg"
                 />
               </div>
             )}
@@ -527,7 +528,7 @@ if (company && showWelcoming) {
             className="absolute top-2 right-4 bg-black text-white text-xs p-1 rounded-full shadow-lg hover:bg-gray-800 transition-colors"
           >
             <div className="relative">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.1 5A1 1 0 006.9 19H19M9 19a2 2 0 100 4 2 2 0 000-4zm8 0a2 2 0 100 4 2 2 0 000-4z" />
               </svg>
               {getTotalItems() > 0 && (
@@ -624,7 +625,7 @@ if (company && showWelcoming) {
 
               {cart.length === 0 ? (
                 <div className="text-center py-8">
-                  <div className="text-4xl mb-4">🛒</div>
+                  <div className="text-5xl mb-4">🛒</div>
                   <p className="text-gray-500">Your cart is empty</p>
                 </div>
               ) : (
@@ -1461,7 +1462,7 @@ function ManualMenu({
   return (
   <div className="">
     {/* Category Selection Tabs */}
-    <div className="sticky top-0 z-10 bg-white bg-opacity-95 backdrop-blur-sm border-b border-gray-200 py-4 mb-6 rounded-full">
+    <div className="bg-white bg-opacity-95 backdrop-blur-sm border-b border-gray-200 py-4 mb-6 rounded-full">
       <div className="flex justify-center">
         <div className="flex flex-wrap justify-center gap-2 px-4">
           {sortedCategories.map((category) => (
@@ -1494,89 +1495,88 @@ function ManualMenu({
           <div className="w-20 h-1 bg-black mx-auto rounded"></div>
         </div>
 
-        {/* Items Grid */}
         {currentCategory.subCategories && currentCategory.subCategories.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {[...currentCategory.subCategories]
-              .sort((a, b) => a.orderNo - b.orderNo)
-              .map((item) => (
-                <div
-                  key={item.id}
-                  className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group hover:-translate-y-1 relative"
-                style={{ alignSelf: 'start' }}
-               >
-                  {/* Product Image */}
-                  <div className="aspect-square w-full bg-gray-100 overflow-hidden">
-                    {item.menuImageUrl ? (
-                      <img
-                        src={`/api/QR_Panel/user/manual-menu/image/${item.id}`}
-                        alt={item.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                        <div className="text-gray-400 text-center">
-                          <div className="text-4xl mb-2">🍽️</div>
-                          <div className="text-sm">No Image</div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Product Info */}
-                  <div className="p-4">
-                    <h3 className="font-bold text-lg text-gray-800 mb-2 line-clamp-2">
-                      {item.name}
-                    </h3>
-
-                    {/* Price and availability */}
-                    <div className="flex items-center justify-between mb-3">
-                      {item.stock ? (
-                        item.price ? (
-                          <span className="text-lg font-bold text-green-600">
-                            ₺{formatPrice(item.price)}
-                          </span>
-                        ) : (
-                          <span className="text-sm text-gray-500">Price not set</span>
-                        )
-                      ) : (
-                        <span className="text-sm font-medium text-red-500">Out of Stock</span>
-                      )}
-
-                      <div
-                        className={`w-3 h-3 rounded-full ${item.stock ? 'bg-green-500' : 'bg-red-500'}`}
-                        title={item.stock ? 'Available' : 'Out of Stock'}
-                      ></div>
-                    </div>
-
-                    {/* Quantity Controls */}
-                    {item.price && item.stock && (
-                      <div className="flex items-center justify-center space-x-3">
-                        <button
-                          onClick={() => handleRemoveFromCart(item.id)}
-                          className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors"
-                        >
-                          -
-                        </button>
-                        <span className="w-8 text-center font-bold">
-                          {getCartItemQuantity(item.id)}
-                        </span>
-                        <button
-                          onClick={() => handleAddToCart(item)}
-                          className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors"
-                        >
-                          +
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Action Buttons */}
-                    {/* Removed - no longer needed with direct cart controls */}
-
-                  </div>
+  <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 items-stretch">
+    {[...currentCategory.subCategories]
+      .sort((a, b) => a.orderNo - b.orderNo)
+      .map((item) => (
+        <div
+          key={item.id}
+          className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group hover:-translate-y-1 relative flex flex-col"
+        >
+          {/* Product Image */}
+          <div className="aspect-square w-full bg-gray-100 overflow-hidden flex-shrink-0">
+            {item.menuImageUrl ? (
+              <img
+                src={`/api/QR_Panel/user/manual-menu/image/${item.id}`}
+                alt={item.name}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+                <div className="text-gray-400 text-center">
+                  <div className="text-4xl mb-2">🍽️</div>
+                  <div className="text-sm">No Image</div>
                 </div>
-              ))}
+              </div>
+            )}
           </div>
+
+          {/* Product Info */}
+          <div className="p-4 flex flex-col flex-1">
+            <h3 className="font-bold text-lg text-gray-800 mb-4 line-clamp-2">
+              {item.name}
+            </h3>
+
+            {/* Bottom Price & Controls */}
+            <div className="mt-auto">
+              {/* Price & Availability */}
+              <div className="flex items-center justify-between mb-3">
+                {item.stock ? (
+                  item.price ? (
+                    <span className="text-lg font-bold text-green-600">
+                      ₺{formatPrice(item.price)}
+                    </span>
+                  ) : (
+                    <span className="text-sm text-gray-500">Price not set</span>
+                  )
+                ) : (
+                  <span className="text-sm font-medium text-red-500">Out of Stock</span>
+                )}
+
+                <div
+                  className={`w-3 h-3 rounded-full ${
+                    item.stock ? 'bg-green-500' : 'bg-red-500'
+                  }`}
+                  title={item.stock ? 'Available' : 'Out of Stock'}
+                ></div>
+              </div>
+
+              {/* Quantity Controls */}
+              {item.price && item.stock && (
+                <div className="flex items-center justify-center space-x-3">
+                  <button
+                    onClick={() => handleRemoveFromCart(item.id)}
+                    className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors"
+                  >
+                    -
+                  </button>
+                  <span className="w-8 text-center font-bold">
+                    {getCartItemQuantity(item.id)}
+                  </span>
+                  <button
+                    onClick={() => handleAddToCart(item)}
+                    className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors"
+                  >
+                    +
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      ))}
+  </div>
         ) : (
           <div className="text-center py-16">
             <div className="text-6xl mb-4">🍽️</div>
