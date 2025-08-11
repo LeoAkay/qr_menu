@@ -1392,6 +1392,259 @@ function PDFViewer({ pdfUrl, displayMode }: { pdfUrl: string; displayMode: strin
   return <PDFFlipbook pdfUrl={pdfUrl} />;
 }
 
+function SpinWheel({ items, onResult }: { items: any[], onResult: (item: any) => void }) {
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [popupItem, setPopupItem] = useState<any | null>(null);
+
+  const duration = 4500; // ms
+  const radius = 160;
+  const degreesPerItem = 360 / items.length;
+
+  const svgRef = useRef<SVGSVGElement | null>(null);
+
+  // Animation refs
+  const rafRef = useRef<number | null>(null);
+  const startTimeRef = useRef<number>(0);
+  const startRotationRef = useRef(0);
+  const targetRotationRef = useRef(0);
+  const lastTickSliceRef = useRef(-1);
+
+  // Current rotation stored in ref (not state)
+  const rotationRef = useRef(0);
+
+  // Audio ref (preloaded)
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const finalSoundRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    audioRef.current = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
+    if (audioRef.current) audioRef.current.volume = 0.15;
+  }, []);
+  useEffect(() => {
+  finalSoundRef.current = new Audio("https://actions.google.com/sounds/v1/cartoon/magic_chime.ogg");
+  if (finalSoundRef.current) finalSoundRef.current.volume = 0.3;
+}, []);
+
+  const playTick = () => {
+    if (!audioRef.current) return;
+    const tickSound = audioRef.current.cloneNode() as HTMLAudioElement;
+    tickSound.volume = 0.15;
+    tickSound.play().catch(() => {});
+  };
+
+  const animate = (time: number) => {
+    if (!startTimeRef.current) startTimeRef.current = time;
+    const elapsed = time - startTimeRef.current;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+
+    const currentRotation =
+      startRotationRef.current +
+      (targetRotationRef.current - startRotationRef.current) * eased;
+
+    rotationRef.current = currentRotation;
+
+    // Update rotation directly on SVG element for smooth animation
+    if (svgRef.current) {
+      svgRef.current.style.transform = `rotate(${currentRotation}deg)`;
+    }
+
+    const normalizedRotation = ((currentRotation % 360) + 360) % 360;
+    const pointerAngle = (360 - normalizedRotation) % 360;
+    const currentSlice = Math.floor(pointerAngle / degreesPerItem);
+
+    if (currentSlice !== lastTickSliceRef.current) {
+      playTick();
+      lastTickSliceRef.current = currentSlice;
+    }
+
+    if (progress < 1) {
+      rafRef.current = requestAnimationFrame(animate);
+    } else {
+      finishSpin(currentRotation);
+    }
+  };
+
+  const finishSpin = (finalRotation: number) => {
+    // Update rotationRef and reset transform to exact value
+    rotationRef.current = finalRotation;
+    if (svgRef.current) {
+      svgRef.current.style.transform = `rotate(${finalRotation}deg)`;
+    }
+    if (finalSoundRef.current) {
+  finalSoundRef.current.currentTime = 0;
+  finalSoundRef.current.play().catch(() => {});
+}
+
+    setTimeout(() => {
+      setIsSpinning(false);
+
+      const normalizedRotation = ((finalRotation % 360) + 360) % 360;
+      const pointerAngle = (360 - normalizedRotation) % 360;
+
+      const winningIndex = Math.floor(
+        ((pointerAngle - 0.0001 + 360) % 360) / degreesPerItem
+      );
+
+      const winner = items[winningIndex];
+      setPopupItem(winner);
+      onResult(winner);
+    }, 300);
+  };
+
+  const spin = () => {
+    if (isSpinning || items.length === 0) return;
+
+    setIsSpinning(true);
+    startTimeRef.current = 0;
+    startRotationRef.current = rotationRef.current;
+
+    const normalizedRotation = ((rotationRef.current % 360) + 360) % 360;
+    const pointerAngle = (360 - normalizedRotation) % 360;
+    lastTickSliceRef.current = Math.floor(pointerAngle / degreesPerItem);
+
+    const extraSpins = 5 * 360;
+    const randomIndex = Math.floor(Math.random() * items.length);
+    const randomOffset = degreesPerItem / 2;
+
+    targetRotationRef.current =
+      rotationRef.current +
+      extraSpins +
+      (items.length - randomIndex) * degreesPerItem -
+      randomOffset;
+
+    rafRef.current = requestAnimationFrame(animate);
+  };
+
+  const colors = [
+    "#FF6B6B",
+    "#FFD93D",
+    "#6BCB77",
+    "#4D96FF",
+    "#FF6EC7",
+    "#FF974F",
+    "#6A67CE",
+    "#B3D4FF",
+  ];
+
+  return (
+    <>
+      <div className="flex flex-col items-center gap-6 select-none">
+        <div className="relative w-[320px] h-[320px]">
+          <div className="absolute top-[-24px] left-1/2 -translate-x-1/2 z-20">
+            <div className="w-0 h-0 border-l-[14px] border-l-transparent border-r-[14px] border-r-transparent border-b-[24px] border-b-red-600 drop-shadow-lg"></div>
+          </div>
+
+          <svg
+            ref={svgRef}
+            width="320"
+            height="320"
+            viewBox="0 0 320 320"
+            style={{
+              transition: "none",
+              transform: `rotate(${rotationRef.current}deg)`, // initial rotation
+            }}
+          >
+            {items.map((item, i) => {
+              const sliceAngle = (2 * Math.PI) / items.length;
+              const startAngle = i * sliceAngle;
+              const endAngle = startAngle + sliceAngle;
+              const largeArc = sliceAngle > Math.PI ? 1 : 0;
+
+              const x1 = 160 + radius * Math.cos(startAngle);
+              const y1 = 160 + radius * Math.sin(startAngle);
+              const x2 = 160 + radius * Math.cos(endAngle);
+              const y2 = 160 + radius * Math.sin(endAngle);
+
+              const pathData = `
+                M 160 160
+                L ${x1} ${y1}
+                A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}
+                Z
+              `;
+
+              const textRadius = radius - 40;
+              const textPathId = `slice-text-${i}`;
+              const startX = 160 + textRadius * Math.cos(startAngle);
+              const startY = 160 + textRadius * Math.sin(startAngle);
+              const endX = 160 + textRadius * Math.cos(endAngle);
+              const endY = 160 + textRadius * Math.sin(endAngle);
+
+              return (
+                <g key={item.id || i}>
+                  <path
+                    d={pathData}
+                    fill={colors[i % colors.length]}
+                    stroke="#fff"
+                    strokeWidth="2"
+                  />
+                  <path
+                    id={textPathId}
+                    d={`
+                      M ${startX} ${startY}
+                      A ${textRadius} ${textRadius} 0 ${largeArc} 1 ${endX} ${endY}
+                    `}
+                    fill="none"
+                  />
+                  <text
+                    fill="#fff"
+                    fontSize="14"
+                    fontWeight="bold"
+                    textAnchor="middle"
+                    style={{ pointerEvents: "none" }}
+                  >
+                    <textPath href={`#${textPathId}`} startOffset="50%">
+                      {item.name}
+                    </textPath>
+                  </text>
+                </g>
+              );
+            })}
+          </svg>
+        </div>
+
+        <button
+          onClick={spin}
+          disabled={isSpinning}
+          className={`px-6 py-3 rounded-full font-semibold text-white shadow-lg transition-all ${
+            isSpinning
+              ? "bg-gray-500 cursor-not-allowed"
+              : "bg-green-600 hover:bg-green-700"
+          }`}
+        >
+          {isSpinning ? "Spinning..." : "Spin the Wheel 🎯"}
+        </button>
+      </div>
+
+      {popupItem && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          onClick={() => setPopupItem(null)}
+        >
+          <div
+            className="bg-white rounded-lg p-6 max-w-sm w-full flex flex-col items-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={popupItem.menuImageUrl || popupItem.image || ""}
+              alt={popupItem.name}
+              className="w-40 h-40 object-contain mb-4"
+            />
+            <h2 className="text-xl font-bold mb-2 text-center">{popupItem.name}</h2>
+            <button
+              onClick={() => setPopupItem(null)}
+              className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+
 // Manual Menu Component
 function ManualMenu({ 
   categories, 
@@ -1413,6 +1666,7 @@ function ManualMenu({
 }) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const sortedCategories = [...(categories || [])].sort((a, b) => a.categoryNo - b.categoryNo)
+  const [showWheel, setShowWheel] = useState(false);
   const [expandedDescriptions, setExpandedDescriptions] = useState<{ [key: string]: boolean }>({});
 const toggleDescription = (itemId: string) => {
   setExpandedDescriptions((prev) => ({
@@ -1500,32 +1754,53 @@ const toggleDescription = (itemId: string) => {
         </div>
 
 {currentCategory.subCategories && currentCategory.subCategories.length > 0 ? (
-  <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(160px,1fr))]">
-    {[...currentCategory.subCategories]
-      .sort((a, b) => a.orderNo - b.orderNo)
-      .map((item) => (
-        <div
-          key={item.id}
-          className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-transform duration-300 overflow-hidden group hover:-translate-y-1 flex flex-col"
-          style={expandedDescriptions?.[item.id] ? { alignSelf: 'start' } : {}}
-        >
-          {/* Image */}
-          <div className="aspect-square w-full bg-gray-100 overflow-hidden relative">
-            {item.menuImageUrl ? (
-              <img
-                src={`/api/QR_Panel/user/manual-menu/image/${item.id}`}
-                alt={item.name}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                <div className="text-gray-400 text-center">
-                  <div className="text-5xl mb-2">🍽️</div>
-                  <div className="text-sm">No Image</div>
-                </div>
+   <>
+    {/* Toggle Button */}
+    <div className="flex justify-center mb-6">
+      <button
+        onClick={() => setShowWheel(!showWheel)}
+        className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800"
+      >
+        {showWheel ? "Show Menu" : "Spin the Wheel 🎯"}
+      </button>
+    </div>
+
+    {/* Conditional Render */}
+    {showWheel ? (
+      <SpinWheel
+        items={currentCategory.subCategories}
+        onResult={(item) => {
+          handleAddToCart(item);
+        }}
+      />
+    ) : (
+      <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(160px,1fr))]">
+        {[...currentCategory.subCategories]
+          .sort((a, b) => a.orderNo - b.orderNo)
+          .map((item) => (
+            <div
+              key={item.id}
+              className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-transform duration-300 overflow-hidden group hover:-translate-y-1 flex flex-col"
+              style={expandedDescriptions?.[item.id] ? { alignSelf: 'start' } : {}}
+            >
+              {/* 🔹 Keep your original card content exactly the same here */}
+              {/* Image */}
+              <div className="aspect-square w-full bg-gray-100 overflow-hidden relative">
+                {item.menuImageUrl ? (
+                  <img
+                    src={`/api/QR_Panel/user/manual-menu/image/${item.id}`}
+                    alt={item.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+                    <div className="text-gray-400 text-center">
+                      <div className="text-5xl mb-2">🍽️</div>
+                      <div className="text-sm">No Image</div>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
 
           {/* Info */}
           <div className="p-4 flex flex-col flex-1">
@@ -1605,6 +1880,8 @@ const toggleDescription = (itemId: string) => {
         </div>
       ))}
   </div>
+    )}
+  </>
 ) : (
   <div className="text-center py-20">
     <div className="text-6xl mb-4">🍽️</div>
@@ -1614,12 +1891,8 @@ const toggleDescription = (itemId: string) => {
     </p>
   </div>
 )}
-
-
-      </div>
+  </div>
     )}
   </div>
 )
 }
-
-
