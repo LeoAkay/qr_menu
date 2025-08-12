@@ -39,7 +39,6 @@ interface UserData {
       subCategories: Array<{
         id: string
         name: string
-        description?: string
         orderNo: number
         stock:boolean      }>
     }>
@@ -296,8 +295,7 @@ export default function UserDashboard() {
   const generateQRUrl = () => {
     if (!userData?.company?.id) return '';
     
-    // Always use current domain/IP for QR URL generation
-    let baseUrl = `${window.location.origin}/QR_Portal/menu/${userData.company.id}`;
+    let baseUrl = userData.company.C_QR_URL || `${window.location.origin}/QR_Portal/menu/${userData.company.id}`;
     
     // Add the display mode parameter for PDF menus
     if (menuType === 'pdf') {
@@ -638,16 +636,16 @@ export default function UserDashboard() {
                   <span className="font-medium">Theme Settings</span>
                 </button>
                 {/* Order System Button */}
-                <a href="/QR_Portal/order_system">
-  <button
-    onClick={() => setActiveSection('Order System')}
-    className="flex items-center space-x-3 px-6 py-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors text-gray-700 border border-purple-200"
-  >
-    <span className="text-3xl">🛒</span>
-    <span className="font-medium">Order System</span>
-  </button>
-</a>
-
+                <button
+                  onClick={() => {
+                    router.push('/QR_Portal/order_system');
+                    setActiveSection('Order System');
+                  }}
+                  className="flex items-center space-x-3 px-6 py-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors text-gray-700 border border-purple-200"
+                >
+                  <span className="text-3xl">🛒</span>
+                  <span className="font-medium">Order System</span>
+                </button>
                 {/* Analytics Button */}
                 <button
                   onClick={() => {
@@ -809,8 +807,7 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
   const generateQRUrl = () => {
     if (!userData?.company?.id) return '';
     
-    // Always use current domain/IP for QR URL generation
-    let baseUrl = `${window.location.origin}/QR_Portal/menu/${userData.company.id}`;
+    let baseUrl = userData.company.C_QR_URL || `${window.location.origin}/QR_Portal/menu/${userData.company.id}`;
     
     try {
       const url = new URL(baseUrl);
@@ -1077,11 +1074,11 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
               onClick={() => {
                 setPdfDisplayMode('flipbook');
                 localStorage.setItem('pdfDisplayMode', 'flipbook');
-                // Update QR URL with new display mode
+                const newQrUrl = generateQRUrl();
                 fetch('/api/QR_Panel/user/update-qr-url', {
-                  method: 'POST',
+                  method: 'PUT',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ displayMode: 'flipbook' }),
+                  body: JSON.stringify({ qrUrl: newQrUrl }),
                   credentials: 'include'
                 }).catch(error => {
                   console.error('Update QR URL error:', error);
@@ -1107,7 +1104,7 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
                   <svg className="w-4 h-4 text-orange-600 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z" />
                   </svg>
-                  
+                  <span className="text-orange-600">Premium</span>
                 </div>
                 {pdfDisplayMode === 'flipbook' && (
                   <div className="mt-3 text-purple-600 font-medium flex items-center justify-center">
@@ -1124,11 +1121,11 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
               onClick={() => {
                 setPdfDisplayMode('scroll');
                 localStorage.setItem('pdfDisplayMode', 'scroll');
-                // Update QR URL with new display mode
+                const newQrUrl = generateQRUrl();
                 fetch('/api/QR_Panel/user/update-qr-url', {
-                  method: 'POST',
+                  method: 'PUT',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ displayMode: 'scroll' }),
+                  body: JSON.stringify({ qrUrl: newQrUrl }),
                   credentials: 'include'
                 }).catch(error => {
                   console.error('Update QR URL error:', error);
@@ -1154,7 +1151,7 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
                   <svg className="w-4 h-4 text-slate-600 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                   </svg>
-                  
+                  <span className="text-slate-600">Simple</span>
                 </div>
                 {pdfDisplayMode === 'scroll' && (
                   <div className="mt-3 text-purple-600 font-medium flex items-center justify-center">
@@ -1172,8 +1169,36 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
             <p className="text-sm text-gray-600 mb-2">Current QR URL:</p>
             <code className="text-xs bg-gray-100 px-2 py-1 rounded break-all">
               {generateQRUrl()}
+              {userData?.company?.C_QR_URL || 'No QR URL generated yet'}
             </code>
-            
+            {userData?.company?.C_QR_URL?.includes('localhost') && (
+              <div className="mt-2">
+                <p className="text-xs text-red-600 mb-2">⚠️ URL uses localhost - other devices can't access</p>
+                <button
+                  onClick={async () => {
+                    try {
+                      const res = await fetch('/api/QR_Panel/user/fix-qr-urls', {
+                        method: 'POST',
+                        credentials: 'include'
+                      })
+                      const data = await res.json()
+                      if (res.ok) {
+                        toast.success(`QR URL fixed!\nOld: ${data.oldUrl}\nNew: ${data.newUrl}`)
+                        window.location.reload()
+                      } else {
+                        toast.error(data.error || 'Failed to fix URL')
+                      }
+                    } catch (error) {
+                      console.error('Fix URL error:', error)
+                      toast.error('Failed to fix URL')
+                    }
+                  }}
+                  className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition-colors"
+                >
+                  🔧 Fix for Other Devices
+                </button>
+              </div>
+            )}
           </div>
           {/* Save Display Mode Button */}
           <div className="text-center mt-6">
@@ -1235,7 +1260,6 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
   const [itemForm, setItemForm] = useState({
     name: '',
     price: '',
-    description: '',
     stock: true,
     menuImage: null as File | null
   });
@@ -1246,7 +1270,6 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
   const [editItemForm, setEditItemForm] = useState({
     name: '',
     price: '',
-    description: '',
     stock: true,
     menuImage: null as File | null
   });
@@ -1306,9 +1329,6 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
       if (itemForm.price) {
         formData.append('price', itemForm.price)
       }
-      if (itemForm.description) {
-        formData.append('description', itemForm.description)
-      }
       formData.append('mainCategoryId', categoryId)
       if (itemForm.menuImage) {
         formData.append('menuImage', itemForm.menuImage)
@@ -1325,7 +1345,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
       if (res.ok) {
         toast.success('Item added successfully!')
         setItemForm({
-          name: '', price: '',description: '',stock:true, menuImage: null
+          name: '', price: '',stock:true, menuImage: null
         })
         setShowItemForm(null)
         fetchCategories()
@@ -1400,7 +1420,6 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
     setEditItemForm({
       name: item.name,
       price: item.price?.toString() || '',
-      description: item.description || '',
       stock: item.stock?.true,
       menuImage: null
     })
@@ -1446,9 +1465,6 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
       if (editItemForm.price) {
         formData.append('price', editItemForm.price)
       }
-      if (editItemForm.description) {
-        formData.append('description', editItemForm.description)
-      }
       if (editItemForm.menuImage) {
         formData.append('menuImage', editItemForm.menuImage)
       }
@@ -1461,7 +1477,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
 
       if (res.ok) {
         toast.success('Item updated successfully!')
-        setEditItemForm({ name: '', price: '',description: '',stock:true, menuImage: null })
+        setEditItemForm({ name: '', price: '',stock:true, menuImage: null })
         setShowEditItemForm(false)
         setEditingItem(null)
         fetchCategories()
@@ -1694,16 +1710,6 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
                         placeholder="e.g., 19.99"
                       />
                     </div>
-                     <div>
-                      <label className="block text-sm font-medium mb-1">Item Description</label>
-                      <input
-                        type="text"
-                        value={itemForm.description}
-                        onChange={(e) => setItemForm({...itemForm, description: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
-                        placeholder="e.g., Grilled Chicken"
-                      />
-                    </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">Item Image (Optional)</label>
                       <input
@@ -1817,16 +1823,6 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
                                placeholder="e.g., 19.99"
                              />
                            </div>
-                            <div>
-                      <label className="block text-sm font-medium mb-1">Item Description</label>
-                      <input
-                        type="text"
-                        value={editItemForm.description}
-                        onChange={(e) => setEditItemForm({...editItemForm, description: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
-                        placeholder="e.g., Chocolate Cake with nutella filling"
-                      />
-                    </div>
                            <div>
                              <label className="block text-sm font-medium mb-2">Item Image (Optional - Leave empty to keep current)</label>
                              <input
@@ -1859,7 +1855,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
                              onClick={() => {
                                setShowEditItemForm(false)
                                setEditingItem(null)
-                               setEditItemForm({ name: '', price: '',description: '',stock:true, menuImage: null })
+                               setEditItemForm({ name: '', price: '',stock:true, menuImage: null })
                              }}
                              className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                            >
@@ -2745,6 +2741,8 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
                 >
                   <option value="modern">Modern</option>
+                  <option value="classic">Klasik</option>
+                  <option value="elegant">Şık</option>
                   <option value="minimal">Minimal</option>
                 </select>
               </div>

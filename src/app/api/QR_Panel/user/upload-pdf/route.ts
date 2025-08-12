@@ -124,27 +124,6 @@ export async function POST(req: Request) {
 
       console.log("PDF public URL:", pdfUrl)
 
-      // Function to get the base URL for QR code link generation
-      const getBaseUrl = () => {
-        // Always use the current request's host for dynamic URL generation
-        const host = req.headers.get('host')
-        const protocol = req.headers.get('x-forwarded-proto') || 
-                        (host?.includes('localhost') ? 'http' : 'https')
-        
-        if (host) {
-          return `${protocol}://${host}`
-        }
-        
-        // Fallback options
-        if (process.env.NODE_ENV === 'production') {
-          return `https://${process.env.VERCEL_URL || 'localhost:3000'}`
-        }
-        
-        return 'http://localhost:3000'
-      }
-
-      const qrUrl = `${getBaseUrl()}/QR_Portal/menu/${company.id}?mode=flipbook`
-
       // Update company with PDF URL in database
       console.log("Updating company with PDF URL in database")
       await prisma.company.update({
@@ -152,7 +131,7 @@ export async function POST(req: Request) {
         data: {
           pdfMenuUrl: pdfUrl, // Store Supabase URL
           menuType: "pdf",
-          C_QR_URL: qrUrl
+          C_QR_URL: `http://${req.headers.get('host')}/QR_Portal/menu/${company.id}?mode=flipbook`
         }
       })
       console.log("Company updated successfully")
