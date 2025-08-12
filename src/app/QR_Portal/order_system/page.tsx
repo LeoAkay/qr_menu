@@ -229,6 +229,10 @@ function OrderSystemSection({ companyId }: { companyId: string }) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [newOrderNotification, setNewOrderNotification] = useState(false);
   const [actionCounts, setActionCounts] = useState<Record<string, number>>({});
+  const [showPayAllConfirm, setShowPayAllConfirm] = useState(false);
+  const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
+  const [payAllData, setPayAllData] = useState<{ tableOrders: Order[], totalToPay: number } | null>(null);
+  const [deleteAllData, setDeleteAllData] = useState<{ tableOrders: Order[] } | null>(null);
 
 
 const handleCountChange = (itemId: string, delta: number, max: number) => {
@@ -363,6 +367,54 @@ useEffect(() => {
     acc[key].push(order);
     return acc;
   }, {});
+
+  // Confirmation Dialog Component
+  const ConfirmationDialog = ({ 
+    isOpen, 
+    title, 
+    message, 
+    confirmText, 
+    cancelText, 
+    onConfirm, 
+    onCancel,
+    confirmColor = "bg-red-500 hover:bg-red-600"
+  }: {
+    isOpen: boolean
+    title: string
+    message: string
+    confirmText: string
+    cancelText: string
+    onConfirm: () => void
+    onCancel: () => void
+    confirmColor?: string
+  }) => {
+    if (!isOpen) return null
+
+    return (
+      <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div className="bg-white rounded-lg max-w-md w-full shadow-xl border border-gray-200">
+          <div className="p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-2">{title}</h3>
+            <p className="text-gray-600 mb-6">{message}</p>
+            <div className="flex space-x-3">
+              <button
+                onClick={onCancel}
+                className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors"
+              >
+                {cancelText}
+              </button>
+              <button
+                onClick={onConfirm}
+                className={`flex-1 text-white px-4 py-2 rounded-lg font-medium transition-colors ${confirmColor}`}
+              >
+                {confirmText}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   if (loading) {
     return (
@@ -531,43 +583,9 @@ useEffect(() => {
 <div className="flex justify-end mt-4 space-x-2">
   <button
     className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded font-semibold transition"
-    onClick={async () => {
-      // Disable button by removing pointer events & reduce opacity while loading
-      const btn = document.activeElement as HTMLButtonElement;
-      btn.disabled = true;
-      btn.style.opacity = '0.6';
-      btn.textContent = 'Deleting...';
-
-      let allSuccess = true;
-      for (const order of tableOrders) {
-        try {
-          const res = await fetch(`/api/QR_Panel/order/${companyId}/delete`, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ orderId: order.id }),
-          });
-          if (!res.ok) {
-            allSuccess = false;
-            console.error(`Failed to delete order ${order.id}`, await res.text());
-            toast.error(`Failed to delete order ${order.id}`);
-          }
-        } catch (err) {
-          allSuccess = false;
-          console.error(`Error deleting order ${order.id}`, err);
-          toast.error(`Error deleting order ${order.id}`);
-        }
-      }
-
-      if (allSuccess) {
-        toast.success('All orders deleted successfully');
-      }
-
-      fetchOrders();
-
-      // Re-enable button & reset text
-      btn.disabled = false;
-      btn.style.opacity = '1';
-      btn.textContent = 'Delete All';
+    onClick={() => {
+      setDeleteAllData({ tableOrders });
+      setShowDeleteAllConfirm(true);
     }}
   >
     Delete All
@@ -575,35 +593,17 @@ useEffect(() => {
 
   <button
     className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-semibold transition"
-    onClick={async () => {
-      const btn = document.activeElement as HTMLButtonElement;
-      btn.disabled = true;
-      btn.style.opacity = '0.6';
-      btn.textContent = 'Paying...';
+    onClick={() => {
+      // Calculate total amount to be paid
+      const totalToPay = tableOrders.reduce((sum, order) => {
+        return sum + order.orderItems.reduce((orderSum, item) => {
+          if (!item?.id || item.quantity == null || item.paidQuantity == null) return orderSum;
+          return orderSum + (item.price * (item.quantity - item.paidQuantity));
+        }, 0);
+      }, 0);
 
-      for (const order of tableOrders) {
-        const fullPayMap: Record<string, number> = {};
-        for (const item of order.orderItems) {
-          if (!item?.id || item.quantity == null || item.paidQuantity == null) continue;
-          fullPayMap[item.id] = item.quantity - item.paidQuantity;
-        }
-
-        await fetch(`/api/QR_Panel/order/${companyId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            orderId: order.id,
-            payCounts: fullPayMap,
-            markInactive: true,
-          }),
-        });
-      }
-
-      fetchOrders();
-
-      btn.disabled = false;
-      btn.style.opacity = '1';
-      btn.textContent = 'Pay All';
+      setPayAllData({ tableOrders, totalToPay });
+      setShowPayAllConfirm(true);
     }}
   >
     Pay All
@@ -615,6 +615,94 @@ useEffect(() => {
           })}
         </div>
       )}
+
+      {/* Confirmation Dialogs */}
+      <ConfirmationDialog
+        isOpen={showPayAllConfirm}
+        title="Confirm Payment"
+        message={`Are you sure you want to pay all remaining items for ₺${formatPrice(payAllData?.totalToPay || 0)}? This action will mark all orders as paid and inactive.`}
+        confirmText="Confirm Payment"
+        cancelText="Cancel"
+        onConfirm={async () => {
+          if (!payAllData) return;
+          
+          for (const order of payAllData.tableOrders) {
+            const fullPayMap: Record<string, number> = {};
+            for (const item of order.orderItems) {
+              if (!item?.id || item.quantity == null || item.paidQuantity == null) continue;
+              fullPayMap[item.id] = item.quantity - item.paidQuantity;
+            }
+
+            await fetch(`/api/QR_Panel/order/${companyId}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                orderId: order.id,
+                payCounts: fullPayMap,
+                markInactive: true,
+              }),
+            });
+          }
+
+          setShowPayAllConfirm(false);
+          setPayAllData(null);
+          fetchOrders();
+          
+          toast.success('All items paid successfully! 💳', {
+            position: 'top-right',
+            autoClose: 3000,
+          });
+        }}
+        onCancel={() => {
+          setShowPayAllConfirm(false);
+          setPayAllData(null);
+        }}
+        confirmColor="bg-green-500 hover:bg-green-600"
+      />
+
+      <ConfirmationDialog
+        isOpen={showDeleteAllConfirm}
+        title="Delete All Orders"
+        message="Are you sure you want to delete all orders for this table? This action cannot be undone."
+        confirmText="Delete All"
+        cancelText="Cancel"
+        onConfirm={async () => {
+          if (!deleteAllData) return;
+          
+          let allSuccess = true;
+          for (const order of deleteAllData.tableOrders) {
+            try {
+              const res = await fetch(`/api/QR_Panel/order/${companyId}/delete`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderId: order.id }),
+              });
+              if (!res.ok) {
+                allSuccess = false;
+                console.error(`Failed to delete order ${order.id}`, await res.text());
+                toast.error(`Failed to delete order ${order.id}`);
+              }
+            } catch (err) {
+              allSuccess = false;
+              console.error(`Error deleting order ${order.id}`, err);
+              toast.error(`Error deleting order ${order.id}`);
+            }
+          }
+
+          if (allSuccess) {
+            toast.success('All orders deleted successfully');
+          }
+
+          setShowDeleteAllConfirm(false);
+          setDeleteAllData(null);
+          fetchOrders();
+        }}
+        onCancel={() => {
+          setShowDeleteAllConfirm(false);
+          setDeleteAllData(null);
+        }}
+        confirmColor="bg-red-500 hover:bg-red-600"
+      />
     </div>
   );
 } 
