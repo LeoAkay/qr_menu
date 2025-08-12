@@ -652,16 +652,15 @@ export default function UserDashboard() {
                   <span className="font-medium">Theme Settings</span>
                 </button>
                 {/* Order System Button */}
-                <button
-                  onClick={() => {
-                    router.push('/QR_Portal/order_system');
-                    setActiveSection('Order System');
-                  }}
-                  className="flex items-center space-x-3 px-6 py-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors text-gray-700 border border-purple-200"
-                >
-                  <span className="text-3xl">🛒</span>
-                  <span className="font-medium">Order System</span>
-                </button>
+                 <a href="/QR_Portal/order_system">
+  <button
+    onClick={() => setActiveSection('Order System')}
+    className="flex items-center space-x-3 px-6 py-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors text-gray-700 border border-purple-200"
+  >
+    <span className="text-3xl">🛒</span>
+    <span className="font-medium">Order System</span>
+  </button>
+</a>
                 {/* Analytics Button */}
                 <button
                   onClick={() => {

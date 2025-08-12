@@ -228,17 +228,17 @@ function OrderSystemSection({ companyId }: { companyId: string }) {
   const socketRef = useRef<any>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [newOrderNotification, setNewOrderNotification] = useState(false);
+  const [actionCounts, setActionCounts] = useState<Record<string, number>>({});
 
-  const [payCounts, setPayCounts] = useState<Record<string, number>>({});
 
-
-const handlePayCountChange = (itemId: string, delta: number, max: number) => {
-  setPayCounts((prev) => {
+const handleCountChange = (itemId: string, delta: number, max: number) => {
+  setActionCounts((prev) => {
     const current = prev[itemId] || 0;
-    const next = Math.min(max, Math.max(0, current + delta));
-    return { ...prev, [itemId]: next };
+    const nextCount = Math.min(max, Math.max(0, current + delta));
+    return { ...prev, [itemId]: nextCount };
   });
 };
+
 
 
 
@@ -301,89 +301,58 @@ const handlePayCountChange = (itemId: string, delta: number, max: number) => {
   }
 }, [newOrderNotification])
   // WebSocket connection + fetch initial orders
-  useEffect(() => {
-    const socketUrl = window.location.origin;
-    console.log('Attempting to connect to WebSocket at:', socketUrl);
+useEffect(() => {
+  const socketUrl = window.location.origin;
+  const socket = io(socketUrl, { /* options */ });
+  socketRef.current = socket;
 
-    const socket = io(socketUrl, {
-      transports: ['polling', 'websocket'],
-      timeout: 20000,
-      forceNew: true,
-    });
-    socketRef.current = socket;
+  socket.on('connect', () => {
+    setConnectionStatus('connected');
+    socket.emit('join', companyId);
+  });
 
-    socket.on('connect', () => {
-      console.log('WebSocket connected successfully');
-      setConnectionStatus('connected');
-      socket.emit('join', companyId);
-    });
+  socket.on('disconnect', () => {
+    setConnectionStatus('disconnected');
+  });
 
-    socket.on('disconnect', () => {
-      console.log('WebSocket disconnected');
-      setConnectionStatus('disconnected');
-    });
+  socket.on('connect_error', (error) => {
+    setConnectionStatus('disconnected');
+    setError('Failed to connect to real-time updates...');
+  });
 
-    socket.on('connect_error', (error) => {
-      console.error('WebSocket connection error:', error);
-      setConnectionStatus('disconnected');
-      setError('Failed to connect to real-time updates. Orders will still be visible but may not update automatically.');
-    });
+  socket.on('new-order', (newOrder: Order) => {
+    setOrders(prev => prev.some(o => o.id === newOrder.id) ? prev : [newOrder, ...prev]);
+    setNewOrderNotification(true);
+    setTimeout(() => setNewOrderNotification(false), 3000);
+    audioRef.current?.play().catch(console.warn);
+  });
 
-    socket.on('new-order', (newOrder: Order) => {
-      console.log('Received new order via WebSocket:', newOrder);
-      if (!newOrder?.id) {
-        console.warn('Received order without ID:', newOrder);
-        return;
+  socket.on('order-updated', (updatedOrder: Order) => {
+    setOrders(prevOrders => {
+      if (!updatedOrder?.orderItems?.length || updatedOrder.isActive === false) {
+        return prevOrders.filter(order => order.id !== updatedOrder.id);
       }
-
-      setOrders(prev => {
-        console.log('Current orders:', prev.length, 'Adding new order:', newOrder.id);
-        if (prev.some(order => order.id === newOrder.id)) {
-          console.log('Order already exists, skipping:', newOrder.id);
-          return prev;
-        }
-        const updatedOrders = [newOrder, ...prev];
-        console.log('Updated orders count:', updatedOrders.length);
-        return updatedOrders;
-      });
-
-      setNewOrderNotification(true);
-      setTimeout(() => setNewOrderNotification(false), 3000);
-
-      if (audioRef.current) {
-        audioRef.current.play().catch(console.warn);
+      const exists = prevOrders.some(order => order.id === updatedOrder.id);
+      if (exists) {
+        return prevOrders.map(order => order.id === updatedOrder.id ? updatedOrder : order);
       }
+      return [...prevOrders, updatedOrder];
     });
+  });
 
-    socket.on('order-updated', (updatedOrder: Order) => {
-      console.log('Received updated order via WebSocket:', updatedOrder);
-      setOrders(prev => {
-        const existingIndex = prev.findIndex(order => order.id === updatedOrder.id);
-        if (existingIndex !== -1) {
-          const newOrders = [...prev];
-          newOrders[existingIndex] = updatedOrder;
-          console.log('Updated existing order:', updatedOrder.id);
-          return newOrders;
-        }
-        console.log('Order not found for update, adding as new:', updatedOrder.id);
-        return [updatedOrder, ...prev];
-      });
-    });
+  socket.on('order-deleted', ({ orderId }) => {
+    setOrders(prev => prev.filter(order => order.id !== orderId));
+  });
 
-    socket.on('test-response', (data) => {
-      console.log('Test response received from server:', data);
-    });
+  fetchOrders();
 
-    fetchOrders();
+  const refreshInterval = setInterval(fetchOrders, 10000);
 
-    // Set up periodic refresh as fallback
-    const refreshInterval = setInterval(fetchOrders, 10000); // Refresh every 10 seconds
-
-    return () => {
-      socket.disconnect();
-      clearInterval(refreshInterval);
-    };
-  }, [companyId]);
+  return () => {
+    socket.disconnect();
+    clearInterval(refreshInterval);
+  };
+}, [companyId]);
 
   const activeOrders = orders.filter(order => order.isActive !== false);
 
@@ -480,89 +449,167 @@ const handlePayCountChange = (itemId: string, delta: number, max: number) => {
                 <div>
                   <span className="font-medium text-gray-700">Items:</span>
                   <ul className="mt-2 space-y-1">
-                    {allItems.map((item) => {
+{allItems.map((item) => {
   const unpaid = item.quantity - item.paidQuantity;
-  const payCount = payCounts[item.id] || 0;
+  const count = actionCounts[item.id] || 0;
 
   return (
-    <li key={item.id} className="grid grid-cols-6 items-center gap-2 bg-purple-50 rounded px-2 py-1">
+    <li key={item.id} className="grid grid-cols-7 items-center gap-2 bg-purple-50 rounded px-2 py-1">
       <span className="truncate col-span-2">{item.subCategory?.name || 'Unknown'}</span>
       <span className="text-sm text-center">Qty: {item.quantity}</span>
       <span className="text-sm text-center text-green-700">Paid: {item.paidQuantity}</span>
-      
+
+      {/* Counter controls */}
       <div className="flex items-center justify-center space-x-2">
         <button
-          onClick={() => handlePayCountChange(item.id, -1, unpaid)}
-          className="px-2 py-1 bg-gray-400 rounded disabled:opacity-50"
-          disabled={payCount <= 0}
+          onClick={() => handleCountChange(item.id, -1, unpaid)}
+          className="px-2 py-1 bg-gray-400 text-white rounded disabled:opacity-50"
+          disabled={count <= 0}
         >
           -
         </button>
-        <span className="w-4 text-center">{payCount}</span>
+        <span className="w-4 text-center">{count}</span>
         <button
-          onClick={() => handlePayCountChange(item.id, 1, unpaid)}
-          className="px-2 py-1 bg-green-500 rounded disabled:opacity-50 hover:bg-green-600"
-          disabled={payCount >= unpaid}
+          onClick={() => handleCountChange(item.id, 1, unpaid)}
+          className="px-2 py-1 bg-blue-500 text-white rounded disabled:opacity-50 hover:bg-blue-600"
+          disabled={count >= unpaid}
         >
           +
         </button>
       </div>
 
+      {/* Pay and Delete buttons */}
       <button
-        disabled={payCount === 0}
-        onClick={async () => {
-          await fetch(`/api/QR_Panel/order/${companyId}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              orderId: latestOrder.id,
-              paidItemIds: [item.id],
-              payCounts: { [item.id]: payCount },
-            }),
-          });
-          setPayCounts(prev => ({ ...prev, [item.id]: 0 }));
-          fetchOrders();
-        }}
-        className="text-xs bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded disabled:bg-gray-300"
-      >
-        Pay
-      </button>
+          disabled={count === 0}
+          onClick={async () => {
+            await fetch(`/api/QR_Panel/order/${companyId}/cancel-item`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                orderId: latestOrder.id,
+                cancelItemIds: [item.id],
+                cancelCounts: { [item.id]: count },
+              }),
+            });
+            setActionCounts(prev => ({ ...prev, [item.id]: 0 }));
+            fetchOrders();
+            toast.success(`Deleted ${count} item(s)`);
+          }}
+          className="text-xs bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded disabled:bg-gray-300"
+        >
+          Delete
+        </button>
+      <div className="flex space-x-2">
+        <button
+          disabled={count === 0}
+          onClick={async () => {
+            await fetch(`/api/QR_Panel/order/${companyId}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                orderId: latestOrder.id,
+                paidItemIds: [item.id],
+                payCounts: { [item.id]: count },
+              }),
+            });
+            setActionCounts(prev => ({ ...prev, [item.id]: 0 }));
+            fetchOrders();
+            toast.success(`Paid ${count} item(s)`);
+          }}
+          className="text-xs bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded disabled:bg-gray-300"
+        >
+          Pay
+        </button>
+
+        
+      </div>
     </li>
   );
 })}
-
-
                   </ul>
                 </div>
-                <div className="flex justify-end mt-4">
-                  <button
-  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-semibold transition"
-  onClick={async () => {
-    for (const order of tableOrders) {
-      const fullPayMap: Record<string, number> = {};
-      for (const item of order.orderItems) {
-  if (!item?.id || item.quantity == null || item.paidQuantity == null) continue;
-  fullPayMap[item.id] = item.quantity - item.paidQuantity;
-}
+<div className="flex justify-end mt-4 space-x-2">
+  <button
+    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded font-semibold transition"
+    onClick={async () => {
+      // Disable button by removing pointer events & reduce opacity while loading
+      const btn = document.activeElement as HTMLButtonElement;
+      btn.disabled = true;
+      btn.style.opacity = '0.6';
+      btn.textContent = 'Deleting...';
 
+      let allSuccess = true;
+      for (const order of tableOrders) {
+        try {
+          const res = await fetch(`/api/QR_Panel/order/${companyId}/delete`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderId: order.id }),
+          });
+          if (!res.ok) {
+            allSuccess = false;
+            console.error(`Failed to delete order ${order.id}`, await res.text());
+            toast.error(`Failed to delete order ${order.id}`);
+          }
+        } catch (err) {
+          allSuccess = false;
+          console.error(`Error deleting order ${order.id}`, err);
+          toast.error(`Error deleting order ${order.id}`);
+        }
+      }
 
-      await fetch(`/api/QR_Panel/order/${companyId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          orderId: order.id,
-          payCounts: fullPayMap,
-          markInactive: true, // optional flag to force isActive = false
-        }),
-      });
-    }
+      if (allSuccess) {
+        toast.success('All orders deleted successfully');
+      }
 
-    fetchOrders(); // Refresh UI
-  }}
->
-  Pay All
-</button>
-                </div>
+      fetchOrders();
+
+      // Re-enable button & reset text
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.textContent = 'Delete All';
+    }}
+  >
+    Delete All
+  </button>
+
+  <button
+    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-semibold transition"
+    onClick={async () => {
+      const btn = document.activeElement as HTMLButtonElement;
+      btn.disabled = true;
+      btn.style.opacity = '0.6';
+      btn.textContent = 'Paying...';
+
+      for (const order of tableOrders) {
+        const fullPayMap: Record<string, number> = {};
+        for (const item of order.orderItems) {
+          if (!item?.id || item.quantity == null || item.paidQuantity == null) continue;
+          fullPayMap[item.id] = item.quantity - item.paidQuantity;
+        }
+
+        await fetch(`/api/QR_Panel/order/${companyId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderId: order.id,
+            payCounts: fullPayMap,
+            markInactive: true,
+          }),
+        });
+      }
+
+      fetchOrders();
+
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.textContent = 'Pay All';
+    }}
+  >
+    Pay All
+  </button>
+</div>
+
               </div>
             );
           })}
