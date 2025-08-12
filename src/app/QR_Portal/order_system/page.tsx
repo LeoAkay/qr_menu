@@ -228,6 +228,8 @@ function OrderSystemSection({ companyId }: { companyId: string }) {
   const socketRef = useRef<any>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [newOrderNotification, setNewOrderNotification] = useState(false);
+  const [showPayAllConfirm, setShowPayAllConfirm] = useState(false);
+  const [payAllData, setPayAllData] = useState<{ tableOrders: Order[], totalToPay: number } | null>(null);
 
   const [payCounts, setPayCounts] = useState<Record<string, number>>({});
 
@@ -534,40 +536,95 @@ const handlePayCountChange = (itemId: string, delta: number, max: number) => {
 
                   </ul>
                 </div>
-                <div className="flex justify-end mt-4">
-                  <button
-  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-semibold transition"
-  onClick={async () => {
-    for (const order of tableOrders) {
-      const fullPayMap: Record<string, number> = {};
-      for (const item of order.orderItems) {
-  if (!item?.id || item.quantity == null || item.paidQuantity == null) continue;
-  fullPayMap[item.id] = item.quantity - item.paidQuantity;
-}
+                                 <div className="flex justify-end mt-4">
+                   <button
+   className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-semibold transition"
+   onClick={() => {
+     // Calculate total amount to be paid
+     const totalToPay = tableOrders.reduce((sum, order) => {
+       return sum + order.orderItems.reduce((orderSum, item) => {
+         if (!item?.id || item.quantity == null || item.paidQuantity == null) return orderSum;
+         return orderSum + (item.price * (item.quantity - item.paidQuantity));
+       }, 0);
+     }, 0);
 
-
-      await fetch(`/api/QR_Panel/order/${companyId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          orderId: order.id,
-          payCounts: fullPayMap,
-          markInactive: true, // optional flag to force isActive = false
-        }),
-      });
-    }
-
-    fetchOrders(); // Refresh UI
-  }}
->
-  Pay All
-</button>
-                </div>
+     // Show confirmation modal
+     setPayAllData({ tableOrders, totalToPay });
+     setShowPayAllConfirm(true);
+   }}
+ >
+   Pay All
+ </button>
+                 </div>
               </div>
             );
           })}
-        </div>
-      )}
-    </div>
-  );
-} 
+                 </div>
+       )}
+
+               {/* Pay All Confirmation Dialog */}
+        {showPayAllConfirm && payAllData && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
+            <div className="bg-white rounded-lg max-w-md w-full shadow-xl border border-gray-200">
+              <div className="p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Confirm Payment</h3>
+                <p className="text-gray-600 mb-4">
+                  Are you sure you want to pay all remaining items for ₺{formatPrice(payAllData.totalToPay)}?
+                </p>
+                <p className="text-sm text-gray-500 mb-6">
+                  This action will mark all orders as paid and inactive.
+                </p>
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => {
+                      setShowPayAllConfirm(false);
+                      setPayAllData(null);
+                    }}
+                    className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={async () => {
+                      // Process the payment
+                      for (const order of payAllData.tableOrders) {
+                        const fullPayMap: Record<string, number> = {};
+                        for (const item of order.orderItems) {
+                          if (!item?.id || item.quantity == null || item.paidQuantity == null) continue;
+                          fullPayMap[item.id] = item.quantity - item.paidQuantity;
+                        }
+
+                        await fetch(`/api/QR_Panel/order/${companyId}`, {
+                          method: 'PATCH',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            orderId: order.id,
+                            payCounts: fullPayMap,
+                            markInactive: true,
+                          }),
+                        });
+                      }
+
+                      // Close modal and refresh
+                      setShowPayAllConfirm(false);
+                      setPayAllData(null);
+                      fetchOrders();
+                      
+                      // Show success notification
+                      toast.success('All items paid successfully! 💳', {
+                        position: 'top-right',
+                        autoClose: 3000,
+                      });
+                    }}
+                    className="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                  >
+                    Confirm Payment
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+     </div>
+   );
+ }  
