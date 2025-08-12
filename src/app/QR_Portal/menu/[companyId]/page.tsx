@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import HTMLFlipBook from 'react-pageflip';
 import { ToastContainer, toast } from 'react-toastify';
+import Confetti from 'react-confetti';
 // Utility function to format prices with thousand separators
 const formatPrice = (price: number): string => {
   return price.toLocaleString('en-US', {
@@ -1407,10 +1408,26 @@ function PDFViewer({ pdfUrl, displayMode }: { pdfUrl: string; displayMode: strin
   return <PDFFlipbook pdfUrl={pdfUrl} />;
 }
 
-function SpinWheel({ items, onResult }: { items: any[], onResult: (item: any) => void }) {
+function useWindowSize() {
+  const [size, setSize] = useState({ width: window.innerWidth, height: window.innerHeight });
+
+  useEffect(() => {
+    const handleResize = () => setSize({ width: window.innerWidth, height: window.innerHeight });
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return size;
+}
+
+function SpinWheel({ items, onAddToCart }: { 
+  items: any[], 
+  onAddToCart: (item: any) => void 
+}) {
   const [isSpinning, setIsSpinning] = useState(false);
   const [popupItem, setPopupItem] = useState<any | null>(null);
-
+  const { width, height } = useWindowSize(); 
   const duration = 4500; // ms
   const radius = 160;
   const degreesPerItem = 360 / items.length;
@@ -1480,56 +1497,51 @@ function SpinWheel({ items, onResult }: { items: any[], onResult: (item: any) =>
     }
   };
 
-  const finishSpin = (finalRotation: number) => {
-    // Update rotationRef and reset transform to exact value
-    rotationRef.current = finalRotation;
-    if (svgRef.current) {
-      svgRef.current.style.transform = `rotate(${finalRotation}deg)`;
-    }
-    if (finalSoundRef.current) {
-  finalSoundRef.current.currentTime = 0;
-  finalSoundRef.current.play().catch(() => {});
-}
+const spin = () => {
+  if (isSpinning || items.length === 0) return;
 
-    setTimeout(() => {
-      setIsSpinning(false);
+  setIsSpinning(true);
+  startTimeRef.current = 0;
+  startRotationRef.current = rotationRef.current;
 
-      const normalizedRotation = ((finalRotation % 360) + 360) % 360;
-      const pointerAngle = (360 - normalizedRotation) % 360;
+  const extraSpins = 5 * 360; // multiple full spins for effect
+  const randomIndex = Math.floor(Math.random() * items.length);
+  const randomOffset = degreesPerItem / 2; // center pointer on slice
 
-      const winningIndex = Math.floor(
-        ((pointerAngle - 0.0001 + 360) % 360) / degreesPerItem
-      );
+  // Calculate target rotation so that the slice at randomIndex lands at pointer (0 deg)
+  targetRotationRef.current =
+    rotationRef.current +
+    extraSpins +
+    randomIndex * degreesPerItem +
+    randomOffset;
 
-      const winner = items[winningIndex];
-      setPopupItem(winner);
-      onResult(winner);
-    }, 300);
-  };
+  lastTickSliceRef.current = -1; // reset tick tracking
 
-  const spin = () => {
-    if (isSpinning || items.length === 0) return;
+  rafRef.current = requestAnimationFrame(animate);
+};
 
-    setIsSpinning(true);
-    startTimeRef.current = 0;
-    startRotationRef.current = rotationRef.current;
+const finishSpin = (finalRotation: number) => {
+  rotationRef.current = finalRotation;
+  if (svgRef.current) {
+    svgRef.current.style.transform = `rotate(${finalRotation}deg)`;
+  }
+  if (finalSoundRef.current) {
+    finalSoundRef.current.currentTime = 0;
+    finalSoundRef.current.play().catch(() => {});
+  }
 
-    const normalizedRotation = ((rotationRef.current % 360) + 360) % 360;
-    const pointerAngle = (360 - normalizedRotation) % 360;
-    lastTickSliceRef.current = Math.floor(pointerAngle / degreesPerItem);
+  setTimeout(() => {
+    setIsSpinning(false);
 
-    const extraSpins = 5 * 360;
-    const randomIndex = Math.floor(Math.random() * items.length);
-    const randomOffset = degreesPerItem / 2;
+    const normalizedRotation = ((finalRotation % 360) + 360) % 360;
+    // pointer at 0 deg means the slice at that angle
+    const winningIndex = Math.floor(normalizedRotation / degreesPerItem) % items.length;
 
-    targetRotationRef.current =
-      rotationRef.current +
-      extraSpins +
-      (items.length - randomIndex) * degreesPerItem -
-      randomOffset;
+    const winner = items[winningIndex];
+    setPopupItem(winner);
+  }, 300);
+};
 
-    rafRef.current = requestAnimationFrame(animate);
-  };
 
   const colors = [
     "#FF6B6B",
@@ -1541,6 +1553,17 @@ function SpinWheel({ items, onResult }: { items: any[], onResult: (item: any) =>
     "#6A67CE",
     "#B3D4FF",
   ];
+
+  const [showConfetti, setShowConfetti] = useState(false);
+
+useEffect(() => {
+  if (popupItem) {
+    setShowConfetti(true);
+    const timer = setTimeout(() => setShowConfetti(false), 3000);
+    return () => clearTimeout(timer);
+  }
+}, [popupItem]);
+
 
   return (
     <>
@@ -1627,34 +1650,64 @@ function SpinWheel({ items, onResult }: { items: any[], onResult: (item: any) =>
               : "bg-green-600 hover:bg-green-700"
           }`}
         >
-          {isSpinning ? "Spinning..." : "Spin the Wheel 🎯"}
+          {isSpinning ? "Spinning..." : "Spin for Your Meal 🎯"}
         </button>
       </div>
 
       {popupItem && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          onClick={() => setPopupItem(null)}
-        >
+        <>
+         {showConfetti && (
+  <Confetti
+    width={width}
+    height={height}
+    numberOfPieces={200}      // Less pieces, lighter burst
+    recycle={false}           // One-time burst only
+    gravity={0.12}            // Lower gravity to slow fall
+    initialVelocityX={{ min: -5, max: 5 }}   // Less horizontal speed
+    initialVelocityY={{ min: 5, max: 15 }}   // Slower upward burst
+    colors={['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff']}
+    wind={0.005}              // Less horizontal drift
+    style={{ position: 'fixed', top: 0, left: 0, pointerEvents: 'none', zIndex: 9999 }}
+  />
+)}
           <div
-            className="bg-white rounded-lg p-6 max-w-sm w-full flex flex-col items-center"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <img
-              src={popupItem.menuImageUrl || popupItem.image || ""}
-              alt={popupItem.name}
-              className="w-40 h-40 object-contain mb-4"
-            />
-            <h2 className="text-xl font-bold mb-2 text-center">{popupItem.name}</h2>
-            <button
-              onClick={() => setPopupItem(null)}
-              className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+  className="fixed inset-0 flex items-center justify-center z-50 backdrop-blur-sm  bg-opacity-20"
+  onClick={() => setPopupItem(null)}
+>
+
+            <div
+              className="bg-white rounded-lg p-6 max-w-sm w-full flex flex-col items-center"
+              onClick={(e) => e.stopPropagation()}
             >
-              Close
-            </button>
+              {/* Your popup content */}
+              <img
+                src={popupItem.menuImageUrl || popupItem.image || ""}
+                alt={popupItem.name}
+                className="w-40 h-40 object-contain mb-4"
+              />
+              <h2 className="text-xl font-bold mb-2 text-center">{popupItem.name}</h2>
+              <div className="flex gap-3 mt-4">
+                <button
+                  onClick={() => setPopupItem(null)}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    onAddToCart(popupItem);
+                    setPopupItem(null);
+                  }}
+                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                >
+                  Add to Cart
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
+        </>
       )}
+
     </>
   );
 }
@@ -1771,23 +1824,36 @@ const toggleDescription = (itemId: string) => {
 {currentCategory.subCategories && currentCategory.subCategories.length > 0 ? (
    <>
     {/* Toggle Button */}
-    <div className="flex justify-center mb-6">
-      <button
-        onClick={() => setShowWheel(!showWheel)}
-        className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800"
-      >
-        {showWheel ? "Show Menu" : "Spin the Wheel 🎯"}
-      </button>
-    </div>
+    <div className="text-2xl font-extrabold text-center text-blue-600 mb-4 leading-snug">
+  Can't decide what to order? <br />
+  <span className="text-green-600">Just spin the wheel! 🎡</span>
+</div>
+
+<div className="flex justify-center mb-6">
+  <button
+    onClick={() => setShowWheel(!showWheel)}
+    className="px-6 py-3 bg-black text-white text-lg font-semibold rounded-full shadow-md hover:bg-gray-800 transition-all"
+  >
+    {showWheel ? "Show Menu 🍽" : "Spin the Wheel 🎯"}
+  </button>
+</div>
+
 
     {/* Conditional Render */}
     {showWheel ? (
-      <SpinWheel
-        items={currentCategory.subCategories}
-        onResult={(item) => {
-          handleAddToCart(item);
-        }}
-      />
+    <SpinWheel
+  items={currentCategory.subCategories}
+  onAddToCart={(item) => {
+    addToCart({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      image: item.menuImageUrl
+    }, 1);
+  }}
+/>
+
+
     ) : (
       <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(160px,1fr))]">
         {[...currentCategory.subCategories]
