@@ -30,13 +30,18 @@ export async function POST(req: Request) {
 
     // Function to get the base URL for QR code link generation
     const getBaseUrl = () => {
-      if (process.env.NODE_ENV === 'production') {
-        return `https://${process.env.VERCEL_URL || 'localhost:3000'}`
+      // Always use the current request's host for dynamic URL generation
+      const host = req.headers.get('host')
+      const protocol = req.headers.get('x-forwarded-proto') || 
+                      (host?.includes('localhost') ? 'http' : 'https')
+      
+      if (host) {
+        return `${protocol}://${host}`
       }
       
-      const host = req.headers.get('host')
-      if (host && !host.includes('localhost')) {
-        return `http://${host}`
+      // Fallback options
+      if (process.env.NODE_ENV === 'production') {
+        return `https://${process.env.VERCEL_URL || 'localhost:3000'}`
       }
       
       return 'http://localhost:3000'
@@ -63,4 +68,9 @@ export async function POST(req: Request) {
     console.error("QR URL update error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
+}
+
+// Support both POST and PUT methods
+export async function PUT(req: Request) {
+  return POST(req)
 }
