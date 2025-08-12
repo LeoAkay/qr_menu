@@ -1809,9 +1809,9 @@ const toggleDescription = (itemId: string) => {
 {currentCategory.subCategories && currentCategory.subCategories.length > 0 ? (
    <>
     {/* Toggle Button */}
-    <div className="text-2xl font-extrabold text-center text-blue-600 mb-4 leading-snug">
+    <div className="text-2xl font-extrabold text-center text-white mb-4 leading-snug">
   Can't decide what to order? <br />
-  <span className="text-green-600">Just spin the wheel! 🎡</span>
+  <span>Just spin the wheel! 🎡</span>
 </div>
 
 <div className="flex justify-center mb-6">
