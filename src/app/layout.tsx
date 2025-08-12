@@ -2,11 +2,17 @@ import './global.css'
 import type { Metadata } from 'next'
 import Script from 'next/script'
 import { ToastContainer } from 'react-toastify';
+import { Inter, Playfair_Display, Crimson_Text } from 'next/font/google';
 
 export const metadata: Metadata = {
   title: 'Admin Panel',
   description: 'Admin dashboard login and control panel',
 }
+
+// Initialize fonts
+const inter = Inter({ subsets: ['latin'] });
+const playfairDisplay = Playfair_Display({ subsets: ['latin'] });
+const crimsonText = Crimson_Text({ subsets: ['latin'], weight: ['400', '600', '700'] });
 
 export default function RootLayout({
   children,

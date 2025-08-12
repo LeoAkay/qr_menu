@@ -14,6 +14,20 @@ const formatPrice = (price: number): string => {
   });
 };
 
+// Font mapping function
+const getFontFamily = (style: string) => {
+  switch (style) {
+    case 'modern':
+      return "'Inter', 'Segoe UI', 'Roboto', sans-serif"
+    case 'classic':
+      return "'Times New Roman', 'Georgia', serif"
+    case 'elegant':
+      return "'Playfair Display', 'Crimson Text', serif"
+    default:
+      return "'Inter', 'Segoe UI', 'Roboto', sans-serif"
+  }
+}
+
 interface UserData {
   id: string
   cId: number
@@ -638,16 +652,16 @@ export default function UserDashboard() {
                   <span className="font-medium">Theme Settings</span>
                 </button>
                 {/* Order System Button */}
-                <a href="/QR_Portal/order_system">
-  <button
-    onClick={() => setActiveSection('Order System')}
-    className="flex items-center space-x-3 px-6 py-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors text-gray-700 border border-purple-200"
-  >
-    <span className="text-3xl">🛒</span>
-    <span className="font-medium">Order System</span>
-  </button>
-</a>
-
+                <button
+                  onClick={() => {
+                    router.push('/QR_Portal/order_system');
+                    setActiveSection('Order System');
+                  }}
+                  className="flex items-center space-x-3 px-6 py-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors text-gray-700 border border-purple-200"
+                >
+                  <span className="text-3xl">🛒</span>
+                  <span className="font-medium">Order System</span>
+                </button>
                 {/* Analytics Button */}
                 <button
                   onClick={() => {
@@ -758,6 +772,7 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
   const [selectedLogo, setSelectedLogo] = useState<File | null>(null)
   const [selectedWelcoming, setSelectedWelcoming] = useState<File | null>(null)
   const [uploadingImages, setUploadingImages] = useState(false)
+  
   const [themeSettings, setThemeSettings] = useState({
     backgroundColor: userData?.company?.Themes?.[0]?.backgroundColor || '#ffffff',
     textColor: userData?.company?.Themes?.[0]?.textColor || '#000000',
@@ -2744,9 +2759,11 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
                   onChange={(e) => setThemeSettings({...themeSettings, style: e.target.value})}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
                 >
-                  <option value="modern">Modern</option>
-                  <option value="minimal">Minimal</option>
+                  <option value="modern">Modern (Clean & Contemporary)</option>
+                  <option value="classic">Classic (Traditional & Timeless)</option>
+                  <option value="elegant">Elegant (Sophisticated & Refined)</option>
                 </select>
+                <p className="text-xs text-gray-500 mt-1">Each style includes a unique font family</p>
               </div>
             </div>
             {/* Preview */}
@@ -2754,7 +2771,11 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
               <h4 className="text-sm font-medium mb-3 text-gray-700">Preview</h4>
               <div 
                 className="border-2 border-gray-300 rounded-lg p-6 text-center"
-                style={{ backgroundColor: themeSettings.backgroundColor, color: themeSettings.textColor }}
+                style={{ 
+                  backgroundColor: themeSettings.backgroundColor, 
+                  color: themeSettings.textColor,
+                  fontFamily: getFontFamily(themeSettings.style)
+                }}
               >
                 <div 
                   className="inline-block px-4 py-2 rounded-lg mb-4"
@@ -2763,7 +2784,10 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
                   <span className="font-bold text-sm">Logo Area</span>
                 </div>
                 <h3 className="text-xl font-bold mb-2">{userData?.company?.C_Name || 'Restaurant Name'}</h3>
-                <p className="text-sm opacity-75">Your PDF menu will be displayed with this theme</p>
+                <p className="text-sm opacity-75 mb-3">Your PDF menu will be displayed with this theme</p>
+                <div className="text-xs opacity-60 border-t pt-2 mt-2">
+                  <span className="capitalize">{themeSettings.style}</span> Style Font
+                </div>
               </div>
             </div>
             {/* Save Theme Button */}
