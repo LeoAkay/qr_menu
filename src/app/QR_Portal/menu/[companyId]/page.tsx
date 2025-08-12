@@ -1826,7 +1826,7 @@ const toggleDescription = (itemId: string) => {
     {/* Toggle Button */}
     <div className="text-2xl font-extrabold text-center text-white mb-4 leading-snug">
   Can't decide what to order? <br />
-  <span className="text-white">Just spin the wheel! 🎡</span>
+  <span>Just spin the wheel! 🎡</span>
 </div>
 
 <div className="flex justify-center mb-6">
