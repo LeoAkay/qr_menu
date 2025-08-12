@@ -85,6 +85,20 @@ export default function MenuPage() {
     data?: any
   } | null>(null)
 
+  // Font mapping function
+  const getFontFamily = (style: string) => {
+    switch (style) {
+      case 'modern':
+        return "'Inter', 'Segoe UI', 'Roboto', sans-serif"
+      case 'classic':
+        return "'Times New Roman', 'Georgia', serif"
+      case 'elegant':
+        return "'Playfair Display', 'Crimson Text', serif"
+      default:
+        return "'Inter', 'Segoe UI', 'Roboto', sans-serif"
+    }
+  }
+
   useEffect(() => {
     if (companyId) {
       fetchCompanyData()
@@ -500,7 +514,8 @@ if (company && showWelcoming) {
       style={{ 
         backgroundColor: getEffectiveMenuType() === 'pdf' ? 'transparent' : theme.backgroundColor,
         color: theme.textColor,
-        minHeight: getEffectiveMenuType() === 'pdf' ? '100vh' : 'auto'
+        minHeight: getEffectiveMenuType() === 'pdf' ? '100vh' : 'auto',
+        fontFamily: getFontFamily(theme.style)
       }}
     >
       {/* Header - Hidden for PDF menus */}
