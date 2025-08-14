@@ -2804,6 +2804,69 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
           </div>
         )}
       </div>
+      
+      {/* Order System Toggle Section */}
+      <div className="mt-8">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-800">Order System Settings</h3>
+        </div>
+        <div className="bg-gray-50 rounded-xl p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="text-md font-medium text-gray-700 mb-2">Enable Order System</h4>
+              <p className="text-sm text-gray-600">
+                When enabled, customers can add items to cart and place orders through the manual menu.
+                When disabled, the menu will be display-only without cart functionality.
+              </p>
+            </div>
+            <div className="flex items-center">
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={userData?.company?.orderSystem || false}
+                  onChange={async (e) => {
+                    try {
+                      const res = await fetch('/api/QR_Panel/user/update-order-system', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ orderSystem: e.target.checked }),
+                        credentials: 'include'
+                      })
+                      
+                      if (res.ok) {
+                        toast.success(`Order system ${e.target.checked ? 'enabled' : 'disabled'} successfully!`)
+                        window.location.reload()
+                      } else {
+                        const data = await res.json()
+                        toast.error(data.error || 'Failed to update order system setting')
+                      }
+                    } catch (error) {
+                      toast.error('Network error. Please try again.')
+                    }
+                  }}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+              </label>
+            </div>
+          </div>
+          <div className="mt-4 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+            <div className="flex items-start space-x-3">
+              <div className="text-purple-600 text-lg">ℹ️</div>
+              <div className="text-sm text-purple-800">
+                <strong>Current Status:</strong> {userData?.company?.orderSystem ? 'Order system is enabled' : 'Order system is disabled'}
+                <br />
+                <span className="text-purple-600">
+                  {userData?.company?.orderSystem 
+                    ? 'Customers can add items to cart and place orders.' 
+                    : 'Menu is display-only. No cart functionality will be shown.'}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       {/* Image Upload Section */}
       <div className="mt-8">
         <div className="flex items-center justify-between mb-4">

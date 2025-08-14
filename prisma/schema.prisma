@@ -40,6 +40,7 @@ model Company {
   updatedBy       String?
   menuType        String?         @default("none")
   pdfMenuUrl      String?
+  orderSystem     Boolean         @default(false)
   creator         User?           @relation("CreatedCompanies", fields: [createdBy], references: [id])
   updater         User?           @relation("UpdatedCompanies", fields: [updatedBy], references: [id])
   user            User            @relation(fields: [userId], references: [id])

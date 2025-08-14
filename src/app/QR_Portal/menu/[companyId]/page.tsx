@@ -540,22 +540,24 @@ if (company && showWelcoming) {
           </div>
         </header>
       )}
- {/* Shopping Cart Icon */}
-          <button
-            onClick={() => setShowCart(true)}
-            className="fixed bottom-4 right-4 z-50 bg-black text-white text-base p-3 rounded-full shadow-xl hover:bg-gray-900 transition-colors focus:outline-none focus:ring-4 focus:ring-black/50"
-          >
-            <div className="relative">
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.1 5A1 1 0 006.9 19H19M9 19a2 2 0 100 4 2 2 0 000-4zm8 0a2 2 0 100 4 2 2 0 000-4z" />
-              </svg>
-              {getTotalItems() > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {getTotalItems()}
-                </span>
-              )}
-            </div>
-          </button>
+      {/* Shopping Cart Icon - Only show if order system is enabled */}
+      {company?.orderSystem && (
+        <button
+          onClick={() => setShowCart(true)}
+          className="fixed bottom-4 right-4 z-50 bg-black text-white text-base p-3 rounded-full shadow-xl hover:bg-gray-900 transition-colors focus:outline-none focus:ring-4 focus:ring-black/50"
+        >
+          <div className="relative">
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.1 5A1 1 0 006.9 19H19M9 19a2 2 0 100 4 2 2 0 000-4zm8 0a2 2 0 100 4 2 2 0 000-4z" />
+            </svg>
+            {getTotalItems() > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                {getTotalItems()}
+              </span>
+            )}
+          </div>
+        </button>
+      )}
       <div className={`mx-auto ${getEffectiveMenuType() === 'pdf' ? ' h-full max-w-none p-0' : 'max-w-4xl px-4'}`}>
         {getEffectiveMenuType() === 'pdf' && company.pdfMenuUrl ? (
           <div className="w-full h-screen flex items-center justify-center bg-transparent">
@@ -576,6 +578,7 @@ if (company && showWelcoming) {
             cart={cart}
             getCartItemQuantity={getCartItemQuantity}
             updateCartItemQuantity={updateCartItemQuantity}
+            orderSystem={company.orderSystem}
           />
         ) : (
           <div className="text-center py-8 h-full">
@@ -588,8 +591,8 @@ if (company && showWelcoming) {
         )}
       </div>
 
-      {/* Shopping Cart Modal */}
-      {showCart && (
+      {/* Shopping Cart Modal - Only show if order system is enabled */}
+      {showCart && company?.orderSystem && (
        <div
   className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm h-full"
   style={{ backgroundColor: 'rgba(255, 255, 255, 0.4)' }}
@@ -1719,7 +1722,8 @@ function ManualMenu({
   theme,
   addToCart,
   getCartItemQuantity,
-  updateCartItemQuantity
+  updateCartItemQuantity,
+  orderSystem
 }: { 
   categories: Company['Main_Categories']
   theme: { backgroundColor?: string; textColor?: string; logoAreaColor?: string; style?: string }
@@ -1731,6 +1735,7 @@ function ManualMenu({
   cart: CartItem[]
   getCartItemQuantity: (itemId: string) => number
   updateCartItemQuantity: (id: string, quantity: number) => void
+  orderSystem?: boolean
 }) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const sortedCategories = [...(categories || [])].sort((a, b) => a.categoryNo - b.categoryNo)
@@ -1935,7 +1940,7 @@ const toggleDescription = (itemId: string) => {
               ></div>
             </div>
 
-{item.price && item.stock && (
+{item.price && item.stock && orderSystem && (
   <div className="pt-2 flex items-center justify-center gap-6">
     <button
       onClick={() => handleRemoveFromCart(item.id)}
