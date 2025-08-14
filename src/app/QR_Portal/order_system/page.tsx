@@ -620,7 +620,7 @@ useEffect(() => {
       <ConfirmationDialog
         isOpen={showPayAllConfirm}
         title="Confirm Payment"
-        message={`Are you sure you want to pay all remaining items for ₺${formatPrice(payAllData?.totalToPay || 0)}? This action will mark all orders as paid and inactive.`}
+        message={`Are you sure you want to pay all remaining items for Table #${payAllData?.tableOrders[0]?.tableNumber} (₺${formatPrice(payAllData?.totalToPay ?? 0)})? This action will mark all orders as paid and inactive.`}
         confirmText="Confirm Payment"
         cancelText="Cancel"
         onConfirm={async () => {
