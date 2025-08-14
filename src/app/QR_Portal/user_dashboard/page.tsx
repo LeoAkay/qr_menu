@@ -44,6 +44,7 @@ interface UserData {
     C_QR_URL?: string
     pdfMenuUrl?: string
     menuType?: string
+    orderSystem?: boolean
 
     Welcoming_Page?: any
     Main_Categories?: Array<{
@@ -2067,7 +2068,7 @@ function PreviewSection({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
               </svg>
             </div>
-            <h4 className="font-semibold text-gray-800 mb-2">Order System</h4>
+            <h4 className="font-semibold text-gray-800 mb-2">Manual Menu</h4>
             <p className="text-sm text-gray-600">
               Show manually created menu
             </p>
