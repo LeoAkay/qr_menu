@@ -655,10 +655,15 @@ export default function UserDashboard() {
                  <a href="/QR_Portal/order_system">
   <button
     onClick={() => setActiveSection('Order System')}
-    className="flex items-center space-x-3 px-6 py-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors text-gray-700 border border-purple-200"
+    className="flex items-center space-x-3 px-6 py-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors text-gray-700 border border-purple-200 relative"
   >
     <span className="text-3xl">🛒</span>
     <span className="font-medium">Order System</span>
+    {newOrderCount > 0 && (
+      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center animate-pulse">
+        {newOrderCount > 99 ? '99+' : newOrderCount}
+      </span>
+    )}
   </button>
 </a>
                 {/* Analytics Button */}

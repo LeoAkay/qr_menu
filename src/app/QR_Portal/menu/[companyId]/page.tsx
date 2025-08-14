@@ -20,6 +20,7 @@ interface Company {
   Welcoming_Page?: any
   pdfMenuUrl?: any
   menuType?: string
+  orderSystem?: boolean
 
   Main_Categories?: Array<{
     id: string
@@ -592,7 +593,7 @@ if (company && showWelcoming) {
       </div>
 
       {/* Shopping Cart Modal - Only show if order system is enabled */}
-      {showCart && company?.orderSystem && (
+      {showCart && company.orderSystem && (
        <div
   className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm h-full"
   style={{ backgroundColor: 'rgba(255, 255, 255, 0.4)' }}
