@@ -61,7 +61,7 @@ export default function UserLoginPage() {
         </div>
       </header>
       
-      <div className="flex items-center justify-center flex-1 relative">
+      <div className="flex items-center justify-center flex-1 relative -mt-20">
       {/* Animated Background Circles */}
       <div className="absolute inset-0">
         {/* Purple circles */}
