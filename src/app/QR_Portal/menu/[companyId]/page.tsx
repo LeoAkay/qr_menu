@@ -142,6 +142,8 @@ export default function MenuPage() {
     }
   }, [])
 
+
+
   useEffect(() => {
     if (company && company.Welcoming_Page && !loading) {
       setShowWelcoming(true)
@@ -227,6 +229,13 @@ export default function MenuPage() {
     setTableNumber('')
     setOrderRequest('')
   }
+
+  // Hide cart when switching to flipbook mode
+  useEffect(() => {
+    if (pdfDisplayMode === 'flipbook') {
+      setShowCart(false)
+    }
+  }, [pdfDisplayMode])
 
   // Confirmation dialog functions
   const handleAddToCartConfirm = (itemData: any) => {
@@ -564,8 +573,8 @@ if (company && showWelcoming) {
         </header>
       )}
       
-      {/* Shopping Cart Icon - Only show if order system is enabled */}
-      {company?.orderSystem && (
+      {/* Shopping Cart Icon - Only show if order system is enabled and NOT in PDF viewer modes */}
+      {company?.orderSystem && getEffectiveMenuType() !== 'pdf' && (
         <button
           onClick={() => setShowCart(true)}
           className="fixed bottom-4 right-4 z-50 bg-black text-white text-base p-3 rounded-full shadow-xl hover:bg-gray-900 transition-colors focus:outline-none focus:ring-4 focus:ring-black/50"
@@ -615,8 +624,8 @@ if (company && showWelcoming) {
         )}
       </div>
 
-      {/* Shopping Cart Modal - Only show if order system is enabled */}
-      {showCart && company.orderSystem && (
+      {/* Shopping Cart Modal - Only show if order system is enabled and NOT in PDF viewer modes */}
+      {showCart && company.orderSystem && getEffectiveMenuType() !== 'pdf' && (
        <div
   className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm h-full"
   style={{ backgroundColor: 'rgba(255, 255, 255, 0.4)' }}
@@ -948,28 +957,26 @@ function PDFFlipbook({ pdfUrl }: { pdfUrl: string }) {
       
       const container = containerRef.current;
       const screenWidth = window.innerWidth;
+      const screenHeight = window.innerHeight;
       const containerWidth = container.clientWidth;
-      const containerHeight = window.innerHeight * 0.8;
       
       // Aspect ratio - A4 page ratio (1:√2)
       const aspectRatio = 1 / Math.sqrt(2); // Approximately 0.707
       
-      // Initial size based on container width
-      let targetWidth = containerWidth * (
-        screenWidth >= 1024 ? 0.8 : // Desktop
-        screenWidth >= 768 ? 0.9 :  // Tablet
-        0.95                        // Mobile
-      );
+      // Calculate available space with better margins - use viewport units
+      const availableWidth = screenWidth * 0.98; // Use 98% of screen width
+      const availableHeight = screenHeight * 0.95; // Use 95% of screen height
       
-      let targetHeight = containerHeight * 0.9; // Keep some margin
+      // Calculate dimensions while maintaining aspect ratio and fitting screen
+      let newWidth = Math.min(availableWidth, availableHeight * aspectRatio);
+      let newHeight = Math.min(availableHeight, availableWidth / aspectRatio);
       
-      // Calculate dimensions while maintaining aspect ratio
-      let newWidth = Math.min(targetWidth, targetHeight * aspectRatio);
-      let newHeight = Math.min(targetHeight, targetWidth / aspectRatio);
+      // Ensure the flipbook fits within the container
+      newWidth = Math.min(newWidth, containerWidth * 0.99);
       
       // Ensure minimum dimensions
-      newWidth = Math.max(newWidth, 320); // min width
-      newHeight = Math.max(newHeight, 400); // min height
+      newWidth = Math.max(newWidth, 280); // min width
+      newHeight = Math.max(newHeight, 320); // min height
       
       setDimensions({
         width: Math.round(newWidth), // Required by HTMLFlipBook component
@@ -1102,6 +1109,8 @@ function PDFFlipbook({ pdfUrl }: { pdfUrl: string }) {
     // console.log('Flipbook orientation changed:', e);
   };
 
+
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
@@ -1120,10 +1129,10 @@ function PDFFlipbook({ pdfUrl }: { pdfUrl: string }) {
             width={dimensions.width}
             height={dimensions.height}
             size="stretch"
-            minWidth={500}
-            maxWidth={1600}
-            minHeight={700}
-            maxHeight={2000}
+            minWidth={280}
+            maxWidth={1400}
+            minHeight={320}
+            maxHeight={1800}
             showCover={true}
             drawShadow={true}
             flippingTime={800}
@@ -1137,7 +1146,7 @@ function PDFFlipbook({ pdfUrl }: { pdfUrl: string }) {
             swipeDistance={30}
             maxShadowOpacity={0.5}
             startZIndex={20}
-            autoSize={false}
+            autoSize={true}
             className=""
             style={{}}
             onFlip={onFlip}
@@ -1161,7 +1170,7 @@ function PDFFlipbook({ pdfUrl }: { pdfUrl: string }) {
         </div>
       </div>
       {/* Floating Navigation Controls - Positioned over the menu */}
-      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-2 flex items-center justify-center space-x-2 z-30 border border-gray-200">
+      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-2 flex items-center justify-center space-x-2 z-30 border border-gray-200">
         {/* Previous Page Button */}
         <button
           onClick={prevPage}
@@ -1338,6 +1347,8 @@ function ScrollPDFViewer({ pdfUrl }: { pdfUrl: string }) {
     container.addEventListener('scroll', handleScroll);
     return () => container.removeEventListener('scroll', handleScroll);
   }, [images.length]);
+
+
 
   if (loading) {
     return (

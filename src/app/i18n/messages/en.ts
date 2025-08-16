@@ -466,7 +466,7 @@ export const en = {
   'orderSystem.confirmPayAll.markInactive': ')? This action will mark all orders as paid.',
   'orderSystem.confirmPayAll.confirm': 'Confirm Payment',
   'orderSystem.confirmPayAll.cancel': 'Cancel',
-  'orderSystem.payAllSuccess': 'All items paid successfully! 💳',
+  'orderSystem.payAllSuccess': 'All items paid successfully!',
   'orderSystem.confirmDeleteAll.title': 'Delete All Orders',
   'orderSystem.confirmDeleteAll.message': 'Are you sure you want to delete all orders for this table? ',
   'orderSystem.confirmDeleteAll.cannotUndo': 'This action cannot be undone.',

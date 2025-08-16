@@ -434,7 +434,7 @@ export const tr = {
   'orderSystem.confirmPayAll.markInactive': ')? Bu işlem tüm siparişleri ödenmiş olarak işaretleyecek.',
   'orderSystem.confirmPayAll.confirm': 'Ödemeyi Onayla',
   'orderSystem.confirmPayAll.cancel': 'İptal',
-  'orderSystem.payAllSuccess': 'Tüm ürünler başarıyla ödendi! 💳',
+  'orderSystem.payAllSuccess': 'Tüm ürünler başarıyla ödendi!',
   'orderSystem.confirmDeleteAll.title': 'Tüm Siparişleri Sil',
   'orderSystem.confirmDeleteAll.message': 'Bu masa için tüm siparişleri silmek istediğinizden emin misiniz? ',
   'orderSystem.confirmDeleteAll.cannotUndo': 'Bu işlem geri alınamaz.',
