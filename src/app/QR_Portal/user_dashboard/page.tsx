@@ -1418,17 +1418,18 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
     setShowEditCategoryForm(true)
   }
 
-  const handleEditItem = (item: any) => {
-    setEditingItem(item)
-    setEditItemForm({
-      name: item.name,
-      price: item.price?.toString() || '',
-      description: item.description || '',
-      stock: item.stock?.true,
-      menuImage: null
-    })
-    setShowEditItemForm(true)
-  }
+ const handleEditItem = (item: any) => {
+  setEditingItem(item)
+  setEditItemForm({
+    name: item.name,
+    price: item.price?.toString() || '',
+    description: item.description || '',
+    stock: item.stock ?? true,
+    menuImage: null
+  })
+  setShowEditItemForm(true)
+}
+
 
   const handleUpdateCategory = async () => {
     if (!editingCategory) return
