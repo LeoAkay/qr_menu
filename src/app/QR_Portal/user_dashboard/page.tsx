@@ -6,7 +6,8 @@ import { QRCodeSVG } from 'qrcode.react'
 import { io } from "socket.io-client";
 import { ToastContainer, toast } from 'react-toastify';
 import { useI18n } from '../../i18n/I18nContext'
-import LanguageSwitcher from '../../components/LanguageSwitcher'
+import { Globe } from 'lucide-react'
+
 
 // Utility function to format prices with thousand separators
 const formatPrice = (price: number): string => {
@@ -97,7 +98,7 @@ interface Order {
 }
 
 export default function UserDashboard() {
-  const { t } = useI18n()
+  const { t, locale, setLocale } = useI18n()
   const router = useRouter()
   const [userData, setUserData] = useState<UserData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -424,7 +425,6 @@ export default function UserDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <LanguageSwitcher />
       
       {/* Notification Popup */}
       {newOrderNotification && (
@@ -510,6 +510,15 @@ export default function UserDashboard() {
 
         {/* Right Buttons */}
         <div className="flex items-center gap-3 ml-4 flex-1 justify-end">
+          <button
+            onClick={() => setLocale(locale === 'en' ? 'tr' : 'en')}
+            className="p-2 bg-black hover:bg-gray-800 rounded-full transition flex items-center gap-2"
+            title={t('language.switch')}
+          >
+            <Globe className="w-5 h-5 text-white" />
+            <span className="text-white text-sm font-medium hidden sm:inline">{locale === 'en' ? 'EN' : 'TR'}</span>
+          </button>
+
           <button
             onClick={() => setActiveTab('contactUs')}
             aria-label={t('dashboard.contactUs.button')}

@@ -3,10 +3,11 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useI18n } from '../../i18n/I18nContext'
-import LanguageSwitcher from '../../components/LanguageSwitcher'
+import { Globe } from 'lucide-react'
+
 
 export default function UserLoginPage() {
-  const { t } = useI18n()
+  const { t, locale, setLocale } = useI18n()
   const router = useRouter()
   const [userName, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -52,9 +53,15 @@ export default function UserLoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
-      <LanguageSwitcher />
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Header */}
+      <header className="relative z-20 py-6 px-4">
+        <div className="max-w-7xl mx-auto text-center">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-gray-900 mb-8 sm:mb-12">{t('userLogin.title')}</h1>
+        </div>
+      </header>
       
+      <div className="flex items-center justify-center min-h-screen relative">
       {/* Animated Background Circles */}
       <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-white">
         {/* Purple circles */}
@@ -70,7 +77,6 @@ export default function UserLoginPage() {
 
       {/* Login Form */}
       <div className="relative z-10 w-full max-w-md sm:max-w-xl mx-auto px-3 sm:px-6">
-  <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-center text-gray-900 mb-8 sm:mb-12">{t('userLogin.title')}</h1>
   <div className="bg-white/20 backdrop-blur-md border border-white/30 rounded-2xl p-4 sm:p-8 shadow-2xl">
     <div className="space-y-4 sm:space-y-6">
             {/* Username Input */}
@@ -143,6 +149,7 @@ export default function UserLoginPage() {
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   )

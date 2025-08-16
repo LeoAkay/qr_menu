@@ -6,7 +6,8 @@ import HTMLFlipBook from 'react-pageflip';
 import { ToastContainer, toast } from 'react-toastify';
 import Confetti from 'react-confetti';
 import { useI18n } from '../../../i18n/I18nContext'
-import LanguageSwitcher from '../../../components/LanguageSwitcher'
+import { Globe } from 'lucide-react'
+
 // Utility function to format prices with thousand separators
 const formatPrice = (price: number): string => {
   return price.toLocaleString('en-US', {
@@ -61,7 +62,7 @@ interface CartItem {
 }
 
 export default function MenuPage() {
-  const { t } = useI18n()
+  const { t, locale, setLocale } = useI18n()
   const params = useParams()
   const companyId = params.companyId as string
   const [company, setCompany] = useState<Company | null>(null)
@@ -531,27 +532,37 @@ if (company && showWelcoming) {
       {/* Header - Hidden for PDF menus */}
       {getEffectiveMenuType() !== 'pdf' && (
         <header className="py-2 px-4 text-center bg-opacity-90 backdrop-blur-sm relative">
-          <div className="max-w-4xl mx-auto">
-            {/* Company Logo */}
-            {company.C_Logo_Image && (
-              <div className="mb-1">
-                <img 
-                  src={`/api/AdminPanel/company/image/${company.id}/logo?${Date.now()}`}
-                  alt={t('menu.company.logo')}
-                  className="max-w-16 max-h-16 mx-auto rounded-lg shadow-lg"
-                />
-              </div>
-            )}
-            
-            <h1 className="text-sm font-bold">
-              {restaurantName}
-            </h1>
+          <div className="max-w-4xl mx-auto flex justify-between items-center">
+            <div className="flex-1"></div>
+            <div className="flex-1 text-center">
+              {/* Company Logo */}
+              {company.C_Logo_Image && (
+                <div className="mb-1">
+                  <img 
+                    src={`/api/AdminPanel/company/image/${company.id}/logo?${Date.now()}`}
+                    alt={t('menu.company.logo')}
+                    className="max-w-16 max-h-16 mx-auto rounded-lg shadow-lg"
+                  />
+                </div>
+              )}
+              
+              <h1 className="text-sm font-bold">
+                {restaurantName}
+              </h1>
+            </div>
+            <div className="flex-1 flex justify-end">
+              <button
+                onClick={() => setLocale(locale === 'en' ? 'tr' : 'en')}
+                className="bg-black text-white border border-gray-800 rounded-lg px-3 py-2 text-sm font-medium hover:bg-gray-800 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
+                title={t('language.switch')}
+              >
+                <Globe className="w-4 h-4" />
+                <span className="hidden sm:inline">{locale === 'en' ? 'EN' : 'TR'}</span>
+              </button>
+            </div>
           </div>
         </header>
       )}
-      
-      {/* Language Switcher */}
-      <LanguageSwitcher />
       
       {/* Shopping Cart Icon - Only show if order system is enabled */}
       {company?.orderSystem && (

@@ -3,10 +3,11 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { useI18n } from '../../i18n/I18nContext'
-import LanguageSwitcher from '../../components/LanguageSwitcher'
+import { Globe } from 'lucide-react'
+
 
 export default function GetStartedPage() {
-  const { t } = useI18n()
+  const { t, locale, setLocale } = useI18n()
   const [form, setForm] = useState({
     name: '',
     surname: '',
@@ -51,8 +52,28 @@ export default function GetStartedPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center px-4 py-16 relative overflow-hidden">
-      <LanguageSwitcher />
+    <div className="min-h-screen bg-white relative overflow-hidden">
+      {/* Header */}
+      <header className="relative z-20 py-6 px-4">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <Link
+            href="/"
+            className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+          >
+            {t('getStarted.return')}
+          </Link>
+                     <button
+             onClick={() => setLocale(locale === 'en' ? 'tr' : 'en')}
+             className="bg-black text-white border border-gray-800 rounded-lg px-3 py-2 text-sm font-medium hover:bg-gray-800 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
+             title={t('language.switch')}
+           >
+             <Globe className="w-4 h-4" />
+             <span className="hidden sm:inline">{locale === 'en' ? 'EN' : 'TR'}</span>
+           </button>
+        </div>
+      </header>
+      
+      <div className="flex items-center justify-center px-4 py-16 relative">
       
       <div className="absolute top-0 left-0 w-48 h-48 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full mix-blend-multiply opacity-70 animate-blob"></div>
       <div className="absolute top-0 right-0 w-56 h-56 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-full mix-blend-multiply opacity-70 animate-blob animation-delay-2000"></div>
@@ -60,14 +81,7 @@ export default function GetStartedPage() {
       <div className="absolute top-1/4 right-1/4 w-44 h-44 bg-gradient-to-br from-pink-300 to-pink-500 rounded-full mix-blend-multiply opacity-70 animate-blob animation-delay-1000"></div>
       <div className="absolute bottom-1/4 left-1/3 w-40 h-40 bg-gradient-to-br from-pink-400 to-rose-400 rounded-full mix-blend-multiply opacity-70 animate-blob animation-delay-3000"></div>
       <div className="absolute bottom-0 right-0 w-60 h-60 bg-gradient-to-br from-pink-300 to-pink-500 rounded-full mix-blend-multiply opacity-70 animate-blob animation-delay-5000"></div>
-      {!submitted &&(<div className="mt-8 text-center">
-        <Link
-          href="/"
-          className="absolute right-5 top-6 bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-semibold text-lg"
-        >
-          {t('getStarted.return')}
-        </Link> 
-        </div>)}
+
       
 
         

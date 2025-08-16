@@ -1,16 +1,15 @@
 'use client'
 
 import Link from 'next/link'
-import { Upload, Paintbrush, QrCode, Eye } from 'lucide-react'
+import { Upload, Paintbrush, QrCode, Eye, Globe } from 'lucide-react'
 import { useI18n } from './i18n/I18nContext'
-import LanguageSwitcher from './components/LanguageSwitcher'
+
 
 export default function HomePage() {
-  const { t } = useI18n()
+  const { t, locale, setLocale } = useI18n()
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 relative overflow-hidden">
-      <LanguageSwitcher />
       
       {/* Animated Blobs */}
       <div className="absolute top-0 left-0 w-48 h-48 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full mix-blend-multiply opacity-70 animate-blob"></div>
@@ -23,13 +22,26 @@ export default function HomePage() {
       {/* Header */}
        <header className="py-8">
   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div className="text-center">
-      <h1 className="text-5xl font-bold text-gray-900 mb-4">{t('main.title')}</h1>
-      <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-        {t('main.subtitle')}
-      </p>
+    <div className="flex justify-between items-center mb-8">
+      <div className="flex-1"></div>
+      <div className="flex-1 text-center">
+        <h1 className="text-5xl font-bold text-gray-900 mb-4">{t('main.title')}</h1>
+        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          {t('main.subtitle')}
+        </p>
+      </div>
+             <div className="flex-1 flex justify-end">
+         <button
+           onClick={() => setLocale(locale === 'en' ? 'tr' : 'en')}
+           className="fixed top-4 right-4 z-50 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-white hover:border-gray-300 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
+           title={t('language.switch')}
+         >
+           <Globe className="w-4 h-4" />
+           <span className="hidden sm:inline">{locale === 'en' ? 'EN' : 'TR'}</span>
+         </button>
+       </div>
     </div>
-    <div className="mt-8 text-center">
+    <div className="text-center">
       <Link
         href="/QR_Portal/get_started"
         className="inline-block bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-semibold text-lg"

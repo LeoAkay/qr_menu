@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import { io } from 'socket.io-client'
 import { toast } from 'react-toastify';
 import { useI18n } from '../../i18n/I18nContext'
-import LanguageSwitcher from '../../components/LanguageSwitcher'
+import { Globe } from 'lucide-react'
+
 
 
 // Utility function to format prices with thousand separators
@@ -60,7 +61,7 @@ interface UserData {
 }
 
 export default function OrderSystemPage() {
-  const { t } = useI18n()
+  const { t, locale, setLocale } = useI18n()
   const router = useRouter()
   const [userData, setUserData] = useState<UserData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -141,7 +142,6 @@ export default function OrderSystemPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-300 to-pink-300">
-      <LanguageSwitcher />
       {/* Header */}
       <header className="bg-white bg-opacity-90 backdrop-blur-md shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -211,6 +211,17 @@ export default function OrderSystemPage() {
               </div>
               
               <h1 className="text-2xl font-bold text-black-800">{t('orderSystem.pageTitle')}</h1>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => setLocale(locale === 'en' ? 'tr' : 'en')}
+                className="bg-black text-white border border-gray-800 rounded-lg px-3 py-2 text-sm font-medium hover:bg-gray-800 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
+                title={t('language.switch')}
+              >
+                <Globe className="w-4 h-4" />
+                <span className="hidden sm:inline">{locale === 'en' ? 'EN' : 'TR'}</span>
+              </button>
             </div>
           </div>
         </div>
@@ -447,7 +458,6 @@ useEffect(() => {
   }
   return (
     <div>
-      <LanguageSwitcher />
       
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-4xl font-bold text-white">{t('orderSystem.title')}</h2>
