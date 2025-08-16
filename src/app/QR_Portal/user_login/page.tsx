@@ -2,8 +2,11 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useI18n } from '../../i18n/I18nContext'
+import LanguageSwitcher from '../../components/LanguageSwitcher'
 
 export default function UserLoginPage() {
+  const { t } = useI18n()
   const router = useRouter()
   const [userName, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -26,7 +29,7 @@ export default function UserLoginPage() {
 
       if (!res.ok) {
         const errorData = await res.json()
-        throw new Error(errorData.error || 'Login failed')
+        throw new Error(errorData.error || t('userLogin.loginFailed'))
       }
 
       const data = await res.json()
@@ -35,7 +38,7 @@ export default function UserLoginPage() {
 
       router.push('/QR_Portal/user_dashboard')
     } catch (err: any) {
-      setError(err.message || 'Invalid credentials')
+      setError(err.message || t('userLogin.invalidCredentials'))
       console.error('Login error:', err)
     } finally {
       setLoading(false)
@@ -50,6 +53,8 @@ export default function UserLoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
+      <LanguageSwitcher />
+      
       {/* Animated Background Circles */}
       <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-white">
         {/* Purple circles */}
@@ -65,17 +70,17 @@ export default function UserLoginPage() {
 
       {/* Login Form */}
       <div className="relative z-10 w-full max-w-md sm:max-w-xl mx-auto px-3 sm:px-6">
-  <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-center text-gray-900 mb-8 sm:mb-12">QR Menu System</h1>
+  <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-center text-gray-900 mb-8 sm:mb-12">{t('userLogin.title')}</h1>
   <div className="bg-white/20 backdrop-blur-md border border-white/30 rounded-2xl p-4 sm:p-8 shadow-2xl">
     <div className="space-y-4 sm:space-y-6">
             {/* Username Input */}
             <div>
               <label className="block text-black-700 text-sm font-medium mb-2">
-                Username
+                {t('userLogin.username')}
               </label>
               <input
                 type="text"
-                placeholder="Username"
+                placeholder={t('userLogin.username')}
                 value={userName}
                 onChange={(e) => setUsername(e.target.value)}
                 onKeyPress={handleKeyPress}
@@ -87,17 +92,17 @@ export default function UserLoginPage() {
             {/* Password Input */}
             <div className="relative">
   <label className="block text-black-700 text-sm font-medium mb-2">
-    Password
+    {t('userLogin.password')}
   </label>
   
   <div className="relative">
   <input
     type={showPassword ? 'text' : 'password'}
-    placeholder="Password"
+    placeholder={t('userLogin.password')}
     value={password}
     onChange={(e) => setPassword(e.target.value)}
     onKeyPress={handleKeyPress}
-    className="w-full px-3 sm:px-4 py-2 sm:py-3 pr-8 sm:pr-12 bg-white/80 border border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200 text-gray-800 placeholder-gray-400 transition-all text-base sm:text-lg"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 pr-8 sm:pr-12 bg-white/80 border border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200 text-gray-800 placeholder-gray-400 transition-all text-base sm:text-lg"
     disabled={loading}
   />
 
@@ -127,7 +132,7 @@ export default function UserLoginPage() {
               disabled={loading || !userName || !password}
               className="w-full bg-blue-600 hover:bg-purple-700 text-white py-3 px-4 rounded-lg font-medium text-lg transition-all duration-200 disabled:bg-blue-600 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >
-              {loading ? 'Signing In...' : 'Sign In'}
+              {loading ? t('userLogin.signingIn') : t('userLogin.signIn')}
             </button>
           </div>
           

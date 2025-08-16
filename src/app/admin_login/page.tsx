@@ -23,7 +23,10 @@ export default function LoginPage() {
         credentials: 'include',
       })
 
-      if (!res.ok) throw new Error('Login failed')
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Login failed')
+      }
 
       const data = await res.json()
       localStorage.setItem('adminId', data.admin.id);
@@ -31,8 +34,10 @@ export default function LoginPage() {
 
       router.push('/admin_login/view_companies')
     } catch (err) {
-      setError('Invalid credentials')
+      setError(err instanceof Error ? err.message : 'Invalid credentials')
       console.error('Login error:', err)
+    } finally {
+      setLoading(false)
     }
   }
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -40,6 +45,8 @@ export default function LoginPage() {
       handleLogin()
     }
   }
+
+
 
    return (
     <main className="flex items-center justify-center min-h-screen p-6">
@@ -80,8 +87,12 @@ export default function LoginPage() {
         <button
           onClick={handleLogin}
           onKeyPress={handleKeyPress}
-          disabled={loading || !userName || !password}
-          className="w-full bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 transition font-semibold text-lg"
+          disabled={loading || !userName.trim() || !password.trim()}
+          className={`w-full py-3 rounded-md transition font-semibold text-lg ${
+            loading || !userName.trim() || !password.trim()
+              ? 'bg-gray-400 cursor-not-allowed'
+              : 'bg-blue-600 hover:bg-blue-700 text-white'
+          }`}
         >
          {loading ? 'Signing In...' : 'Sign In'}
         </button>

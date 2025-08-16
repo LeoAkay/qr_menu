@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { io } from 'socket.io-client'
 import { toast } from 'react-toastify';
+import { useI18n } from '../../i18n/I18nContext'
+import LanguageSwitcher from '../../components/LanguageSwitcher'
 
 
 // Utility function to format prices with thousand separators
@@ -58,6 +60,7 @@ interface UserData {
 }
 
 export default function OrderSystemPage() {
+  const { t } = useI18n()
   const router = useRouter()
   const [userData, setUserData] = useState<UserData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -120,7 +123,7 @@ export default function OrderSystemPage() {
       <div className="min-h-screen bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <p className="mt-4 text-gray-600">{t('orderSystem.loading')}</p>
         </div>
       </div>
     )
@@ -130,7 +133,7 @@ export default function OrderSystemPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600">No company data available</p>
+          <p className="text-gray-600">{t('orderSystem.noCompanyData')}</p>
         </div>
       </div>
     )
@@ -138,6 +141,7 @@ export default function OrderSystemPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-300 to-pink-300">
+      <LanguageSwitcher />
       {/* Header */}
       <header className="bg-white bg-opacity-90 backdrop-blur-md shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -167,7 +171,7 @@ export default function OrderSystemPage() {
                         className="w-full text-left px-4 py-3 bg-blue-200 hover:bg-blue-300 flex items-center space-x-3 transition-colors"
                       >
                         <span className="text-2xl">🍽️</span>
-                        <span className="font-medium text-gray-700">Menu</span>
+                        <span className="font-medium text-gray-700">{t('orderSystem.dropdown.menu')}</span>
                       </button>
                       
                       <button
@@ -175,7 +179,7 @@ export default function OrderSystemPage() {
                         className="w-full text-left px-4 py-3 bg-green-200 hover:bg-green-300 flex items-center space-x-3 transition-colors"
                       >
                         <span className="text-2xl">📄</span>
-                        <span className="font-medium text-gray-700">PDF Upload</span>
+                        <span className="font-medium text-gray-700">{t('orderSystem.dropdown.pdfUpload')}</span>
                       </button>
                       
                       <button
@@ -183,7 +187,7 @@ export default function OrderSystemPage() {
                         className="w-full text-left px-4 py-3 bg-yellow-200 hover:bg-yellow-300 flex items-center space-x-3 transition-colors"
                       >
                         <span className="text-2xl">⚙️</span>
-                        <span className="font-medium text-gray-700">Manual Menu</span>
+                        <span className="font-medium text-gray-700">{t('orderSystem.dropdown.manualMenu')}</span>
                       </button>
                       
                       <button
@@ -191,7 +195,7 @@ export default function OrderSystemPage() {
                         className="w-full text-left px-4 py-3 bg-pink-200 hover:bg-pink-300 flex items-center space-x-3 transition-colors"
                       >
                         <span className="text-2xl">🎨</span>
-                        <span className="font-medium text-gray-700">Theme Settings</span>
+                        <span className="font-medium text-gray-700">{t('orderSystem.dropdown.themeSettings')}</span>
                       </button>
                       
                       <button
@@ -199,14 +203,14 @@ export default function OrderSystemPage() {
                         className="w-full text-left px-4 py-3 bg-indigo-200 hover:bg-indigo-300 flex items-center space-x-3 transition-colors"
                       >
                         <span className="text-2xl">📊</span>
-                        <span className="font-medium text-gray-700">Analytics</span>
+                        <span className="font-medium text-gray-700">{t('orderSystem.dropdown.analytics')}</span>
                       </button>
                     </div>
                   </div>
                 )}
               </div>
               
-              <h1 className="text-2xl font-bold text-black-800">Order System</h1>
+              <h1 className="text-2xl font-bold text-black-800">{t('orderSystem.pageTitle')}</h1>
             </div>
           </div>
         </div>
@@ -221,6 +225,7 @@ export default function OrderSystemPage() {
 }
 
 function OrderSystemSection({ companyId }: { companyId: string }) {
+  const { t } = useI18n()
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');
@@ -287,10 +292,10 @@ const handleCountChange = (itemId: string, delta: number, max: number) => {
       if (Array.isArray(data.orders)) {
         setOrders(data.orders);
       } else {
-        setError('Invalid order data received');
+        setError(t('orderSystem.connectionStatus.invalidData'));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch orders');
+      setError(err instanceof Error ? err.message : t('orderSystem.connectionStatus.fetchFailed'));
     } finally {
       setLoading(false);
     }
@@ -298,7 +303,7 @@ const handleCountChange = (itemId: string, delta: number, max: number) => {
 
   useEffect(() => {
   if (newOrderNotification) {
-    toast.success('New Order! 🎉', {
+    toast.success(t('orderSystem.newOrder'), {
       position: 'top-right',
       autoClose: 10000,
     })
@@ -321,7 +326,7 @@ useEffect(() => {
 
   socket.on('connect_error', (error) => {
     setConnectionStatus('disconnected');
-    setError('Failed to connect to real-time updates...');
+    setError(t('orderSystem.connectionStatus.failed'));
   });
 
   socket.on('new-order', (newOrder: Order) => {
@@ -420,7 +425,7 @@ useEffect(() => {
     return (
       <div className="text-center py-8">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-        <p className="text-gray-600">Loading orders...</p>
+        <p className="text-gray-600">{t('orderSystem.loading')}</p>
       </div>
     );
   }
@@ -435,21 +440,23 @@ useEffect(() => {
           onClick={() => window.location.reload()}
           className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors"
         >
-          Retry
+          {t('orderSystem.retry')}
         </button>
       </div>
     );
   }
   return (
     <div>
+      <LanguageSwitcher />
+      
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-4xl font-bold text-white">Orders</h2>
+        <h2 className="text-4xl font-bold text-white">{t('orderSystem.title')}</h2>
         <div className="flex items-center space-x-4">
           <button
             onClick={fetchOrders}
             className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm transition-colors"
           >
-            🔄 Refresh
+            {t('orderSystem.refresh')}
           </button>
           <div className={`flex items-center space-x-1 text-sm ${
             connectionStatus === 'connected' ? 'text-green-600' : 
@@ -459,7 +466,7 @@ useEffect(() => {
               connectionStatus === 'connected' ? 'bg-green-500' : 
               connectionStatus === 'connecting' ? 'bg-yellow-500' : 'bg-red-500'
             }`}></div>
-            <span className="capitalize">{connectionStatus}</span>
+            <span className="capitalize">{t(`orderSystem.connectionStatus.${connectionStatus}`)}</span>
           </div>
         </div>
       </div>
@@ -467,8 +474,8 @@ useEffect(() => {
       {Object.keys(groupedOrders).length === 0 ? (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">📋</div>
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">No Active Orders</h3>
-          <p className="text-gray-500">Orders will appear here when customers place them.</p>
+          <h3 className="text-xl font-semibold text-gray-700 mb-2">{t('orderSystem.noOrders.title')}</h3>
+          <p className="text-gray-500">{t('orderSystem.noOrders.subtitle')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -484,22 +491,22 @@ useEffect(() => {
     >
       <div className="flex items-center justify-between mb-4">
         <span className="text-lg font-semibold text-purple-700">
-          Table #{latestOrder.tableNumber}
+          {t('orderSystem.table')}{latestOrder.tableNumber}
         </span>
         <span className="text-sm text-gray-500">
           {new Date(latestOrder.createdAt).toLocaleString()}
         </span>
       </div>
                 <div className="mb-2 flex items-center justify-between">
-                  <span className="font-medium text-gray-700">Total:</span>
+                  <span className="font-medium text-gray-700">{t('orderSystem.total')}</span>
                   <span className="font-bold text-green-600">₺{formatPrice(totalAmount)}</span>
                 </div>
                 <div className="mb-2 text-sm text-gray-600 italic">
-                  <span className="font-medium text-purple-600">Special Notes:</span>{' '}
-                  {tableOrders.map(o => o.note || 'No special note').join(', ')}
+                  <span className="font-medium text-purple-600">{t('orderSystem.specialNotes')}</span>{' '}
+                  {tableOrders.map(o => o.note || t('orderSystem.noSpecialNote')).join(', ')}
                 </div>
                 <div>
-                  <span className="font-medium text-gray-700">Items:</span>
+                  <span className="font-medium text-gray-700">{t('orderSystem.items')}</span>
                   <ul className="mt-2 space-y-1">
 {allItems.map((item) => {
   const unpaid = item.quantity - item.paidQuantity;
@@ -507,9 +514,9 @@ useEffect(() => {
 
   return (
     <li key={item.id} className="grid grid-cols-7 items-center gap-2 bg-purple-50 rounded px-2 py-1">
-      <span className="truncate col-span-2">{item.subCategory?.name || 'Unknown'}</span>
-      <span className="text-sm text-center">Qty: {item.quantity}</span>
-      <span className="text-sm text-center text-green-700">Paid: {item.paidQuantity}</span>
+              <span className="truncate col-span-2">{item.subCategory?.name || t('orderSystem.unknown')}</span>
+      <span className="text-sm text-center">{t('orderSystem.quantity')} {item.quantity}</span>
+      <span className="text-sm text-center text-green-700">{t('orderSystem.paid')} {item.paidQuantity}</span>
 
       {/* Counter controls */}
       <div className="flex items-center justify-center space-x-2">
@@ -545,11 +552,11 @@ useEffect(() => {
             });
             setActionCounts(prev => ({ ...prev, [item.id]: 0 }));
             fetchOrders();
-            toast.success(`Deleted ${count} item(s)`);
+            toast.success(t('orderSystem.deleteItemSuccess').replace('{count}', count.toString()));
           }}
           className="text-xs bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded disabled:bg-gray-300"
         >
-          Delete
+          {t('orderSystem.deleteButton')}
         </button>
       <div className="flex space-x-2">
         <button
@@ -566,11 +573,11 @@ useEffect(() => {
             });
             setActionCounts(prev => ({ ...prev, [item.id]: 0 }));
             fetchOrders();
-            toast.success(`Paid ${count} item(s)`);
+            toast.success(t('orderSystem.payItemSuccess').replace('{count}', count.toString()));
           }}
           className="text-xs bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded disabled:bg-gray-300"
         >
-          Pay
+          {t('orderSystem.payButton')}
         </button>
 
         
@@ -588,7 +595,7 @@ useEffect(() => {
       setShowDeleteAllConfirm(true);
     }}
   >
-    Delete All
+    {t('orderSystem.deleteAllButton')}
   </button>
 
   <button
@@ -606,7 +613,7 @@ useEffect(() => {
       setShowPayAllConfirm(true);
     }}
   >
-    Pay All
+    {t('orderSystem.payAllButton')}
   </button>
 </div>
 
@@ -619,10 +626,10 @@ useEffect(() => {
       {/* Confirmation Dialogs */}
       <ConfirmationDialog
         isOpen={showPayAllConfirm}
-        title="Confirm Payment"
-        message={`Are you sure you want to pay all remaining items for Table #${payAllData?.tableOrders[0]?.tableNumber} (₺${formatPrice(payAllData?.totalToPay ?? 0)})? This action will mark all orders as paid and inactive.`}
-        confirmText="Confirm Payment"
-        cancelText="Cancel"
+        title={t('orderSystem.confirmPayAll.title')}
+        message={`${t('orderSystem.confirmPayAll.message')}${payAllData?.tableOrders[0]?.tableNumber}${t('orderSystem.confirmPayAll.total')}${formatPrice(payAllData?.totalToPay ?? 0)}${t('orderSystem.confirmPayAll.markInactive')}`}
+        confirmText={t('orderSystem.confirmPayAll.confirm')}
+        cancelText={t('orderSystem.confirmPayAll.cancel')}
         onConfirm={async () => {
           if (!payAllData) return;
           
@@ -648,7 +655,7 @@ useEffect(() => {
           setPayAllData(null);
           fetchOrders();
           
-          toast.success('All items paid successfully! 💳', {
+          toast.success(t('orderSystem.payAllSuccess'), {
             position: 'top-right',
             autoClose: 3000,
           });
@@ -662,10 +669,10 @@ useEffect(() => {
 
       <ConfirmationDialog
         isOpen={showDeleteAllConfirm}
-        title="Delete All Orders"
-        message="Are you sure you want to delete all orders for this table? This action cannot be undone."
-        confirmText="Delete All"
-        cancelText="Cancel"
+        title={t('orderSystem.confirmDeleteAll.title')}
+        message={`${t('orderSystem.confirmDeleteAll.message')}${t('orderSystem.confirmDeleteAll.cannotUndo')}`}
+        confirmText={t('orderSystem.confirmDeleteAll.confirm')}
+        cancelText={t('orderSystem.confirmDeleteAll.cancel')}
         onConfirm={async () => {
           if (!deleteAllData) return;
           
@@ -680,17 +687,17 @@ useEffect(() => {
               if (!res.ok) {
                 allSuccess = false;
                 console.error(`Failed to delete order ${order.id}`, await res.text());
-                toast.error(`Failed to delete order ${order.id}`);
+                toast.error(`${t('orderSystem.deleteOrderFailed')}${order.id}`);
               }
             } catch (err) {
               allSuccess = false;
               console.error(`Error deleting order ${order.id}`, err);
-              toast.error(`Error deleting order ${order.id}`);
+              toast.error(`${t('orderSystem.errorDeletingOrder')}${order.id}`);
             }
           }
 
           if (allSuccess) {
-            toast.success('All orders deleted successfully');
+            toast.success(t('orderSystem.deleteAllSuccess'));
           }
 
           setShowDeleteAllConfirm(false);

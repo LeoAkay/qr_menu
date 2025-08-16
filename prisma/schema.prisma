@@ -79,7 +79,7 @@ model SubCategory {
   mainCategoryId String
   menuImageUrl   String?
   price          Float?
-  description   String?
+  description    String?
   stock          Boolean      @default(true)
   orderItems     OrderItem[]
   mainCategory   MainCategory @relation(fields: [mainCategoryId], references: [id])

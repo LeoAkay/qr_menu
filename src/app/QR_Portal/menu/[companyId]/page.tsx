@@ -5,6 +5,8 @@ import { useParams } from 'next/navigation'
 import HTMLFlipBook from 'react-pageflip';
 import { ToastContainer, toast } from 'react-toastify';
 import Confetti from 'react-confetti';
+import { useI18n } from '../../../i18n/I18nContext'
+import LanguageSwitcher from '../../../components/LanguageSwitcher'
 // Utility function to format prices with thousand separators
 const formatPrice = (price: number): string => {
   return price.toLocaleString('en-US', {
@@ -16,9 +18,9 @@ const formatPrice = (price: number): string => {
 interface Company {
   id: string
   C_Name: string
-  C_Logo_Image?: any
-  Welcoming_Page?: any
-  pdfMenuUrl?: any
+  C_Logo_Image?: string | null
+  Welcoming_Page?: string | null
+  pdfMenuUrl?: string | null
   menuType?: string
   orderSystem?: boolean
 
@@ -30,7 +32,7 @@ interface Company {
       id: string
       name: string
       orderNo: number
-      menuImageUrl?: any
+      menuImageUrl?: string | null
       price?: number
       description?: string
       stock: boolean
@@ -59,6 +61,7 @@ interface CartItem {
 }
 
 export default function MenuPage() {
+  const { t } = useI18n()
   const params = useParams()
   const companyId = params.companyId as string
   const [company, setCompany] = useState<Company | null>(null)
@@ -84,7 +87,12 @@ export default function MenuPage() {
   const [showFinalOrderConfirm, setShowFinalOrderConfirm] = useState(false)
   const [pendingAction, setPendingAction] = useState<{
     type: 'addToCart' | 'cancel' | 'clearCart' | 'order' | 'removeItem' | 'finalOrder'
-    data?: any
+    data?: {
+      item?: { id: string; name: string; price: number; image?: string }
+      quantity?: number
+      itemId?: string
+      itemName?: string
+    }
   } | null>(null)
 
   // Font mapping function
@@ -157,13 +165,13 @@ export default function MenuPage() {
       const res = await fetch(`/api/QR_Panel/menu/${companyId}`)
       
       if (!res.ok) {
-        throw new Error('Menu not found')
+        throw new Error(t('menu.error.menuNotFound'))
       }
       
       const data = await res.json()
       setCompany(data.company)
     } catch (err: any) {
-      setError(err.message || 'Failed to load menu')
+      setError(err.message || t('menu.error.failedToLoad'))
       console.error('Menu fetch error:', err)
     } finally {
       setLoading(false)
@@ -237,7 +245,7 @@ export default function MenuPage() {
 
   const handleFinalOrderConfirm = () => {
     if (!tableNumber.trim()) {
-      toast.warn('Please enter your table number before confirming the order.')
+      toast.warn(t('menu.error.enterTableNumber'))
       return(<ToastContainer/>)
     }
     setPendingAction({ type: 'finalOrder' })
@@ -254,7 +262,7 @@ export default function MenuPage() {
 
     switch (pendingAction.type) {
       case 'addToCart':
-        if (pendingAction.data) {
+        if (pendingAction.data?.item && pendingAction.data?.quantity) {
           addToCart(pendingAction.data.item, pendingAction.data.quantity)
         }
         break
@@ -271,7 +279,7 @@ export default function MenuPage() {
         placeOrder()
         break
       case 'removeItem':
-        if (pendingAction.data) {
+        if (pendingAction.data?.itemId) {
           updateCartItemQuantity(pendingAction.data.itemId, 0)
         }
         break
@@ -318,17 +326,17 @@ export default function MenuPage() {
 
       if (response.ok) {
         const data = await response.json();
-        toast.success(`✅ Order confirmed`);
+        toast.success(t('menu.order.success'));
         clearCart();
         setShowCart(false);
       } else {
         const error = await response.json();
         console.error('Order failed:', error);
-        toast.error('❌ Failed to place the order. Please try again.');
+        toast.error(t('menu.order.failed'));
       }
     } catch (err) {
       console.error('Error placing order:', err);
-      toast.error('❌ Something went wrong. Please try again later.');
+      toast.error(t('menu.order.error'));
     }
   }
 
@@ -345,7 +353,7 @@ export default function MenuPage() {
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="text-center">
           <div className="text-4xl mb-4">😞</div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Menu Not Found</h1>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">{t('menu.error.menuNotFoundTitle')}</h1>
           <p className="text-gray-600">{error}</p>
         </div>
       </div>
@@ -357,8 +365,8 @@ export default function MenuPage() {
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="text-center">
           <div className="text-4xl mb-4">❓</div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">No Menu Available</h1>
-          <p className="text-gray-600">This restaurant hasn't set up their menu yet.</p>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">{t('menu.error.noMenuAvailableTitle')}</h1>
+          <p className="text-gray-600">{t('menu.error.noMenuAvailableDescription')}</p>
         </div>
       </div>
     )
@@ -446,7 +454,7 @@ if (company && showWelcoming) {
           setTimeout(() => setShowWelcoming(false), 300)
         }}
         className="absolute top-2 right-2 text-gray-600 hover:text-black bg-gray-200 hover:bg-gray-300 rounded-full w-8 h-8 flex items-center justify-center z-10"
-        aria-label="Close welcome screen"
+        aria-label={t('menu.welcoming.close')}
       >
         &times;
       </button>
@@ -454,7 +462,7 @@ if (company && showWelcoming) {
       {/* Welcoming image */}
         <img
           src={`/api/AdminPanel/company/image/${company.id}/welcoming?${Date.now()}`}
-          alt="Welcoming"
+          alt={t('menu.welcoming.welcoming')}
           className="w-full h-auto object-cover"
         />
     </div>
@@ -529,7 +537,7 @@ if (company && showWelcoming) {
               <div className="mb-1">
                 <img 
                   src={`/api/AdminPanel/company/image/${company.id}/logo?${Date.now()}`}
-                  alt="Company Logo"
+                  alt={t('menu.company.logo')}
                   className="max-w-16 max-h-16 mx-auto rounded-lg shadow-lg"
                 />
               </div>
@@ -541,6 +549,10 @@ if (company && showWelcoming) {
           </div>
         </header>
       )}
+      
+      {/* Language Switcher */}
+      <LanguageSwitcher />
+      
       {/* Shopping Cart Icon - Only show if order system is enabled */}
       {company?.orderSystem && (
         <button
@@ -584,9 +596,9 @@ if (company && showWelcoming) {
         ) : (
           <div className="text-center py-8 h-full">
             <div className="text-6xl mb-4">🍽️</div>
-            <h2 className="text-2xl font-bold mb-4">Menu Coming Soon</h2>
+            <h2 className="text-2xl font-bold mb-4">{t('menu.comingSoon.title')}</h2>
             <p className="text-lg opacity-80">
-              This restaurant is still setting up their menu. Please check back later!
+              {t('menu.comingSoon.description')}
             </p>
           </div>
         )}
@@ -600,7 +612,7 @@ if (company && showWelcoming) {
 >
           <div className="bg-white rounded-lg max-w-md w-full max-h-[80vh] overflow-hidden">
             <div className="p-4 border-b flex items-center justify-between">
-              <h2 className="text-xl font-bold">Shopping Cart</h2>
+              <h2 className="text-xl font-bold">{t('menu.cart.title')}</h2>
               <button
                 onClick={() => setShowCart(false)}
                 className="text-gray-500 hover:text-gray-700"
@@ -615,14 +627,14 @@ if (company && showWelcoming) {
               {/* Table Number Input */}
               <div className="mb-4">
                 <label htmlFor="tableNumber" className="block text-sm font-medium text-gray-700 mb-2">
-                  Table Number <span className="text-red-500">*</span>
+                  {t('menu.cart.tableNumber')} <span className="text-red-500">{t('menu.cart.tableNumberRequired')}</span>
                 </label>
                 <input
                   type="text"
                   id="tableNumber"
                   value={tableNumber}
                   onChange={(e) => setTableNumber(e.target.value)}
-                  placeholder="Enter your table number"
+                  placeholder={t('menu.cart.tableNumberPlaceholder')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
@@ -630,13 +642,13 @@ if (company && showWelcoming) {
               {/* Order Request/Notes Input */}
               <div className="mb-4">
                 <label htmlFor="orderRequest" className="block text-sm font-medium text-gray-700 mb-2">
-                  Special Requests or Notes
+                  {t('menu.cart.specialRequests')}
                 </label>
                 <textarea
                   id="orderRequest"
                   value={orderRequest}
                   onChange={(e) => setOrderRequest(e.target.value)}
-                  placeholder="Any special requests, allergies, or additional notes..."
+                  placeholder={t('menu.cart.specialRequestsPlaceholder')}
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                 />
@@ -645,7 +657,7 @@ if (company && showWelcoming) {
               {cart.length === 0 ? (
                 <div className="text-center py-8">
                   <div className="text-5xl mb-4">🛒</div>
-                  <p className="text-gray-500">Your cart is empty</p>
+                  <p className="text-gray-500">{t('menu.cart.empty')}</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -653,7 +665,7 @@ if (company && showWelcoming) {
                     <div key={item.id} className="flex items-center space-x-3 bg-gray-50 p-3 rounded-lg">
                       <div className="flex-1">
                         <h3 className="font-medium">{item.name}</h3>
-                        <p className="text-sm text-gray-600">₺{formatPrice(item.price)} each</p>
+                        <p className="text-sm text-gray-600">₺{formatPrice(item.price)} {t('menu.cart.each')}</p>
                       </div>
                       <div className="flex items-center space-x-2">
                         <button
@@ -688,15 +700,15 @@ if (company && showWelcoming) {
             {cart.length > 0 && (
               <div className="p-4 border-t">
                 <div className="flex justify-between items-center mb-4">
-                  <span className="text-lg font-bold">Total: ₺{formatPrice(getTotalPrice())}</span>
-                  <span className="text-sm text-gray-600">{getTotalItems()} items</span>
+                  <span className="text-lg font-bold">{t('menu.cart.total')} ₺{formatPrice(getTotalPrice())}</span>
+                  <span className="text-sm text-gray-600">{getTotalItems()} {t('menu.cart.items')}</span>
                 </div>
                 <div className="flex space-x-2">
                   <button
                     onClick={handleClearCartConfirm}
                     className="flex-1 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition-colors"
                   >
-                    Clear Cart
+                    {t('menu.cart.clear')}
                   </button>
                   <button
                     onClick={handleFinalOrderConfirm}
@@ -707,7 +719,7 @@ if (company && showWelcoming) {
                         : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     }`}
                   >
-                    Confirm Order
+                    {t('menu.cart.confirmOrder')}
                   </button>
 
                 </div>
@@ -720,10 +732,10 @@ if (company && showWelcoming) {
       {/* Confirmation Dialogs */}
       <ConfirmationDialog
         isOpen={showAddToCartConfirm}
-        title="Add to Cart"
-        message={`Are you sure you want to add ${pendingAction?.data?.quantity || 0} ${pendingAction?.data?.item?.name || 'item'} to your cart?`}
-        confirmText="Yes, Add to Cart"
-        cancelText="Cancel"
+        title={t('menu.dialog.addToCart.title')}
+        message={t('menu.dialog.addToCart.message').replace('{quantity}', String(pendingAction?.data?.quantity || 0)).replace('{itemName}', pendingAction?.data?.item?.name || 'item')}
+        confirmText={t('menu.dialog.addToCart.confirm')}
+        cancelText={t('menu.dialog.addToCart.cancel')}
         onConfirm={executePendingAction}
         onCancel={cancelPendingAction}
         confirmColor="bg-green-500 hover:bg-green-600"
@@ -731,10 +743,10 @@ if (company && showWelcoming) {
 
       <ConfirmationDialog
         isOpen={showCancelConfirm}
-        title="Cancel Selection"
-        message="Are you sure you want to cancel your selection?"
-        confirmText="Yes, Cancel"
-        cancelText="Keep Selection"
+        title={t('menu.dialog.cancelSelection.title')}
+        message={t('menu.dialog.cancelSelection.message')}
+        confirmText={t('menu.dialog.cancelSelection.confirm')}
+        cancelText={t('menu.dialog.cancelSelection.cancel')}
         onConfirm={executePendingAction}
         onCancel={cancelPendingAction}
         confirmColor="bg-red-500 hover:bg-red-600"
@@ -742,10 +754,10 @@ if (company && showWelcoming) {
 
       <ConfirmationDialog
         isOpen={showClearCartConfirm}
-        title="Clear Cart"
-        message="Are you sure you want to clear your cart? This will remove all items and cannot be undone."
-        confirmText="Clear Cart"
-        cancelText="Keep Items"
+        title={t('menu.dialog.clearCart.title')}
+        message={t('menu.dialog.clearCart.message')}
+        confirmText={t('menu.dialog.clearCart.confirm')}
+        cancelText={t('menu.dialog.clearCart.cancel')}
         onConfirm={executePendingAction}
         onCancel={cancelPendingAction}
         confirmColor="bg-red-500 hover:bg-red-600"
@@ -753,10 +765,10 @@ if (company && showWelcoming) {
 
       <ConfirmationDialog
         isOpen={showOrderConfirm}
-        title="Confirm Order"
-        message={`Are you sure you want to place this order for ₺${formatPrice(getTotalPrice())}? You cannot cancel after this confirmation. This is your final confirmation.`}
-        confirmText="Yes, Place Order"
-        cancelText="Review Order"
+        title={t('menu.dialog.confirmOrder.title')}
+        message={t('menu.dialog.confirmOrder.message').replace('{total}', String(formatPrice(getTotalPrice())))}
+        confirmText={t('menu.dialog.confirmOrder.confirm')}
+        cancelText={t('menu.dialog.confirmOrder.cancel')}
         onConfirm={executePendingAction}
         onCancel={cancelPendingAction}
         confirmColor="bg-green-500 hover:bg-green-600"
@@ -764,10 +776,10 @@ if (company && showWelcoming) {
 
       <ConfirmationDialog
         isOpen={showRemoveItemConfirm}
-        title="Remove Item"
-        message={`Are you sure you want to remove "${pendingAction?.data?.itemName || 'this item'}" from your cart?`}
-        confirmText="Yes, Remove"
-        cancelText="Keep Item"
+        title={t('menu.dialog.removeItem.title')}
+        message={t('menu.dialog.removeItem.message').replace('{itemName}', pendingAction?.data?.itemName || 'this item')}
+        confirmText={t('menu.dialog.removeItem.confirm')}
+        cancelText={t('menu.dialog.removeItem.cancel')}
         onConfirm={executePendingAction}
         onCancel={cancelPendingAction}
         confirmColor="bg-red-500 hover:bg-red-600"
@@ -777,19 +789,19 @@ if (company && showWelcoming) {
       <div className={`fixed inset-0 z-[60] flex items-center justify-center p-4 backdrop-blur-sm ${showFinalOrderConfirm ? 'block' : 'hidden'}`}>
         <div className="bg-white rounded-lg max-w-md w-full shadow-xl border border-gray-200 max-h-[80vh] overflow-y-auto">
           <div className="p-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Final Order Confirmation</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-4">{t('menu.dialog.finalOrder.title')}</h3>
             
             {/* Table Number */}
             <div className="mb-4 p-3 bg-blue-50 rounded-lg">
               <div className="flex items-center space-x-2">
-                <span className="font-semibold text-blue-800">Table Number:</span>
+                <span className="font-semibold text-blue-800">{t('menu.dialog.finalOrder.tableNumber')}</span>
                 <span className="text-lg font-bold text-blue-900">{tableNumber}</span>
               </div>
             </div>
 
             {/* Order Items */}
             <div className="mb-4">
-              <h4 className="font-semibold text-gray-800 mb-3">Order Items:</h4>
+              <h4 className="font-semibold text-gray-800 mb-3">{t('menu.dialog.finalOrder.orderItems')}</h4>
               <div className="space-y-2 max-h-40 overflow-y-auto">
                 {cart.map((item) => (
                   <div key={item.id} className="flex justify-between items-center p-2 bg-gray-50 rounded">
@@ -806,26 +818,26 @@ if (company && showWelcoming) {
             {/* Special Requests */}
             {orderRequest.trim() && (
               <div className="mb-4 p-3 bg-yellow-50 rounded-lg">
-                <div className="flex items-start space-x-2">
-                  <svg className="w-5 h-5 text-yellow-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  <div>
-                    <span className="font-semibold text-yellow-800">Special Requests:</span>
-                    <p className="text-sm text-yellow-700 mt-1">{orderRequest}</p>
+                                  <div className="flex items-start space-x-2">
+                    <svg className="w-5 h-5 text-yellow-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <div>
+                      <span className="font-semibold text-yellow-800">{t('menu.specialRequests.title')}</span>
+                      <p className="text-sm text-yellow-700 mt-1">{orderRequest}</p>
+                    </div>
                   </div>
-                </div>
               </div>
             )}
 
             {/* Total */}
             <div className="mb-6 p-3 bg-green-50 rounded-lg">
               <div className="flex justify-between items-center">
-                <span className="font-semibold text-green-800">Total Amount:</span>
+                <span className="font-semibold text-green-800">{t('menu.total.title')}</span>
                 <span className="text-xl font-bold text-green-900">₺{formatPrice(getTotalPrice())}</span>
               </div>
               <div className="text-sm text-green-700 mt-1">
-                {getTotalItems()} item{getTotalItems() !== 1 ? 's' : ''}
+                {getTotalItems()} {getTotalItems() !== 1 ? t('menu.total.itemsPlural') : t('menu.total.items')}
               </div>
             </div>
 
@@ -834,13 +846,13 @@ if (company && showWelcoming) {
                 onClick={cancelPendingAction}
                 className="flex-1 px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
               >
-                Review Order
+                {t('menu.reviewOrder')}
               </button>
               <button
                 onClick={executePendingAction}
                 className="flex-1 px-4 py-2 text-white bg-green-500 rounded-lg hover:bg-green-600 transition-colors"
               >
-                Place Order
+                {t('menu.placeOrder')}
               </button>
             </div>
           </div>
@@ -851,7 +863,7 @@ if (company && showWelcoming) {
         {/* Social Media Links */}
         {(theme.facebookUrl || theme.instagramUrl || theme.xUrl) && (
           <div className="mb-1">
-            <h3 className="text-xs font-medium mb-1 opacity-80">Follow Us</h3>
+            <h3 className="text-xs font-medium mb-1 opacity-80">{t('menu.footer.followUs')}</h3>
             <div className="flex justify-center space-x-2">
               {theme.facebookUrl && (
                 <a
@@ -859,7 +871,7 @@ if (company && showWelcoming) {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center w-8 h-8 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-all duration-300 hover:scale-110 shadow-sm"
-                  title="Facebook"
+                  title={t('menu.footer.facebook')}
                 >
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
@@ -873,7 +885,7 @@ if (company && showWelcoming) {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-full transition-all duration-300 hover:scale-110 shadow-sm"
-                  title="Instagram"
+                  title={t('menu.footer.instagram')}
                 >
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
@@ -887,7 +899,7 @@ if (company && showWelcoming) {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center w-8 h-8 bg-black hover:bg-gray-800 text-white rounded-full transition-all duration-300 hover:scale-110 shadow-sm"
-                  title="X (Twitter)"
+                  title={t('menu.footer.twitter')}
                 >
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
@@ -899,7 +911,7 @@ if (company && showWelcoming) {
         )}
         
         <p className="text-xs opacity-60 leading-tight">
-          Powered by QR Menu System
+          {t('menu.footer.poweredBy')}
         </p>
       </footer>
     </div>
@@ -908,6 +920,7 @@ if (company && showWelcoming) {
 
 // Flipbook PDF Viewer Component
 function PDFFlipbook({ pdfUrl }: { pdfUrl: string }) {
+  const { t } = useI18n()
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [dimensions, setDimensions] = useState({ width: 800, height: 1200 });
@@ -1155,7 +1168,7 @@ function PDFFlipbook({ pdfUrl }: { pdfUrl: string }) {
 
         {/* Page Input */}
         <form onSubmit={handlePageInput} className="flex items-center space-x-1">
-          <span className="text-gray-600 text-xs font-medium">Page</span>
+          <span className="text-gray-600 text-xs font-medium">{t('menu.navigation.page')}</span>
           <input
             type="number"
             value={inputPage}
@@ -1175,7 +1188,7 @@ function PDFFlipbook({ pdfUrl }: { pdfUrl: string }) {
                 : 'bg-blue-500 text-white hover:bg-blue-600'
             }`}
           >
-            Go
+            {t('menu.navigation.go')}
           </button>
         </form>
 
@@ -1201,6 +1214,7 @@ function PDFFlipbook({ pdfUrl }: { pdfUrl: string }) {
 
 // Scroll PDF Viewer Component
 function ScrollPDFViewer({ pdfUrl }: { pdfUrl: string }) {
+  const { t } = useI18n()
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(0);
@@ -1319,7 +1333,7 @@ function ScrollPDFViewer({ pdfUrl }: { pdfUrl: string }) {
       <div className="text-center py-12">
         <div className="inline-flex items-center space-x-3">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
-          <span className="text-lg font-medium text-gray-600">Loading menu...</span>
+          <span className="text-lg font-medium text-gray-600">{t('menu.navigation.loadingMenu')}</span>
         </div>
       </div>
     );
@@ -1361,7 +1375,7 @@ function ScrollPDFViewer({ pdfUrl }: { pdfUrl: string }) {
 
         {/* Page Input */}
         <form onSubmit={handlePageInput} className="flex items-center space-x-1">
-          <span className="text-gray-600 text-xs font-medium">Page</span>
+          <span className="text-gray-600 text-xs font-medium">{t('menu.navigation.page')}</span>
           <input
             type="number"
             min="1"
@@ -1381,7 +1395,7 @@ function ScrollPDFViewer({ pdfUrl }: { pdfUrl: string }) {
                 : 'bg-blue-500 text-white hover:bg-blue-600'
             }`}
           >
-            Go
+            {t('menu.navigation.go')}
           </button>
         </form>
 
@@ -1429,6 +1443,7 @@ function SpinWheel({ items, onAddToCart }: {
   items: any[], 
   onAddToCart: (item: any) => void 
 }) {
+  const { t } = useI18n()
   const [isSpinning, setIsSpinning] = useState(false);
   const [popupItem, setPopupItem] = useState<any | null>(null);
   const { width, height } = useWindowSize(); 
@@ -1654,7 +1669,7 @@ useEffect(() => {
               : "bg-green-600 hover:bg-green-700"
           }`}
         >
-          {isSpinning ? "Spinning..." : "Spin for Your Meal 🎯"}
+          {isSpinning ? t('menu.wheel.spinning') : t('menu.wheel.spinForMeal')}
         </button>
       </div>
 
@@ -1695,7 +1710,7 @@ useEffect(() => {
                   onClick={() => setPopupItem(null)}
                   className="flex-1 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
                 >
-                  Close
+                  {t('menu.wheel.close')}
                 </button>
                 <button
                   onClick={() => {
@@ -1704,7 +1719,7 @@ useEffect(() => {
                   }}
                   className="flex-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
                 >
-                  Add to Cart
+                  {t('menu.wheel.addToCart')}
                 </button>
               </div>
             </div>
@@ -1738,6 +1753,7 @@ function ManualMenu({
   updateCartItemQuantity: (id: string, quantity: number) => void
   orderSystem?: boolean
 }) {
+  const { t } = useI18n()
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const sortedCategories = [...(categories || [])].sort((a, b) => a.categoryNo - b.categoryNo)
   const [showWheel, setShowWheel] = useState(false);
@@ -1783,8 +1799,8 @@ const toggleDescription = (itemId: string) => {
     return (
       <div className="text-center py-12">
         <div className="text-4xl mb-4">📝</div>
-        <h2 className="text-2xl font-bold mb-2">No Categories Yet</h2>
-        <p className="opacity-70">The menu is being prepared.</p>
+        <h2 className="text-2xl font-bold mb-2">{t('menu.categories.noCategories')}</h2>
+        <p className="opacity-70">{t('menu.categories.preparing')}</p>
       </div>
     )
   }
@@ -1831,8 +1847,8 @@ const toggleDescription = (itemId: string) => {
    <>
     {/* Toggle Button */}
     <div className="text-2xl font-extrabold text-center text-white mb-4 leading-snug">
-  Can't decide what to order? <br />
-  <span>Just spin the wheel! 🎡</span>
+  {t('menu.wheel.cantDecide')} <br />
+  <span>{t('menu.wheel.spinWheel')}</span>
 </div>
 
 <div className="flex justify-center mb-6">
@@ -1840,7 +1856,7 @@ const toggleDescription = (itemId: string) => {
     onClick={() => setShowWheel(!showWheel)}
     className="px-6 py-3 bg-black text-white text-lg font-semibold rounded-full shadow-md hover:bg-gray-800 transition-all"
   >
-    {showWheel ? "Show Menu 🍽" : "Spin the Wheel 🎯"}
+    {showWheel ? t('menu.wheel.showMenu') : t('menu.wheel.spinWheelButton')}
   </button>
 </div>
 
@@ -1883,7 +1899,7 @@ const toggleDescription = (itemId: string) => {
                   <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
                     <div className="text-gray-400 text-center">
                       <div className="text-5xl mb-2">🍽️</div>
-                      <div className="text-sm">No Image</div>
+                      <div className="text-sm">{t('menu.wheel.noImage')}</div>
                     </div>
                   </div>
                 )}
@@ -1911,7 +1927,7 @@ const toggleDescription = (itemId: string) => {
                   onClick={() => toggleDescription(item.id)}
                   className="text-blue-500 text-xs mt-1 font-medium hover:underline focus:outline-none"
                 >
-                  {expandedDescriptions?.[item.id] ? 'Show less' : 'Read more'}
+                  {expandedDescriptions?.[item.id] ? t('menu.item.showLess') : t('menu.item.readMore')}
                 </button>
               )}
             </div>
@@ -1925,11 +1941,11 @@ const toggleDescription = (itemId: string) => {
                       ₺{formatPrice(item.price)}
                     </span>
                   ) : (
-                    <span className="text-sm text-gray-500">Price not set</span>
+                    <span className="text-sm text-gray-500">{t('menu.item.priceNotSet')}</span>
                   )
                 ) : (
                   <span className="text-sm font-semibold text-red-500">
-                    Out of Stock
+                    {t('menu.item.outOfStock')}
                   </span>
                 )}
               </div>
@@ -1937,7 +1953,7 @@ const toggleDescription = (itemId: string) => {
                 className={`w-3 h-3 rounded-full ${
                   item.stock ? 'bg-green-500' : 'bg-red-500'
                 }`}
-                title={item.stock ? 'Available' : 'Out of Stock'}
+                title={item.stock ? t('menu.item.available') : t('menu.item.outOfStock')}
               ></div>
             </div>
 
@@ -1946,7 +1962,7 @@ const toggleDescription = (itemId: string) => {
     <button
       onClick={() => handleRemoveFromCart(item.id)}
       className="w-12 h-12 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-2xl font-bold"
-      aria-label="Remove item"
+      aria-label={t('menu.item.removeItem')}
     >
       –
     </button>
@@ -1956,7 +1972,7 @@ const toggleDescription = (itemId: string) => {
     <button
       onClick={() => handleAddToCart(item)}
       className="w-12 h-12 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-2xl font-bold"
-      aria-label="Add item"
+      aria-label={t('menu.item.addItem')}
     >
       +
     </button>
@@ -1972,9 +1988,9 @@ const toggleDescription = (itemId: string) => {
 ) : (
   <div className="text-center py-20">
     <div className="text-6xl mb-4">🍽️</div>
-    <h3 className="text-2xl font-semibold text-gray-700 mb-2">No Items Yet</h3>
+    <h3 className="text-2xl font-semibold text-gray-700 mb-2">{t('menu.categories.noItemsYet')}</h3>
     <p className="text-gray-500">
-      Items will appear here once they are added to this category.
+      {t('menu.categories.noItemsDescription')}
     </p>
   </div>
 )}

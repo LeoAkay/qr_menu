@@ -2,24 +2,17 @@ import './global.css'
 import type { Metadata } from 'next'
 import Script from 'next/script'
 import { ToastContainer } from 'react-toastify';
-import { Inter, Playfair_Display, Crimson_Text } from 'next/font/google';
+import { I18nProvider } from './i18n/I18nContext'
 
 export const metadata: Metadata = {
   title: 'Admin Panel',
   description: 'Admin dashboard login and control panel',
 }
 
-// Initialize fonts
-const inter = Inter({ subsets: ['latin'] });
-const playfairDisplay = Playfair_Display({ subsets: ['latin'] });
-const crimsonText = Crimson_Text({ subsets: ['latin'], weight: ['400', '600', '700'] });
-
 export default function RootLayout({
   children,
-  bodyClassName = '',
 }: {
   children: React.ReactNode
-  bodyClassName?: string
 }) {
   return (
     <html lang="en">
@@ -38,7 +31,9 @@ export default function RootLayout({
         </Script>
       </head>
       <body className={`bubble-bg`}>
-        {children}
+        <I18nProvider>
+          {children}
+        </I18nProvider>
         <ToastContainer/>
       </body>
     </html>

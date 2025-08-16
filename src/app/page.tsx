@@ -2,10 +2,16 @@
 
 import Link from 'next/link'
 import { Upload, Paintbrush, QrCode, Eye } from 'lucide-react'
+import { useI18n } from './i18n/I18nContext'
+import LanguageSwitcher from './components/LanguageSwitcher'
 
 export default function HomePage() {
+  const { t } = useI18n()
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 relative overflow-hidden">
+      <LanguageSwitcher />
+      
       {/* Animated Blobs */}
       <div className="absolute top-0 left-0 w-48 h-48 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full mix-blend-multiply opacity-70 animate-blob"></div>
       <div className="absolute top-0 right-0 w-56 h-56 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-full mix-blend-multiply opacity-70 animate-blob animation-delay-2000"></div>
@@ -18,9 +24,9 @@ export default function HomePage() {
        <header className="py-8">
   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div className="text-center">
-      <h1 className="text-5xl font-bold text-gray-900 mb-4">QR Menu System</h1>
+      <h1 className="text-5xl font-bold text-gray-900 mb-4">{t('main.title')}</h1>
       <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-        Build and share digital menus effortlessly using QR codes. Upload PDF menus or design your own with custom categories and items.
+        {t('main.subtitle')}
       </p>
     </div>
     <div className="mt-8 text-center">
@@ -28,7 +34,7 @@ export default function HomePage() {
         href="/QR_Portal/get_started"
         className="inline-block bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-semibold text-lg"
       >
-        Get Started
+        {t('main.getStarted')}
       </Link> 
     </div>
   </div>
@@ -51,15 +57,15 @@ export default function HomePage() {
               />
             </span>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Restaurant Owner</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">{t('main.restaurantOwner.title')}</h2>
           <p className="text-gray-600 mb-8">
-            Manage your restaurant’s digital menu. Upload PDFs, organize by category, and generate QR codes for your tables.
+            {t('main.restaurantOwner.description')}
           </p>
           <Link
             href="/QR_Portal/user_login"
             className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-semibold text-lg inline-block"
           >
-            Login as Owner
+            {t('main.restaurantOwner.login')}
           </Link>
         </div>
       </div>
@@ -70,27 +76,27 @@ export default function HomePage() {
           <div className="w-16 h-16 bg-pink-300 rounded-full flex items-center justify-center mx-auto mb-6">
             <span className="text-3xl">⚙️</span>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">System Admin</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">{t('main.admin.title')}</h2>
           <p className="text-gray-600 mb-8">
-            Oversee restaurants on the platform. Create new accounts and manage user access.
+            {t('main.admin.description')}
           </p>
           <Link
             href="/admin_login"
             className="mt-6 w-full bg-purple-600 text-white py-3 px-6 rounded-lg hover:bg-purple-700 transition-colors font-semibold text-lg inline-block"
           >
-            Login as Admin
+            {t('main.admin.login')}
           </Link>
         </div>
       </div>
     </div>
         {/* How It Works */}
         <div className="mt-16 text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8">How It Works</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-8">{t('main.howItWorks.title')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
             {[
-              { step: '1️⃣', title: 'Create Account', desc: 'Contact us to get your restaurant account set up.', color:'bg-blue-600'},
-              { step: '2️⃣', title: 'Upload Menu', desc: 'Add your menu as a PDF or create a custom digital menu.', color:'bg-pink-400' },
-              { step: '3️⃣', title: 'Generate QR', desc: 'Download or upload a unique QR code for your tables.', color:'bg-purple-600' },
+              { step: '1️⃣', title: t('main.howItWorks.step1.title'), desc: t('main.howItWorks.step1.desc'), color:'bg-blue-600'},
+              { step: '2️⃣', title: t('main.howItWorks.step2.title'), desc: t('main.howItWorks.step2.desc'), color:'bg-pink-400' },
+              { step: '3️⃣', title: t('main.howItWorks.step3.title'), desc: t('main.howItWorks.step3.desc'), color:'bg-purple-600' },
             ].map((item, i) => (
               <div key={i}>
                 <div className={`w-12 h-12 ${item.color} rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl`}>
@@ -105,12 +111,12 @@ export default function HomePage() {
 
         {/* Features */}
         <div className="mt-20 text-center">
-          <h3 className="text-3xl font-bold text-gray-900 mb-10">Key Features</h3>
+          <h3 className="text-3xl font-bold text-gray-900 mb-10">{t('main.features.title')}</h3>
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto text-left">
-            <FeatureCard icon={<Upload className="text-purple-600 w-6 h-6 " />} title="Upload or Create Menus" description="Upload PDF menus or build interactive ones manually." />
-            <FeatureCard icon={<Paintbrush className="text-blue-600 w-6 h-6" />} title="Customize Appearance" description="Personalize your menus with themes and colors." />
-            <FeatureCard icon={<QrCode className="text-pink-500 w-6 h-6" />} title="QR Code Generation" description="Generate and download QR codes for your menus." />
-            <FeatureCard icon={<Eye className="text-blue-500 w-6 h-6" />} title="Live Menu Preview" description="Instantly preview your digital menu before publishing." />
+            <FeatureCard icon={<Upload className="text-purple-600 w-6 h-6 " />} title={t('main.features.upload.title')} description={t('main.features.upload.description')} />
+            <FeatureCard icon={<Paintbrush className="text-blue-600 w-6 h-6" />} title={t('main.features.customize.title')} description={t('main.features.customize.description')} />
+            <FeatureCard icon={<QrCode className="text-pink-500 w-6 h-6" />} title={t('main.features.qr.title')} description={t('main.features.qr.description')} />
+            <FeatureCard icon={<Eye className="text-blue-500 w-6 h-6" />} title={t('main.features.preview.title')} description={t('main.features.preview.description')} />
           </div>
         </div>
       </main>
@@ -118,8 +124,8 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="bg-gray-100 py-12 mt-20 relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-gray-700 text-sm">© 2024 QR Menu System. All rights reserved.</p>
-          <p className="text-gray-500 mt-2">Digital menus made simple for restaurants and cafes.</p>
+          <p className="text-gray-700 text-sm">{t('main.footer.copyright')}</p>
+          <p className="text-gray-500 mt-2">{t('main.footer.description')}</p>
         </div>
       </footer>
     </div>

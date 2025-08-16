@@ -2,8 +2,11 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import { useI18n } from '../../i18n/I18nContext'
+import LanguageSwitcher from '../../components/LanguageSwitcher'
 
 export default function GetStartedPage() {
+  const { t } = useI18n()
   const [form, setForm] = useState({
     name: '',
     surname: '',
@@ -49,6 +52,8 @@ export default function GetStartedPage() {
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center px-4 py-16 relative overflow-hidden">
+      <LanguageSwitcher />
+      
       <div className="absolute top-0 left-0 w-48 h-48 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full mix-blend-multiply opacity-70 animate-blob"></div>
       <div className="absolute top-0 right-0 w-56 h-56 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-full mix-blend-multiply opacity-70 animate-blob animation-delay-2000"></div>
       <div className="absolute -bottom-8 left-20 w-52 h-52 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full mix-blend-multiply opacity-70 animate-blob animation-delay-4000"></div>
@@ -60,7 +65,7 @@ export default function GetStartedPage() {
           href="/"
           className="absolute right-5 top-6 bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-semibold text-lg"
         >
-          Return
+          {t('getStarted.return')}
         </Link> 
         </div>)}
       
@@ -71,7 +76,7 @@ export default function GetStartedPage() {
     <div className="min-h-screen flex flex-col items-center justify-center space-y-6">
     
     <div className="text-green-600 font-semibold text-4xl text-center">
-      Thank you! We'll contact you soon.
+      {t('getStarted.thankYou')}
     </div><div className="text-green-600 font-semibold text-4xl">
       ✅
     </div>
@@ -79,7 +84,7 @@ export default function GetStartedPage() {
       href="/"
       className="bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-semibold text-lg"
     >
-      Return to Home
+      {t('getStarted.returnHome')}
     </Link>
   </div>
 
@@ -88,18 +93,18 @@ export default function GetStartedPage() {
 
         ) : (
         <div className="max-w-2xl w-full space-y-6 relative z-10">
-        <h1 className="text-6xl font-bold text-center text-gray-900">Get Started</h1>
-        <p className="text-center text-gray-700 mb-6">Fill out the form below and we’ll get back to you shortly.</p>
+        <h1 className="text-6xl font-bold text-center text-gray-900">{t('getStarted.title')}</h1>
+        <p className="text-center text-gray-700 mb-6">{t('getStarted.subtitle')}</p>
           <form onSubmit={handleSubmit} className="space-y-6 bg-white p-8 rounded-2xl shadow-lg border border-gray-200">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[
-                { name: 'name', placeholder: 'First Name' },
-                { name: 'surname', placeholder: 'Last Name' },
-                { name: 'phone', placeholder: 'Phone Number' },
-                { name: 'email', placeholder: 'Email Address', type: 'email' },
-                { name: 'restaurant', placeholder: 'Restaurant Name' },
-                { name: 'country', placeholder: 'Country' },
-                { name: 'city', placeholder: 'City' },
+                { name: 'name', placeholder: t('getStarted.form.firstName') },
+                { name: 'surname', placeholder: t('getStarted.form.lastName') },
+                { name: 'phone', placeholder: t('getStarted.form.phone') },
+                { name: 'email', placeholder: t('getStarted.form.email'), type: 'email' },
+                { name: 'restaurant', placeholder: t('getStarted.form.restaurant') },
+                { name: 'country', placeholder: t('getStarted.form.country') },
+                { name: 'city', placeholder: t('getStarted.form.city') },
               ].map(({ name, placeholder, type }) => (
                 <input
                   key={name}
@@ -117,7 +122,7 @@ export default function GetStartedPage() {
               name="message"
               value={form.message}
               onChange={handleChange}
-              placeholder="Optional message or request..."
+              placeholder={t('getStarted.form.message')}
               rows={5}
               className="w-full px-3 sm:px-5 py-3 sm:py-4 rounded-xl bg-white border border-gray-300 placeholder-gray-400 text-gray-900 text-base sm:text-lg resize-none transition focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent shadow-sm"
             />
@@ -125,7 +130,7 @@ export default function GetStartedPage() {
               type="submit"
               className="w-full py-3 sm:py-4 bg-purple-600 text-white text-base sm:text-lg font-semibold rounded-xl hover:bg-purple-700 transition shadow-md"
             >
-              Send Details
+              {t('getStarted.form.send')}
             </button>
           </form>
           </div>

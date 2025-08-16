@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { QRCodeSVG } from 'qrcode.react'
 import { io } from "socket.io-client";
 import { ToastContainer, toast } from 'react-toastify';
+import { useI18n } from '../../i18n/I18nContext'
+import LanguageSwitcher from '../../components/LanguageSwitcher'
 
 // Utility function to format prices with thousand separators
 const formatPrice = (price: number): string => {
@@ -95,33 +97,34 @@ interface Order {
 }
 
 export default function UserDashboard() {
+  const { t } = useI18n()
   const router = useRouter()
   const [userData, setUserData] = useState<UserData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'pdf' | 'manual' | 'theme' | 'preview' | 'profile'| 'contactUs' | 'analytics' | ''>('')
+  const [activeTab, setActiveTab] = useState('')
+  const [activeSection, setActiveSection] = useState('')
   const [menuType, setMenuType] = useState<'pdf' | 'manual' | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [newOrderNotification, setNewOrderNotification] = useState(false)
-  const [notificationMessage, setNotificationMessage] = useState('')
-  const [newOrderCount, setNewOrderCount] = useState(0)
-  const [activeSection, setActiveSection] = useState<string>('')
-
   const [theme, setTheme] = useState<Theme>({
     backgroundColor: '#ffffff',
     textColor: '#000000',
     style: 'modern'
   })
-  const pdfRef = useRef<HTMLDivElement>(null);
-  const manualRef = useRef<HTMLDivElement>(null);
-  const themeRef = useRef<HTMLDivElement>(null);
-  const analyticsRef = useRef<HTMLDivElement>(null);
-  const [manualLoaded, setManualLoaded] = useState(false);
-  const [themeLoaded, setThemeLoaded] = useState(false);
-  const [analyticsLoaded, setAnalyticsLoaded] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('')
+  const [newOrderNotification, setNewOrderNotification] = useState(false)
+  const [notificationMessage, setNotificationMessage] = useState('')
+  const [newOrderCount, setNewOrderCount] = useState(0)
+  const [manualLoaded, setManualLoaded] = useState(false)
+  const [themeLoaded, setThemeLoaded] = useState(false)
+  const [analyticsLoaded, setAnalyticsLoaded] = useState(false)
 
-  const menuRef = useRef<HTMLDivElement>(null);
-  const profileRef = useRef<HTMLDivElement>(null);
-  
+  // Refs for scrolling
+  const menuRef = useRef<HTMLDivElement>(null)
+  const pdfRef = useRef<HTMLDivElement>(null)
+  const manualRef = useRef<HTMLDivElement>(null)
+  const themeRef = useRef<HTMLDivElement>(null)
+  const profileRef = useRef<HTMLDivElement>(null)
+  const analyticsRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
     if (!userData?.company?.id) return;
     const interval = setInterval(async () => {
@@ -175,37 +178,37 @@ export default function UserDashboard() {
         case 'pdf':
           setMenuType('pdf')
           setActiveTab('pdf')
-          setActiveSection('PDF Upload')
+          setActiveSection(t('dashboard.sections.pdfUpload'))
           setTimeout(() => pdfRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
           break
         case 'manual':
           setMenuType('manual')
           setActiveTab('manual')
-          setActiveSection('Manual Menu')
+          setActiveSection(t('dashboard.sections.manualMenu'))
           setTimeout(() => manualRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
           break
         case 'theme':
           setActiveTab('theme')
-          setActiveSection('Theme Settings')
+          setActiveSection(t('dashboard.sections.themeSettings'))
           setTimeout(() => themeRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
           break
         case 'analytics':
           setActiveTab('analytics')
-          setActiveSection('Analytics')
+          setActiveSection(t('dashboard.sections.analytics'))
           break
         case 'preview':
           setActiveTab('preview')
-          setActiveSection('Preview & QR Code')
+          setActiveSection(t('dashboard.sections.preview'))
           setTimeout(() => menuRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
           break
         case 'profile':
           setActiveTab('profile')
-          setActiveSection('Profile')
+          setActiveSection(t('dashboard.sections.profile'))
           setTimeout(() => profileRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
           break
         case 'contactUs':
           setActiveTab('contactUs')
-          setActiveSection('Contact Us')
+          setActiveSection(t('dashboard.sections.contactUs'))
           break
       }
     }
@@ -421,13 +424,15 @@ export default function UserDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <LanguageSwitcher />
+      
       {/* Notification Popup */}
       {newOrderNotification && (
         <div className="fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg animate-bounce">
           <div className="flex items-center space-x-3">
             <div className="text-2xl">🎉</div>
             <div>
-              <div className="font-semibold">New Order!</div>
+              <div className="font-semibold">{t('dashboard.newOrder.title')}</div>
               <div className="text-sm opacity-90">{notificationMessage}</div>
             </div>
             <button
@@ -440,13 +445,6 @@ export default function UserDashboard() {
         </div>
       )}
 
-
-
-      
-
-    
-
-   
       {/* Header */}
         <header className="bg-gradient-to-r from-purple-500 to-purple-600 shadow-md py-3">
   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -485,7 +483,7 @@ export default function UserDashboard() {
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search..."
+                placeholder={t('dashboard.search.placeholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleSearch}
@@ -514,7 +512,7 @@ export default function UserDashboard() {
         <div className="flex items-center gap-3 ml-4 flex-1 justify-end">
           <button
             onClick={() => setActiveTab('contactUs')}
-            aria-label="Contact Us"
+            aria-label={t('dashboard.contactUs.button')}
             className="p-2 bg-white bg-opacity-10 hover:bg-opacity-20 rounded-full transition"
           >
             <img
@@ -529,7 +527,7 @@ export default function UserDashboard() {
               setActiveTab('profile');
               setTimeout(() => profileRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
             }}
-            aria-label="Profile"
+            aria-label={t('dashboard.profile.button')}
             className="bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full p-1.5 transition-all"
           >
             <img
@@ -546,8 +544,8 @@ export default function UserDashboard() {
 
           <button
             onClick={handleLogout}
-            aria-label="Logout"
-            title="Logout"
+            aria-label={t('dashboard.logout.button')}
+            title={t('dashboard.logout.button')}
             className="p-2 bg-red-500 hover:bg-red-600 rounded-full transition"
           >
             <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -563,7 +561,7 @@ export default function UserDashboard() {
           <div className="relative">
             <input
               type="text"
-              placeholder="Search..."
+              placeholder={t('dashboard.search.placeholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleSearch}
@@ -591,10 +589,6 @@ export default function UserDashboard() {
   </div>
 </header>
 
-
-
-
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Menu Section */}
                 {/* Action Buttons Bar */}
@@ -605,14 +599,14 @@ export default function UserDashboard() {
                 {/* Menu Button */}
                 <button 
                   onClick={() => {
-                    setActiveTab('preview');
-                    setActiveSection('Menu');
-                    setTimeout(() => menuRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+                            setActiveTab('preview');
+        setActiveSection(t('dashboard.sections.preview'));
+        setTimeout(() => menuRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
                   }}
                   className="flex items-center space-x-3 px-6 py-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors text-gray-700 border border-purple-200"
                 >
                   <span className="text-2xl">🍽️</span>
-                  <span className="font-medium">Menu</span>
+                  <span className="font-medium">{t('dashboard.menu.button')}</span>
                 </button>
                 {/* PDF Upload Button */}
                 <button
@@ -625,7 +619,7 @@ export default function UserDashboard() {
                   className="flex items-center space-x-3 px-6 py-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors text-gray-700 border border-blue-200"
                 >
                   <span className="text-2xl">📄</span>
-                  <span className="font-medium">PDF Upload</span>
+                  <span className="font-medium">{t('dashboard.pdfUpload.button')}</span>
                 </button>
                 {/* Manual Menu Button */}
                 <button
@@ -638,7 +632,7 @@ export default function UserDashboard() {
                   className="flex items-center space-x-3 px-6 py-3 bg-green-50 hover:bg-green-100 rounded-lg transition-colors text-gray-700 border border-green-200"
                 >
                   <span className="text-2xl">⚙️</span>
-                  <span className="font-medium">Manual Menu</span>
+                  <span className="font-medium">{t('dashboard.manualMenu.button')}</span>
                 </button>
                 {/* Theme Settings Button */}
                 <button
@@ -650,7 +644,7 @@ export default function UserDashboard() {
                   className="flex items-center space-x-3 px-6 py-3 bg-yellow-50 hover:bg-yellow-100 rounded-lg transition-colors text-gray-700 border border-yellow-200"
                 >
                   <span className="text-2xl">🎨</span>
-                  <span className="font-medium">Theme Settings</span>
+                  <span className="font-medium">{t('dashboard.themeSettings.button')}</span>
                 </button>
                 {/* Order System Button */}
                  <a href="/QR_Portal/order_system">
@@ -659,7 +653,7 @@ export default function UserDashboard() {
     className="flex items-center space-x-3 px-6 py-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors text-gray-700 border border-purple-200 relative"
   >
     <span className="text-3xl">🛒</span>
-    <span className="font-medium">Order System</span>
+    <span className="font-medium">{t('dashboard.orderSystem.button')}</span>
     {newOrderCount > 0 && (
       <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center animate-pulse">
         {newOrderCount > 99 ? '99+' : newOrderCount}
@@ -676,14 +670,12 @@ export default function UserDashboard() {
                   className="flex items-center space-x-3 px-6 py-3 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors text-gray-700 border border-indigo-200"
                 >
                   <span className="text-2xl">📊</span>
-                  <span className="font-medium">Analytics</span>
+                  <span className="font-medium">{t('dashboard.analytics.button')}</span>
                 </button>
               </div>
             </div>
           </div>
         </div>
-
-
 
         {/* Content Area */}
         <div className="bg-white rounded-xl shadow-lg p-6">
@@ -692,8 +684,8 @@ export default function UserDashboard() {
             <div>
               {!menuType ? (
                 <div className="text-center py-12">
-                  <h2 className="text-2xl font-semibold text-gray-800 mb-6">PDF Menu Upload</h2>
-                  <p className="text-gray-600 mb-8">Follow the steps below to upload your PDF menu</p>
+                  <h2 className="text-2xl font-semibold text-gray-800 mb-6">{t('dashboard.pdfUpload.title')}</h2>
+                  <p className="text-gray-600 mb-8">{t('dashboard.pdfUpload.subtitle')}</p>
                   <button
                     onClick={() => setMenuType('pdf')}
                     className="bg-purple-400 hover:bg-purple-500 text-white px-8 py-3 rounded-lg font-medium text-lg transition-all duration-200 shadow-sm hover:shadow-md"
@@ -701,7 +693,7 @@ export default function UserDashboard() {
                     <svg className="w-6 h-6 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                     </svg>
-                    Start PDF Upload
+                    {t('dashboard.pdfUpload.startButton')}
                   </button>
                 </div>
               ) : (
@@ -756,8 +748,8 @@ export default function UserDashboard() {
           {/* Default Welcome Screen */}
           {!activeTab && (
             <div className="text-center py-12">
-              <h2 className="text-2xl font-semibold text-gray-800 mb-6">Welcome!</h2>
-              <p className="text-gray-600 mb-8">Select one of the cards above to get started</p>
+              <h2 className="text-2xl font-semibold text-gray-800 mb-6">{t('dashboard.welcome.title')}</h2>
+              <p className="text-gray-600 mb-8">{t('dashboard.welcome.subtitle')}</p>
               <div className="text-6xl mb-4">🍽️</div>
             </div>
           )}
@@ -769,6 +761,7 @@ export default function UserDashboard() {
 
 // PDF Upload Component
 function PDFUploadSection({ userData }: { userData: UserData | null }) {
+  const { t } = useI18n()
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -822,7 +815,7 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
     if (file && file.type === 'application/pdf') {
       setSelectedFile(file)
     } else {
-     toast.error('Please select a valid PDF file')
+     toast.error(t('pdfUpload.error.invalidFile'))
     }
   }
 
@@ -860,24 +853,24 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
       const data = await res.json()
 
       if (res.ok) {
-        toast.success('PDF uploaded successfully!')
+        toast.success(t('pdfUpload.success.upload'))
         setSelectedFile(null)
         // Refresh page data
         window.location.reload()
       } else {
         console.error('Upload failed:', data)
-        toast.error(data.error || 'Upload failed. Please try again.')
+        toast.error(data.error || t('pdfUpload.error.upload'))
       }
     } catch (error) {
       console.error('Upload error:', error)
-      toast.error('Network error. Please check your connection and try again.')
+      toast.error(t('pdfUpload.error.network'))
     } finally {
       setUploading(false)
     }
   }
 
   const handleDeletePDF = async () => {
-    if (!confirm('Are you sure you want to delete the PDF menu?')) {
+    if (!confirm(t('pdfUpload.confirmDelete.message'))) {
       return
     }
 
@@ -889,15 +882,15 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
       })
 
       if (res.ok) {
-        toast.success('PDF successfully deleted!')
+        toast.success(t('pdfUpload.success.delete'))
         window.location.reload()
       } else {
         const data = await res.json()
-       toast.error(data.error || 'Failed to delete PDF. Please try again.')
+       toast.error(data.error || t('pdfUpload.error.delete'))
       }
     } catch (error) {
       console.error('Delete error:', error)
-      toast.error('Network error. Please check your connection.')
+      toast.error(t('pdfUpload.error.network'))
     } finally {
       setDeleting(false)
     }
@@ -915,7 +908,7 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
       })
 
       if (res.ok) {
-        toast.success('Theme settings saved!')
+        toast.success(t('theme.success'))
         // Refresh page to show updated theme
         window.location.reload()
       } else {
@@ -998,13 +991,13 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
 
   return (
     <div>
-      <h2 className="text-2xl font-semibold text-center mb-6 text-gray-800">PDF Menu Management</h2>
+      <h2 className="text-2xl font-semibold text-center mb-6 text-gray-800">{t('pdfUpload.title')}</h2>
       {/* Existing PDF Display */}
       {existingPDF && (
         <div className="mb-8 p-6 bg-green-50 border border-green-200 rounded-xl flex items-center space-x-6">
           <div className="flex-1 text-center">
-            <h3 className="text-lg font-semibold text-green-800">Current PDF Menu</h3>
-            <p className="text-green-600">Your PDF menu has been successfully uploaded</p>
+            <h3 className="text-lg font-semibold text-green-800">{t('pdfUpload.currentPDF.title')}</h3>
+            <p className="text-green-600">{t('pdfUpload.currentPDF.subtitle')}</p>
             {userData?.company?.pdfMenuUrl && (
               <a 
                 href={`/api/AdminPanel/company/pdf/${userData.company.id}?t=${Date.now()}`} 
@@ -1012,7 +1005,7 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
                 rel="noopener noreferrer"
                 className="text-purple-600 hover:text-purple-800 text-sm font-medium inline-block mt-2"
               >
-                📁 View PDF
+                {t('pdfUpload.viewPDF')}
               </a>
             )}
             <div className="mt-4">
@@ -1027,14 +1020,14 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
                     <svg className="w-4 h-4 inline mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
-                    Deleting...
+                    {t('pdfUpload.deleting')}
                   </>
                 ) : (
                   <>
                     <svg className="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
-                    Delete
+                    {t('pdfUpload.delete')}
                   </>
                 )}
               </button>
@@ -1057,10 +1050,10 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
         >
           <div className="text-6xl mb-6">📄</div>
           <div className="text-xl font-medium mb-3 text-gray-800">
-            {selectedFile ? selectedFile.name : existingPDF ? 'Select New PDF (Will Replace Current PDF)' : 'Select PDF File'}
+            {selectedFile ? selectedFile.name : existingPDF ? t('pdfUpload.selectNewFile') : t('pdfUpload.selectFile')}
           </div>
           <div className="text-gray-500">
-            {existingPDF ? 'Replace your current PDF by selecting or uploading a new one' : 'Click to select your menu PDF'}
+            {existingPDF ? t('pdfUpload.replaceCurrent') : t('pdfUpload.clickToSelect')}
           </div>
         </label>
       </div>
@@ -1074,7 +1067,7 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
             <svg className="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
             </svg>
-            {uploading ? 'Uploading...' : existingPDF ? 'Update PDF' : 'Upload PDF'}
+            {uploading ? t('pdfUpload.uploading') : existingPDF ? t('pdfUpload.update') : t('pdfUpload.upload')}
           </button>
           <button
             onClick={() => setSelectedFile(null)}
@@ -1083,13 +1076,13 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
             <svg className="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
-            Cancel
+            {t('pdfUpload.cancel')}
           </button>
         </div>
       )}
       {/* PDF Display Mode Selection */}
       <div className="mt-8">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">PDF Display Mode</h3>
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">{t('pdfUpload.displayMode.title')}</h3>
         <div className="bg-gray-50 rounded-xl p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Flipbook Mode */}
@@ -1119,22 +1112,22 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                   </svg>
                 </div>
-                <h4 className="font-semibold text-gray-800 mb-2">Flipbook Style</h4>
+                <h4 className="font-semibold text-gray-800 mb-2">{t('pdfUpload.displayMode.flipbook.title')}</h4>
                 <p className="text-sm text-gray-600">
-                  Interactive page-turning experience like a real book
+                  {t('pdfUpload.displayMode.flipbook.description')}
                 </p>
                 <div className="mt-2 p-2 bg-orange-50 border border-orange-200 rounded text-xs flex items-center justify-center">
                   <svg className="w-4 h-4 text-orange-600 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z" />
                   </svg>
-                  
+                  {t('pdfUpload.displayMode.flipbook.recommended')}
                 </div>
                 {pdfDisplayMode === 'flipbook' && (
                   <div className="mt-3 text-purple-600 font-medium flex items-center justify-center">
                     <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    Selected
+                    {t('pdfUpload.displayMode.flipbook.selected')}
                   </div>
                 )}
               </div>
@@ -1166,9 +1159,9 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                 </div>
-                <h4 className="font-semibold text-gray-800 mb-2">Scroll Style</h4>
+                <h4 className="font-semibold text-gray-800 mb-2">{t('pdfUpload.displayMode.scroll.title')}</h4>
                 <p className="text-sm text-gray-600">
-                  Traditional continuous scrolling view
+                  {t('pdfUpload.displayMode.scroll.description')}
                 </p>
                 <div className="mt-2 p-2 bg-slate-50 border border-slate-200 rounded text-xs flex items-center justify-center">
                   <svg className="w-4 h-4 text-slate-600 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1181,7 +1174,7 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
                     <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    Selected
+                    {t('pdfUpload.displayMode.scroll.selected')}
                   </div>
                 )}
               </div>
@@ -1189,7 +1182,7 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
           </div>
           {/* Current QR URL Display */}
           <div className="text-center mt-4 p-3 bg-white border border-gray-200 rounded-lg">
-            <p className="text-sm text-gray-600 mb-2">Current QR URL:</p>
+            <p className="text-sm text-gray-600 mb-2">{t('pdfUpload.currentQRUrl')}</p>
             <code className="text-xs bg-gray-100 px-2 py-1 rounded break-all">
               {generateQRUrl()}
             </code>
@@ -1209,22 +1202,22 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
                   })
                   const data = await res.json()
                   if (res.ok) {
-                    toast.success(`PDF display mode saved!\nNew QR URL: ${data.qrUrl}`)
+                    toast.success(t('pdfUpload.success.update'))
                     window.location.reload()
                   } else {
-                    toast.error(data.error || 'Failed to update QR code')
+                    toast.error(data.error || t('pdfUpload.error.update'))
                   }
                 } catch (error) {
-                  toast.error('Network error. Please try again.')
+                  toast.error(t('pdfUpload.error.network'))
                 }
               }}
               className="bg-purple-400 hover:bg-purple-500 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 shadow-sm hover:shadow-md"
-              title="Save PDF display mode"
+              title={t('pdfUpload.saveDisplayMode.title')}
             >
               <svg className="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
-              Save Display Mode
+              {t('pdfUpload.saveDisplayMode')}
             </button>
           </div>
         </div>
@@ -1235,6 +1228,7 @@ function PDFUploadSection({ userData }: { userData: UserData | null }) {
 
 // Manual Menu Component
 function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQuery?: string, onSearchHandled?: () => void, onLoaded?: () => void }) {
+  const { t } = useI18n()
   const [categories, setCategories] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [editingCategory, setEditingCategory] = useState<any>(null)
@@ -1305,13 +1299,13 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
       })
 
       if (res.ok) {
-        toast.success('Category added successfully!')
+        toast.success(t('manualMenu.success.categoryAdded'))
         setCategoryForm({ name: '',})
         setShowCategoryForm(false)
         fetchCategories()
       } else {
         const data = await res.json()
-        toast.error(data.error || 'Failed to add category')
+        toast.error(data.error || t('manualMenu.error.addCategory'))
       }
     } catch (error) {
       console.error('Add category error:', error)
@@ -1343,7 +1337,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
       })
 
       if (res.ok) {
-        toast.success('Item added successfully!')
+        toast.success(t('manualMenu.success.itemAdded'))
         setItemForm({
           name: '', price: '',description: '',stock:true, menuImage: null
         })
@@ -1351,16 +1345,16 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
         fetchCategories()
       } else {
         const data = await res.json()
-        toast.error(data.error || 'Failed to add item')
+        toast.error(data.error || t('manualMenu.error.addItem'))
       }
     } catch (error) {
       console.error('Add item error:', error)
-      toast.error('Network error. Please try again.')
+      toast.error(t('manualMenu.error.network'))
     }
   }
 
   const handleDeleteCategory = async (categoryId: string, categoryName: string) => {
-    if (!confirm(`Are you sure you want to delete "${categoryName}" category? This will also delete all items in this category.`)) {
+    if (!confirm(t('manualMenu.confirmDeleteCategory.message').replace('{categoryName}', categoryName))) {
       return
     }
 
@@ -1371,20 +1365,20 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
       })
 
       if (res.ok) {
-        toast.success('Category deleted successfully!')
+        toast.success(t('manualMenu.success.categoryDeleted'))
         fetchCategories()
       } else {
         const data = await res.json()
-        toast.error(data.error || 'Failed to delete category')
+        toast.error(data.error || t('manualMenu.error.deleteCategory'))
       }
     } catch (error) {
       console.error('Delete category error:', error)
-      toast.error('Network error. Please try again.')
+      toast.error(t('manualMenu.error.network'))
     }
   }
 
   const handleDeleteItem = async (itemId: string, itemName: string) => {
-    if (!confirm(`Are you sure you want to delete "${itemName}"?`)) {
+    if (!confirm(t('manualMenu.confirmDeleteItem.message').replace('{itemName}', itemName))) {
       return
     }
 
@@ -1395,15 +1389,15 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
       })
 
       if (res.ok) {
-        toast.success('Item deleted successfully!')
+        toast.success(t('manualMenu.success.itemDeleted'))
         fetchCategories()
       } else {
         const data = await res.json()
-        toast.error(data.error || 'Failed to delete item')
+        toast.error(data.error || t('manualMenu.error.deleteItem'))
       }
     } catch (error) {
       console.error('Delete item error:', error)
-      toast.error('Network error. Please try again.')
+      toast.error(t('manualMenu.error.network'))
     }
   }
 
@@ -1442,19 +1436,19 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
       })
 
       if (res.ok) {
-        toast.success('Category updated successfully!')
+        toast.success(t('manualMenu.editCategory.success'))
         setEditCategoryForm({ name: ''})
         setShowEditCategoryForm(false)
         setEditingCategory(null)
         fetchCategories()
       } else {
         const data = await res.json()
-        toast.error(data.error || 'Failed to update category')
+        toast.error(data.error || t('manualMenu.editCategory.failed'))
       }
-    } catch (error) {
-      console.error('Update category error:', error)
-      toast.error('Network error. Please try again.')
-    }
+          } catch (error) {
+        console.error('Update category error:', error)
+        toast.error(t('manualMenu.editCategory.networkError'))
+      }
   }
 
   const handleUpdateItem = async () => {
@@ -1480,19 +1474,19 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
       })
 
       if (res.ok) {
-        toast.success('Item updated successfully!')
+        toast.success(t('manualMenu.editItem.success'))
         setEditItemForm({ name: '', price: '',description: '',stock:true, menuImage: null })
         setShowEditItemForm(false)
         setEditingItem(null)
         fetchCategories()
       } else {
         const data = await res.json()
-        toast.error(data.error || 'Failed to update item')
+        toast.error(data.error || t('manualMenu.editItem.failed'))
       }
-    } catch (error) {
-      console.error('Update item error:', error)
-      toast.error('Network error. Please try again.')
-    }
+          } catch (error) {
+        console.error('Update item error:', error)
+        toast.error(t('manualMenu.editItem.networkError'))
+      }
   }
 
   const toggleCategoryExpansion = (categoryId: string) => {
@@ -1552,28 +1546,28 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-semibold text-gray-800"> Builder</h2>
+        <h2 className="text-2xl font-semibold text-gray-800">{t('manualMenu.title')}</h2>
         <button
           onClick={() => setShowCategoryForm(true)}
           className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
         >
-          + Add Category
+          + {t('manualMenu.addCategory')}
         </button>
       </div>
 
       {/* Add Category Form */}
       {showCategoryForm && (
         <div className="mb-6 p-6 bg-gray-50 border border-gray-200 rounded-xl">
-          <h3 className="text-lg font-semibold mb-4">Add New Category</h3>
+          <h3 className="text-lg font-semibold mb-4">{t('manualMenu.addCategory')}</h3>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Category Name</label>
+              <label className="block text-sm font-medium mb-2">{t('manualMenu.categoryName')}</label>
               <input
                 type="text"
                 value={categoryForm.name}
                 onChange={(e) => setCategoryForm({...categoryForm, name: e.target.value})}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
-                placeholder="e.g., Appetizers, Main Courses"
+                placeholder={t('manualMenu.categoryForm.placeholder')}
               />
             </div>
             
@@ -1583,13 +1577,13 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
               onClick={handleAddCategory}
               className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
             >
-              Save Category
+                                    {t('manualMenu.saveItem')}
             </button>
             <button
               onClick={() => setShowCategoryForm(false)}
-              className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              className="bg-gray-500 hover:bg-gray-500 text-white px-4 py-2 rounded-lg font-medium transition-colors"
             >
-              Cancel
+              {t('manualMenu.cancel')}
             </button>
           </div>
         </div>
@@ -1599,8 +1593,8 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
       {categories.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
           <div className="text-6xl mb-4">🍽️</div>
-          <h3 className="text-xl font-medium mb-2">No Categories Yet</h3>
-          <p className="text-sm">Start by adding your first menu category</p>
+          <h3 className="text-xl font-medium mb-2">{t('dashboard.noCategories.title')}</h3>
+          <p className="text-sm">{t('dashboard.noCategories.description')}</p>
         </div>
       ) : (
         <div className="space-y-6">
@@ -1609,7 +1603,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
                <div className="flex justify-between items-center mb-4">
                  <div className="flex items-center space-x-3 flex-1 cursor-pointer" onClick={() => toggleCategoryExpansion(category.id)}>
                    <h3 className="text-xl font-semibold text-gray-800">{category.name}</h3>
-                   <span className="text-gray-500 text-sm">({category.subCategories?.length || 0} items)</span>
+                   <span className="text-gray-500 text-sm">({category.subCategories?.length || 0} {t('dashboard.items.count')})</span>
                    <svg 
                      className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${expandedCategories.has(category.id) ? 'rotate-180' : ''}`} 
                      fill="none" 
@@ -1627,7 +1621,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
                      <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                      </svg>
-                     Add Item
+                     {t('manualMenu.addItem')}
                    </button>
                    <button
                      onClick={() => handleEditCategory(category)}
@@ -1636,7 +1630,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
                      <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                      </svg>
-                     Edit
+                     {t('manualMenu.editCategory')}
                    </button>
                    <button
                      onClick={() => handleDeleteCategory(category.id, category.name)}
@@ -1645,7 +1639,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
                      <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                      </svg>
-                     Delete
+                     {t('dashboard.delete')}
                    </button>
                  </div>
                </div>
@@ -1653,16 +1647,16 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
               {/* Inline Edit Category Form */}
               {editingCategory?.id === category.id && showEditCategoryForm && (
                 <div className="mb-6 p-6 bg-yellow-50 border border-yellow-200 rounded-xl">
-                  <h3 className="text-lg font-semibold mb-4">Edit Category: {editingCategory?.name}</h3>
+                  <h3 className="text-lg font-semibold mb-4">{t('manualMenu.editCategory.title').replace('{categoryName}', editingCategory?.name || '')}</h3>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium mb-2">Category Name</label>
+                      <label className="block text-sm font-medium mb-2">{t('dashboard.categoryName')}</label>
                       <input
                         type="text"
                         value={editCategoryForm.name}
                         onChange={(e) => setEditCategoryForm({...editCategoryForm, name: e.target.value})}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none"
-                        placeholder="e.g., Appetizers, Main Courses"
+                        placeholder={t('manualMenu.categoryForm.placeholder')}
                       />
                     </div>
                     
@@ -1672,7 +1666,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
                       onClick={handleUpdateCategory}
                       className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                     >
-                      Update Category
+                      {t('manualMenu.editCategory.updateButton')}
                     </button>
                     <button
                       onClick={() => {
@@ -1682,7 +1676,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
                       }}
                       className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                     >
-                      Cancel
+                      {t('manualMenu.editCategory.cancelButton')}
                     </button>
                   </div>
                 </div>
@@ -1691,57 +1685,76 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
               {/* Add Item Form */}
               {showItemForm === category.id && (
                 <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <h4 className="text-lg font-medium mb-3">Add New Item to {category.name}</h4>
+                  <h4 className="text-lg font-medium mb-3">{t('dashboard.addItem.title')} {category.name}</h4>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium mb-1">Item Name</label>
+                      <label className="block text-sm font-medium mb-1">{t('manualMenu.itemName.label')}</label>
                       <input
                         type="text"
                         value={itemForm.name}
                         onChange={(e) => setItemForm({...itemForm, name: e.target.value})}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
-                        placeholder="e.g., Grilled Chicken"
+                        placeholder={t('manualMenu.itemName.placeholder')}
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">Price (₺)</label>
+                      <label className="block text-sm font-medium mb-1">{t('manualMenu.itemPrice.label')}</label>
                       <input
                         type="number"
                         step="0.01"
                         value={itemForm.price}
                         onChange={(e) => setItemForm({...itemForm, price: e.target.value})}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
-                        placeholder="e.g., 19.99"
+                        placeholder={t('manualMenu.itemPrice.placeholder')}
                       />
                     </div>
                      <div>
-                      <label className="block text-sm font-medium mb-1">Item Description</label>
+                      <label className="block text-sm font-medium mb-1">{t('manualMenu.itemDescription.label')}</label>
                       <input
                         type="text"
                         value={itemForm.description}
                         onChange={(e) => setItemForm({...itemForm, description: e.target.value})}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
-                        placeholder="e.g., Grilled Chicken"
+                        placeholder={t('manualMenu.itemDescription.placeholder')}
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">Item Image (Optional)</label>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => setItemForm({...itemForm, menuImage: e.target.files?.[0] || null})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
-                      />
+                      <label className="block text-sm font-medium mb-1">{t('manualMenu.itemImage.label')}</label>
+                      <div className="relative">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => setItemForm({...itemForm, menuImage: e.target.files?.[0] || null})}
+                          className="hidden"
+                          id={`file-input-${category.id}`}
+                        />
+                        <label
+                          htmlFor={`file-input-${category.id}`}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none bg-blue-50 hover:bg-blue-100 text-blue-700 cursor-pointer flex items-center justify-center transition-colors"
+                        >
+                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                          </svg>
+                          {t('manualMenu.itemImage.selectFile')}
+                        </label>
+                        <div className="mt-2 text-sm text-gray-500">
+                          {itemForm.menuImage ? (
+                            <span className="text-blue-600">{itemForm.menuImage.name}</span>
+                          ) : (
+                            <span>{t('manualMenu.itemImage.noFileSelected')}</span>
+                          )}
+                        </div>
+                      </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">Stock Status</label>
+                      <label className="block text-sm font-medium mb-1">{t('manualMenu.stockStatus.label')}</label>
                       <select
                         value={itemForm.stock ? 'true' : 'false'}
                         onChange={(e) => setItemForm({ ...itemForm, stock: e.target.value === 'true' })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
                       >
-                        <option value="true">In Stock</option>
-                        <option value="false">Out of Stock</option>
+                        <option value="true">{t('manualMenu.stockStatus.inStock')}</option>
+                        <option value="false">{t('manualMenu.stockStatus.outOfStock')}</option>
                       </select>
                   </div>
                   </div>
@@ -1750,13 +1763,13 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
                       onClick={() => handleAddItem(category.id)}
                       className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                     >
-                      Save Item
+                      {t('manualMenu.saveItem')}
                     </button>
                     <button
                       onClick={() => setShowItemForm(null)}
                       className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                     >
-                      Cancel
+                      {t('manualMenu.cancel')}
                     </button>
                   </div>
                 </div>
@@ -1775,9 +1788,9 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
                              <span className="text-green-600 font-bold">₺{formatPrice(item.price)}</span>
                            )}
                            {item.stock ? (
-                            <span className='text-green-600 font-bold'>Available</span>
+                            <span className='text-green-600 font-bold'>{t('manualMenu.stockStatus.inStock')}</span>
                            ):(
-                            <span className='text-red-600 font-bold'>Out of Stock</span>
+                            <span className='text-red-600 font-bold'>{t('manualMenu.stockStatus.outOfStock')}</span>
                            )}
                          </div>
                        </div>
@@ -1794,7 +1807,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
                          <button
                            onClick={() => handleEditItem(item)}
                            className="bg-amber-400 hover:bg-amber-500 text-white p-2 rounded-lg font-medium transition-all duration-200 text-sm shadow-sm hover:shadow-md"
-                           title="Edit item"
+                           title={t('manualMenu.editItem.title').replace('{itemName}', item.name)}
                          >
                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -1803,7 +1816,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
                          <button
                            onClick={() => handleDeleteItem(item.id, item.name)}
                            className="bg-rose-400 hover:bg-rose-500 text-white p-2 rounded-lg font-medium transition-all duration-200 text-sm shadow-sm hover:shadow-md"
-                           title="Delete item"
+                           title={t('manualMenu.deleteItem.title')}
                          >
                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -1814,67 +1827,86 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
                      {/* Inline Edit Item Form */}
                      {editingItem?.id === item.id && (
                        <div className="mt-4 mb-2 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
-                         <h3 className="text-lg font-semibold mb-4">Edit Item: {editingItem?.name}</h3>
+                         <h3 className="text-lg font-semibold mb-4">{t('manualMenu.editItem.title').replace('{itemName}', editingItem?.name || '')}</h3>
                          <div className="space-y-4">
                            <div>
-                             <label className="block text-sm font-medium mb-2">Item Name</label>
+                             <label className="block text-sm font-medium mb-2">{t('manualMenu.itemName.label')}</label>
                              <input
                                type="text"
                                value={editItemForm.name}
                                onChange={(e) => setEditItemForm({...editItemForm, name: e.target.value})}
                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none"
-                               placeholder="e.g., Grilled Chicken"
+                               placeholder={t('manualMenu.itemName.placeholder')}
                              />
                            </div>
                            <div>
-                             <label className="block text-sm font-medium mb-2">Price (₺)</label>
+                             <label className="block text-sm font-medium mb-2">{t('manualMenu.itemPrice.label')}</label>
                              <input
                                type="number"
                                step="0.01"
                                value={editItemForm.price}
                                onChange={(e) => setEditItemForm({...editItemForm, price: e.target.value})}
                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none"
-                               placeholder="e.g., 19.99"
+                               placeholder={t('manualMenu.itemPrice.placeholder')}
                              />
                            </div>
                             <div>
-                      <label className="block text-sm font-medium mb-1">Item Description</label>
+                      <label className="block text-sm font-medium mb-1">{t('manualMenu.itemDescription.label')}</label>
                       <input
                         type="text"
                         value={editItemForm.description}
                         onChange={(e) => setEditItemForm({...editItemForm, description: e.target.value})}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
-                        placeholder="e.g., Chocolate Cake with nutella filling"
+                        placeholder={t('manualMenu.editItem.placeholder')}
                       />
                     </div>
                            <div>
-                             <label className="block text-sm font-medium mb-2">Item Image (Optional - Leave empty to keep current)</label>
-                             <input
-                               type="file"
-                               accept="image/*"
-                               onChange={(e) => setEditItemForm({...editItemForm, menuImage: e.target.files?.[0] || null})}
-                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none"
-                             />
+                             <label className="block text-sm font-medium mb-2">{t('manualMenu.editItem.imageNote')}</label>
+                             <div className="relative">
+                               <input
+                                 type="file"
+                                 accept="image/*"
+                                 onChange={(e) => setEditItemForm({...editItemForm, menuImage: e.target.files?.[0] || null})}
+                                 className="hidden"
+                                 id={`edit-file-input-${editingItem?.id}`}
+                               />
+                               <label
+                                 htmlFor={`edit-file-input-${editingItem?.id}`}
+                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none bg-yellow-50 hover:bg-yellow-100 text-yellow-700 cursor-pointer flex items-center justify-center transition-colors"
+                               >
+                                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                 </svg>
+                                 {t('manualMenu.itemImage.selectFile')}
+                               </label>
+                               <div className="mt-2 text-sm text-gray-500">
+                                 {editItemForm.menuImage ? (
+                                   <span className="text-yellow-600">{editItemForm.menuImage.name}</span>
+                                 ) : (
+                                   <span>{t('manualMenu.itemImage.noFileSelected')}</span>
+                                 )}
+                               </div>
+                             </div>
                            </div>
                             <div>
-                            <label className="block text-sm font-medium mb-1">Stock Status</label>
+                            <label className="block text-sm font-medium mb-1">{t('manualMenu.editItem.stockNote')}</label>
                             <select
                               value={itemForm.stock ? 'true' : 'false'}
                               onChange={(e) => setItemForm({ ...itemForm, stock: e.target.value === 'true' })}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
                             >
-                              <option value="true">In Stock</option>
-                              <option value="false">Out of Stock</option>
+                              <option value="true">{t('manualMenu.editItem.stockInStock')}</option>
+                              <option value="false">{t('manualMenu.editItem.stockOutOfStock')}</option>
                             </select>
                           </div>
                          </div>
                          <div className="flex space-x-3 mt-4">
                            <button
-                             onClick={handleUpdateItem}
-                             className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                           >
-                             Update Item
-                           </button>
+                                                        onClick={handleUpdateItem}
+                           className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                         >
+                           {t('manualMenu.editItem.updateButton')}
+                         </button>
                            <button
                              onClick={() => {
                                setShowEditItemForm(false)
@@ -1883,7 +1915,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
                              }}
                              className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                            >
-                             Cancel
+                             {t('manualMenu.editCategory.cancelButton')}
                            </button>
                          </div>
                        </div>
@@ -1891,7 +1923,7 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
                    </div>
                  )                ) || (
                   <p className="text-gray-500 text-sm text-center py-4">
-                    No items yet. Click "Add Item" to add your first menu item.
+                    {t('dashboard.noItems.title')}. {t('dashboard.noItems.description')}
                   </p>
                 )}
                 </div>
@@ -1909,13 +1941,14 @@ function ThemeSection({ theme, setTheme }: {
   theme: Theme
   setTheme: (theme: Theme) => void 
 }) {
+  const { t } = useI18n()
   return (
     <div>
-      <h2 className="text-2xl font-semibold mb-6 text-gray-800">Theme & Logo Customization</h2>
+      <h2 className="text-2xl font-semibold mb-6 text-gray-800">{t('theme.simple.title')}</h2>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div>
-          <label className="block text-sm font-medium mb-3 text-gray-700">Background Color</label>
+          <label className="block text-sm font-medium mb-3 text-gray-700">{t('theme.simple.backgroundColor')}</label>
           <input
             type="color"
             value={theme.backgroundColor}
@@ -1925,7 +1958,7 @@ function ThemeSection({ theme, setTheme }: {
         </div>
         
         <div>
-          <label className="block text-sm font-medium mb-3 text-gray-700">Text Color</label>
+          <label className="block text-sm font-medium mb-3 text-gray-700">{t('theme.simple.textColor')}</label>
           <input
             type="color"
             value={theme.textColor}
@@ -1935,7 +1968,7 @@ function ThemeSection({ theme, setTheme }: {
         </div>
         
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium mb-3 text-gray-700">Style</label>
+          <label className="block text-sm font-medium mb-3 text-gray-700">{t('theme.simple.style')}</label>
           <select
             value={theme.style}
             onChange={(e) => setTheme({ ...theme, style: e.target.value })}
@@ -1949,10 +1982,10 @@ function ThemeSection({ theme, setTheme }: {
       </div>
       
       <div className="mt-10">
-        <h3 className="text-lg font-medium mb-4 text-gray-800">Company Logo</h3>
+        <h3 className="text-lg font-medium mb-4 text-gray-800">{t('theme.simple.companyLogo')}</h3>
         <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-purple-400 transition-colors">
           <div className="text-4xl mb-4">🖼️</div>
-          <p className="text-gray-600">Logo upload feature coming soon...</p>
+          <p className="text-gray-600">{t('theme.simple.logoUploadComingSoon')}</p>
         </div>
       </div>
     </div>
@@ -1971,6 +2004,7 @@ function PreviewSection({
   qrUrl: string
   onDownloadQR: () => void
 }) {
+  const { t } = useI18n()
   const [selectedMenuType, setSelectedMenuType] = useState<'pdf' | 'manual' | null>(null)
   const [updating, setUpdating] = useState(false)
 
@@ -2003,11 +2037,11 @@ function PreviewSection({
         window.location.reload()
       } else {
         const data = await res.json()
-        toast.error(data.error || 'Failed to update menu type')
+        toast.error(data.error || t('dashboard.orderSystem.error.update'))
       }
     } catch (error) {
       console.error('Menu type update error:', error)
-      toast.error('Network error. Please try again.')
+      toast.error(t('dashboard.orderSystem.error.network'))
     } finally {
       setUpdating(false)
     }
@@ -2015,11 +2049,11 @@ function PreviewSection({
 
   return (
     <div>
-      <h2 className="text-2xl font-semibold mb-2 text-center text-gray-800">Preview & QR Code</h2>
+      <h2 className="text-2xl font-semibold mb-2 text-center text-gray-800">{t('dashboard.preview.title')}</h2>
       
       {/* Menu Type Selector */}
       <div className="mb-6 p-4 bg-gray-50 rounded-xl">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4 text-center">Select Menu Type for QR Code</h3>
+        <h3 className="text-lg font-semibold text-gray-800 mb-4 text-center">{t('dashboard.preview.menuTypeSelector.title')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
           {/* PDF Menu Option */}
           <div 
@@ -2035,21 +2069,21 @@ function PreviewSection({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <h4 className="font-semibold text-gray-800 mb-2">PDF Menu</h4>
+            <h4 className="font-semibold text-gray-800 mb-2">{t('dashboard.preview.menuTypeSelector.pdfMenu.title')}</h4>
             <p className="text-sm text-gray-600">
-              Show uploaded PDF menu
+              {t('dashboard.preview.menuTypeSelector.pdfMenu.description')}
             </p>
             {selectedMenuType === 'pdf' && (
               <div className="mt-3 text-purple-500 font-medium flex items-center justify-center">
                 <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                Active
+                {t('dashboard.preview.menuTypeSelector.pdfMenu.active')}
               </div>
             )}
             {!userData?.company?.pdfMenuUrl && (
               <div className="mt-2 text-rose-400 text-xs">
-                No PDF uploaded yet
+                {t('dashboard.noPdfUploaded')}
               </div>
             )}
           </div>
@@ -2068,21 +2102,21 @@ function PreviewSection({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
               </svg>
             </div>
-            <h4 className="font-semibold text-gray-800 mb-2">Manual Menu</h4>
+            <h4 className="font-semibold text-gray-800 mb-2">{t('dashboard.preview.menuTypeSelector.manualMenu.title')}</h4>
             <p className="text-sm text-gray-600">
-              Show manually created menu
+              {t('dashboard.preview.menuTypeSelector.manualMenu.description')}
             </p>
             {selectedMenuType === 'manual' && (
               <div className="mt-3 text-purple-500 font-medium flex items-center justify-center">
                 <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                Active
+                {t('dashboard.preview.menuTypeSelector.manualMenu.active')}
               </div>
             )}
             {(!userData?.company?.Main_Categories || userData.company.Main_Categories.length === 0) && (
               <div className="mt-2 text-rose-400 text-xs">
-                No categories created yet
+                {t('dashboard.manualMenu.noCategories')}
               </div>
             )}
           </div>
@@ -2092,7 +2126,7 @@ function PreviewSection({
           <div className="text-center mt-4">
             <div className="inline-flex items-center space-x-2 text-purple-500">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-500"></div>
-              <span>Updating menu type...</span>
+              <span>{t('dashboard.updatingMenuType')}</span>
             </div>
           </div>
         )}
@@ -2107,13 +2141,13 @@ function PreviewSection({
         color: theme.textColor,
       }}
     >
-      <h3 className="text-lg font-medium mb-3 text-gray-600">Menu Preview</h3>
+      <h3 className="text-lg font-medium mb-3 text-gray-600">{t('dashboard.preview.menuPreview.title')}</h3>
 
       <div className="text-center">
         <h1 className="text-2xl font-bold mb-4">
-          {userData?.company?.C_Name || 'Your Restaurant'}
+          {userData?.company?.C_Name || t('dashboard.preview.menuPreview.defaultRestaurant')}
         </h1>
-        <p className="text-base mb-4 text-gray-500">Menu preview will appear here</p>
+        <p className="text-base mb-4 text-gray-500">{t('dashboard.preview.menuPreview.subtitle')}</p>
 
         {userData?.company?.id && (
           <a
@@ -2125,7 +2159,7 @@ function PreviewSection({
             <svg className="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>
-            Menu Preview
+            {t('dashboard.preview.menuPreview.button')}
           </a>
         )}
       </div>
@@ -2139,7 +2173,7 @@ function PreviewSection({
         color: theme.textColor,
       }}
     >
-      <h3 className="text-lg font-medium mb-3 text-gray-600">QR Code</h3>
+      <h3 className="text-lg font-medium mb-3 text-gray-600">{t('dashboard.preview.qrCode.title')}</h3>
 
       <div className="text-center">
         {qrUrl && (
@@ -2158,10 +2192,10 @@ function PreviewSection({
                 <svg className="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                Download QR Code
+                {t('dashboard.preview.qrCode.downloadButton')}
               </button>
             </div>
-            <p className="text-sm text-gray-400 mt-3">Scan to view your menu</p>
+            <p className="text-sm text-gray-400 mt-3">{t('dashboard.preview.qrCode.scanText')}</p>
           </>
         )}
       </div>
@@ -2173,6 +2207,7 @@ function PreviewSection({
 }
 
 function GetStartedPage({ userData }: { userData: UserData | null }) {
+  const { t } = useI18n()
   const [form, setForm] = useState({
     c_Id:  userData?.cId || '',
     restaurant: userData?.company?.C_Name || '',
@@ -2202,7 +2237,7 @@ function GetStartedPage({ userData }: { userData: UserData | null }) {
         message: '',
       })
     } else {
-      toast.error('Error sending message.')
+      toast.error(t('contact.error'))
     }
   }
     return (
@@ -2212,7 +2247,7 @@ function GetStartedPage({ userData }: { userData: UserData | null }) {
     <div className="min-h-screen flex flex-col items-center justify-center space-y-6">
     
     <div className="text-green-600 font-semibold text-4xl text-center">
-      Thank you! We'll contact you soon.
+      {t('contact.success')}
     </div><div className="text-green-600 font-semibold text-4xl">
       ✅
     </div>
@@ -2221,13 +2256,13 @@ function GetStartedPage({ userData }: { userData: UserData | null }) {
 </>
         ) : (
         <div className="max-w-4xl w-full space-y-6 relative z-10">
-        <h1 className="text-6xl font-bold text-center text-gray-900">Contact Us</h1>
-        <p className="text-center text-gray-700 mb-6">Fill out the form below and we'll get back to you shortly.</p>
+        <h1 className="text-6xl font-bold text-center text-gray-900">{t('contact.title')}</h1>
+        <p className="text-center text-gray-700 mb-6">{t('contact.subtitle')}</p>
           <form onSubmit={handleSubmit} className="space-y-6 bg-white p-8 rounded-2xl shadow-lg border border-gray-200">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[
-                { name: 'c_Id', placeholder: 'Restaurant ID' },
-                { name: 'restaurant', placeholder: 'Restaurant Name' },
+                { name: 'c_Id', placeholder: t('contact.restaurantId') },
+                { name: 'restaurant', placeholder: t('contact.restaurantName') },
               ].map(({ name, placeholder }) => (
                 <input
                   key={name}
@@ -2244,7 +2279,7 @@ function GetStartedPage({ userData }: { userData: UserData | null }) {
               name="message"
               value={form.message}
               onChange={handleChange}
-              placeholder="Optional message or request..."
+              placeholder={t('contact.message')}
               rows={5}
               className="w-full px-5 py-4 rounded-xl bg-white border border-gray-300 placeholder-gray-400 text-gray-900 text-lg resize-none transition focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent shadow-sm"
             />
@@ -2252,7 +2287,7 @@ function GetStartedPage({ userData }: { userData: UserData | null }) {
               type="submit"
               className="w-full py-4 bg-purple-600 text-white text-lg font-semibold rounded-xl hover:bg-purple-700 transition shadow-md"
             >
-              Send Message
+              {t('contact.send')}
             </button>
           </form>
           </div>
@@ -2263,6 +2298,7 @@ function GetStartedPage({ userData }: { userData: UserData | null }) {
 
 // Profile Component
 function ProfileSection({ userData }: { userData: UserData | null }) {
+  const { t } = useI18n()
   const [formData, setFormData] = useState({
     userName: userData?.userName || '',
     companyName: userData?.company?.C_Name || '',
@@ -2306,18 +2342,18 @@ const [showResetDropdown, setShowResetDropdown] = useState(false)
     const data = await res.json()
 
     if (res.ok) {
-      toast.success(data.message || 'Password updated successfully!')
+      toast.success(data.message || t('profile.password.success'))
       // Optionally clear password fields here:
       setOldPassword('')
       setNewPassword('')
       setConfirmPassword('')
       setShowResetDropdown(false)
     } else {
-      toast.error(data.error || 'Password update failed')
+      toast.error(data.error || t('profile.password.failed'))
     }
   } catch (error) {
     console.error('Password update error:', error)
-    toast.error('Network error. Please try again.')
+    toast.error(t('profile.password.networkError'))
   } finally {
     setLoading(false)
   }
@@ -2344,11 +2380,11 @@ const [showResetDropdown, setShowResetDropdown] = useState(false)
       
 
       if (res.ok) {
-        toast.success('Profile updated successfully!')
+        toast.success(t('profile.success'))
         window.location.reload()
       } else {
         const data = await res.json()
-        toast.error(data.error || 'Update failed')
+        toast.error(data.error || t('profile.error'))
       }
     } catch (error) {
       console.error('Profile update error:', error)
@@ -2360,42 +2396,42 @@ const [showResetDropdown, setShowResetDropdown] = useState(false)
 
   return (
     <div>
-      <h2 className="text-2xl font-semibold mb-6 text-center text-gray-800">Profile Settings</h2>
+      <h2 className="text-2xl font-semibold mb-6 text-center text-gray-800">{t('profile.title')}</h2>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Basic Information */}
         <div className="space-y-6">
-          <h3 className="text-xl font-semibold text-black-700">Company Information</h3>
+          <h3 className="text-xl font-semibold text-black-700">{t('profile.companyInformation.title')}</h3>
           
           <div>
             <label className="block text-sm font-medium mb-2 text-black-700">
-              Username
+              {t('profile.userName')}
             </label>
             <input
               type="text"
               value={formData.userName}
               onChange={(e) => setFormData({ ...formData, userName: e.target.value })}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200"
-              placeholder="Enter your username"
+              placeholder={t('profile.userName.placeholder')}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium mb-2 text-black-700">
-              Restaurant Name
+              {t('profile.companyName')}
             </label>
             <input
               type="text"
               value={formData.companyName}
               onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200"
-              placeholder="Enter your restaurant name"
+              placeholder={t('profile.companyName.placeholder')}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium mb-2 text-black-700">
-              User ID
+              {t('profile.userId.label')}
             </label>
             <input
               type="text"
@@ -2403,50 +2439,50 @@ const [showResetDropdown, setShowResetDropdown] = useState(false)
               disabled
               className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
             />
-            <p className="text-xs text-gray-500 mt-1">*This field cannot be changed</p>
+            <p className="text-xs text-gray-500 mt-1">{t('profile.userId.cannotChange')}</p>
           </div>
         </div>
 
         {/* Social Media Links */}
         <div className="space-y-6">
-          <h3 className="text-xl font-semibold text-black-700">Social Media Links</h3>
+          <h3 className="text-xl font-semibold text-black-700">{t('profile.socialMedia.title')}</h3>
           
           <div>
             <label className="block text-sm font-medium mb-2 text-black-700">
-              Facebook URL
+              {t('profile.socialMedia.facebook')}
             </label>
             <input
               type="url"
               value={formData.facebookUrl}
               onChange={(e) => setFormData({ ...formData, facebookUrl: e.target.value })}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200"
-              placeholder="https://facebook.com/yourpage"
+              placeholder={t('profile.socialMedia.facebook.placeholder')}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium mb-2 text-black-700">
-              Instagram URL
+              {t('profile.socialMedia.instagram')}
             </label>
             <input
               type="url"
               value={formData.instagramUrl}
               onChange={(e) => setFormData({ ...formData, instagramUrl: e.target.value })}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200"
-              placeholder="https://instagram.com/yourpage"
+              placeholder={t('profile.socialMedia.instagram.placeholder')}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium mb-2 text-black-700">
-              X (Twitter) URL
+              {t('profile.socialMedia.x')}
             </label>
             <input
               type="url"
               value={formData.xUrl}
               onChange={(e) => setFormData({ ...formData, xUrl: e.target.value })}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200"
-              placeholder="https://x.com/yourpage"
+              placeholder={t('profile.socialMedia.x.placeholder')}
             />
           </div>
         </div>
@@ -2459,7 +2495,7 @@ const [showResetDropdown, setShowResetDropdown] = useState(false)
     className="bg-pink-400 hover:bg-purple-700 text-white px-8 py-3 rounded-lg font-medium text-lg disabled:bg-purple-400 transition-colors shadow-lg"
     onClick={() => setShowResetDropdown(true)}
   >
-    Reset Password
+    {t('profile.resetPassword.button')}
   </button>
 )}
   {showResetDropdown && (
@@ -2467,12 +2503,12 @@ const [showResetDropdown, setShowResetDropdown] = useState(false)
       <div className="bg-white border border-gray-200 rounded-xl shadow-md p-6 space-y-4 mx-auto">
         <div>
           <label htmlFor="oldPassword" className="block text-sm font-medium mb-1 text-gray-700">
-            Old Password
+            {t('profile.resetPassword.oldPassword')}
           </label>
           <input
             id="oldPassword"
             type="password"
-            placeholder="Enter old password"
+            placeholder={t('profile.resetPassword.oldPassword.placeholder')}
             value={oldPassword}
             onChange={(e) => setOldPassword(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200"
@@ -2481,12 +2517,12 @@ const [showResetDropdown, setShowResetDropdown] = useState(false)
 
         <div>
           <label htmlFor="newPassword" className="block text-sm font-medium mb-1 text-gray-700">
-            New Password
+            {t('profile.resetPassword.newPassword')}
           </label>
           <input
             id="newPassword"
             type="password"
-            placeholder="Enter new password"
+            placeholder={t('profile.resetPassword.newPassword.placeholder')}
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200"
@@ -2495,12 +2531,12 @@ const [showResetDropdown, setShowResetDropdown] = useState(false)
 
         <div>
           <label htmlFor="confirmPassword" className="block text-sm font-medium mb-1 text-gray-700">
-            Confirm Password
+            {t('profile.resetPassword.confirmPassword')}
           </label>
           <input
             id="confirmPassword"
             type="password"
-            placeholder="Re-enter new password"
+            placeholder={t('profile.resetPassword.confirmPassword.placeholder')}
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200"
@@ -2514,14 +2550,14 @@ const [showResetDropdown, setShowResetDropdown] = useState(false)
             loading ? 'bg-green-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'
           } text-white py-2 px-4 rounded-lg transition font-semibold`}
         >
-          {loading ? 'Updating...' : 'Submit Password Reset'}
+          {loading ? t('profile.resetPassword.updating') : t('profile.resetPassword.submit')}
         </button>
         <div className="flex justify-center">
   <button
     className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg font-medium text-lg transition-colors shadow-lg"
     onClick={() => setShowResetDropdown(false)}
   >
-    Discard
+    {t('profile.resetPassword.discard')}
   </button>
 </div>
       </div>
@@ -2530,19 +2566,19 @@ const [showResetDropdown, setShowResetDropdown] = useState(false)
 </div>
       {/* Account Info */}
       <div className="mt-8 p-6 bg-gray-50 text-center rounded-xl">
-        <h3 className="text-xl font-semibold text-black-700 mb-4">Account Information</h3>
+        <h3 className="text-xl font-semibold text-black-700 mb-4">{t('profile.accountInformation.title')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-l text-black-600">
           <div>
-            <span className="font-semibold">Registration Date:</span> {userData?.CreatedAt ? new Date(userData.CreatedAt).toLocaleDateString('en-US') : 'Unknown'}
+            <span className="font-semibold">{t('profile.accountInformation.registrationDate')}</span> {userData?.CreatedAt ? new Date(userData.CreatedAt).toLocaleDateString('en-US') : t('profile.accountInformation.unknown')}
           </div>
           <div>
-            <span className="font-semibold">Last Update:</span> {userData?.UpdatedAt ? new Date(userData.UpdatedAt).toLocaleDateString('en-US') : 'Unknown'}
+            <span className="font-semibold">{t('profile.accountInformation.lastUpdate')}</span> {userData?.UpdatedAt ? new Date(userData.UpdatedAt).toLocaleDateString('en-US') : t('profile.accountInformation.unknown')}
           </div>
           <div>
-            <span className="font-semibold">Role:</span> {userData?.role?.roleName || 'User'}
+            <span className="font-semibold">{t('profile.accountInformation.role')}</span> {userData?.role?.roleName || t('profile.accountInformation.user')}
           </div>
           <div>
-            <span className="font-semibold">Menu Type:</span> {userData?.company?.menuType || 'Not Determined Yet'}
+            <span className="font-semibold">{t('profile.accountInformation.menuType')}</span> {userData?.company?.menuType || t('profile.accountInformation.notDetermined')}
           </div>
         </div>
       </div>
@@ -2554,7 +2590,7 @@ const [showResetDropdown, setShowResetDropdown] = useState(false)
           disabled={saving}
           className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-lg font-medium text-lg disabled:bg-purple-400 transition-colors shadow-lg"
         >
-          {saving ? 'Saving...' : '💾 Save Profile'}
+          {saving ? t('profile.save.saving') : t('profile.save.button')}
         </button>
       </div>
     </div>
@@ -2563,6 +2599,7 @@ const [showResetDropdown, setShowResetDropdown] = useState(false)
 
 // Theme Settings Section
 function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | null, onLoaded?: () => void }) {
+  const { t } = useI18n()
   const [showThemeOptions, setShowThemeOptions] = useState(false)
   const [showImageOptions, setShowImageOptions] = useState(false)
   const [selectedLogo, setSelectedLogo] = useState<File | null>(null)
@@ -2597,14 +2634,14 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
         credentials: 'include'
       })
       if (res.ok) {
-        toast.success('Theme settings saved!')
+        toast.success(t('theme.success'))
         window.location.reload()
       } else {
         const data = await res.json()
-        toast.error(data.error || 'Failed to save theme')
+        toast.error(data.error || t('theme.error'))
       }
     } catch (error) {
-      toast.error('Network error. Please try again.')
+      toast.error(t('theme.error.network'))
     }
   }
 
@@ -2615,7 +2652,7 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
       if (allowedTypes.includes(file.type)) {
         setSelectedLogo(file)
       } else {
-        toast.warn('Please select a valid image file (JPEG, PNG, WebP)')
+        toast.warn(t('theme.section.images.validImageFile'))
       }
     }
   }
@@ -2627,14 +2664,14 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
       if (allowedTypes.includes(file.type)) {
         setSelectedWelcoming(file)
       } else {
-        toast.warn('Please select a valid image file (JPEG, PNG, WebP)')
+        toast.warn(t('theme.section.images.validImageFile'))
       }
     }
   }
 
   const handleImageUpload = async () => {
     if (!selectedLogo && !selectedWelcoming) {
-      toast.warn('Please select at least one image')
+      toast.warn(t('theme.section.images.selectAtLeastOne'))
       return
     }
     setUploadingImages(true)
@@ -2649,22 +2686,23 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
       })
       const data = await res.json()
       if (res.ok) {
-        toast.success('Images uploaded successfully!')
+        toast.success(t('images.success.upload'))
         setSelectedLogo(null)
         setSelectedWelcoming(null)
         window.location.reload()
       } else {
-        toast.error(data.error || 'Image upload failed')
+        toast.error(data.error || t('images.error.upload'))
       }
     } catch (error) {
-      toast.error('Network error. Please try again.')
+      toast.error(t('theme.section.images.networkError'))
     } finally {
       setUploadingImages(false)
     }
   }
 
   const handleDeleteImage = async (imageType: 'logo' | 'welcoming') => {
-    if (!confirm(`Are you sure you want to delete the ${imageType === 'logo' ? 'logo' : 'welcome image'}?`)) return
+    const typeText = imageType === 'logo' ? t('theme.section.images.companyLogo') : t('theme.section.images.welcomeImage')
+    if (!confirm(t('theme.section.images.deleteConfirm').replace('{type}', typeText))) return
     try {
       const res = await fetch(`/api/QR_Panel/user/delete-image?type=${imageType}`, {
         method: 'DELETE',
@@ -2672,28 +2710,28 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
       })
       const data = await res.json()
       if (res.ok) {
-        toast.success(data.message)
+        toast.success(data.message || t('theme.section.images.deleteSuccess'))
         window.location.reload()
       } else {
-        toast.error(data.error || 'Failed to delete image')
+        toast.error(data.error || t('theme.section.images.deleteFailed'))
       }
     } catch (error) {
-      toast.error('Network error. Please try again.')
+      toast.error(t('theme.section.images.networkError'))
     }
   }
 
   return (
     <div>
-      <h2 className="text-2xl font-semibold text-center mb-6 text-gray-800">Theme, Logo & Welcome Settings</h2>
+      <h2 className="text-2xl font-semibold text-center mb-6 text-gray-800">{t('theme.section.title')}</h2>
       {/* Theme Customization Section */}
       <div className="mt-8">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-800">Menu Appearance Settings</h3>
+          <h3 className="text-lg font-semibold text-gray-800">{t('theme.section.menuAppearance.title')}</h3>
           <button
             onClick={() => setShowThemeOptions(!showThemeOptions)}
             className="bg-purple-100 hover:bg-purple-200 text-purple-700 px-4 py-2 rounded-lg transition-colors text-sm font-medium"
           >
-            {showThemeOptions ? '⬆️ Hide' : '🎨 Customize'}
+            {showThemeOptions ? t('theme.section.menuAppearance.hideButton') : t('theme.section.menuAppearance.customizeButton')}
           </button>
         </div>
         {showThemeOptions && (
@@ -2701,7 +2739,7 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Background Color */}
               <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">Background Color</label>
+                <label className="block text-sm font-medium mb-2 text-gray-700">{t('theme.section.menuAppearance.backgroundColor')}</label>
                 <div className="flex items-center space-x-3">
                   <input
                     type="color"
@@ -2720,7 +2758,7 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
               </div>
               {/* Text Color */}
               <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">Text Color</label>
+                <label className="block text-sm font-medium mb-2 text-gray-700">{t('theme.section.menuAppearance.textColor')}</label>
                 <div className="flex items-center space-x-3">
                   <input
                     type="color"
@@ -2739,7 +2777,7 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
               </div>
               {/* Logo Area Color */}
               <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">Logo Area Color</label>
+                <label className="block text-sm font-medium mb-2 text-gray-700">{t('theme.section.menuAppearance.logoAreaColor')}</label>
                 <div className="flex items-center space-x-3">
                   <input
                     type="color"
@@ -2758,7 +2796,7 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
               </div>
               {/* Style Selection */}
               <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700">Theme Style</label>
+                <label className="block text-sm font-medium mb-2 text-gray-700">{t('theme.section.menuAppearance.themeStyle')}</label>
                 <select
                   value={themeSettings.style}
                   onChange={(e) => setThemeSettings({...themeSettings, style: e.target.value})}
@@ -2768,12 +2806,12 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
                   <option value="classic">Classic (Traditional & Timeless)</option>
                   <option value="elegant">Elegant (Sophisticated & Refined)</option>
                 </select>
-                <p className="text-xs text-gray-500 mt-1">Each style includes a unique font family</p>
+                <p className="text-xs text-gray-500 mt-1">{t('theme.section.menuAppearance.styleDescription')}</p>
               </div>
             </div>
             {/* Preview */}
             <div className="mt-6">
-              <h4 className="text-sm font-medium mb-3 text-gray-700">Preview</h4>
+              <h4 className="text-sm font-medium mb-3 text-gray-700">{t('theme.section.menuAppearance.preview')}</h4>
               <div 
                 className="border-2 border-gray-300 rounded-lg p-6 text-center"
                 style={{ 
@@ -2786,12 +2824,12 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
                   className="inline-block px-4 py-2 rounded-lg mb-4"
                   style={{ backgroundColor: themeSettings.logoAreaColor }}
                 >
-                  <span className="font-bold text-sm">Logo Area</span>
+                  <span className="font-bold text-sm">{t('theme.section.menuAppearance.logoArea')}</span>
                 </div>
-                <h3 className="text-xl font-bold mb-2">{userData?.company?.C_Name || 'Restaurant Name'}</h3>
-                <p className="text-sm opacity-75 mb-3">Your PDF menu will be displayed with this theme</p>
+                <h3 className="text-xl font-bold mb-2">{userData?.company?.C_Name || t('theme.section.menuAppearance.restaurantName')}</h3>
+                <p className="text-sm opacity-75 mb-3">{t('theme.section.menuAppearance.previewDescription')}</p>
                 <div className="text-xs opacity-60 border-t pt-2 mt-2">
-                  <span className="capitalize">{themeSettings.style}</span> Style Font
+                  <span className="capitalize">{themeSettings.style}</span> {t('theme.section.menuAppearance.styleFont')}
                 </div>
               </div>
             </div>
@@ -2804,7 +2842,7 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
                 <svg className="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                Save Theme Settings
+                {t('dashboard.themeSettings.saveButton')}
               </button>
             </div>
           </div>
@@ -2814,15 +2852,14 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
       {/* Order System Toggle Section */}
       <div className="mt-8">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-800">Order System Settings</h3>
+          <h3 className="text-lg font-semibold text-gray-800">{t('theme.section.orderSystem.title')}</h3>
         </div>
         <div className="bg-gray-50 rounded-xl p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="text-md font-medium text-gray-700 mb-2">Enable Order System</h4>
+              <h4 className="text-md font-medium text-gray-700 mb-2">{t('theme.section.orderSystem.enableTitle')}</h4>
               <p className="text-sm text-gray-600">
-                When enabled, customers can add items to cart and place orders through the manual menu.
-                When disabled, the menu will be display-only without cart functionality.
+                {t('theme.section.orderSystem.description')}
               </p>
             </div>
             <div className="flex items-center">
@@ -2840,14 +2877,14 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
                       })
                       
                       if (res.ok) {
-                        toast.success(`Order system ${e.target.checked ? 'enabled' : 'disabled'} successfully!`)
+                        toast.success(e.target.checked ? t('dashboard.orderSystem.success.enabled') : t('dashboard.orderSystem.success.disabled'))
                         window.location.reload()
                       } else {
                         const data = await res.json()
-                        toast.error(data.error || 'Failed to update order system setting')
+                        toast.error(data.error || t('dashboard.orderSystem.error.update'))
                       }
                     } catch (error) {
-                      toast.error('Network error. Please try again.')
+                      toast.error(t('dashboard.orderSystem.error.network'))
                     }
                   }}
                   className="sr-only peer"
@@ -2860,12 +2897,12 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
             <div className="flex items-start space-x-3">
               <div className="text-purple-600 text-lg">ℹ️</div>
               <div className="text-sm text-purple-800">
-                <strong>Current Status:</strong> {userData?.company?.orderSystem ? 'Order system is enabled' : 'Order system is disabled'}
+                <strong>{t('theme.section.orderSystem.currentStatus')}</strong> {userData?.company?.orderSystem ? t('theme.section.orderSystem.status.enabled') : t('theme.section.orderSystem.status.disabled')}
                 <br />
                 <span className="text-purple-600">
                   {userData?.company?.orderSystem 
-                    ? 'Customers can add items to cart and place orders.' 
-                    : 'Menu is display-only. No cart functionality will be shown.'}
+                    ? t('theme.section.orderSystem.enabled')
+                    : t('theme.section.orderSystem.status.displayOnly')}
                 </span>
               </div>
             </div>
@@ -2876,7 +2913,7 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
       {/* Image Upload Section */}
       <div className="mt-8">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-800">Logo and Welcome Image</h3>
+          <h3 className="text-lg font-semibold text-gray-800">{t('theme.section.images.title')}</h3>
           <button
             onClick={() => setShowImageOptions(!showImageOptions)}
             className="bg-purple-100 hover:bg-purple-200 text-purple-700 px-4 py-2 rounded-lg transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
@@ -2886,14 +2923,14 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
                 <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                 </svg>
-                Hide
+                {t('theme.section.images.hide')}
               </>
             ) : (
               <>
                 <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                Upload Images
+                {t('theme.section.images.uploadImages')}
               </>
             )}
           </button>
@@ -2901,11 +2938,11 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
         {/* Current Images Display */}
         {(userData?.company?.C_Logo_Image || userData?.company?.Welcoming_Page) && (
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
-            <h4 className="text-sm font-medium text-green-800 mb-3">Uploaded Images</h4>
+            <h4 className="text-sm font-medium text-green-800 mb-3">{t('theme.section.images.uploadedImages')}</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {userData?.company?.C_Logo_Image && (
                 <div className="text-center">
-                  <p className="text-sm text-green-600 mb-2">Company Logo</p>
+                  <p className="text-sm text-green-600 mb-2">{t('theme.section.images.companyLogo')}</p>
                   <img 
                     src={`/api/AdminPanel/company/image/${userData.company.id}/logo?${Date.now()}`}
                     alt="Company Logo"
@@ -2919,13 +2956,13 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
                     <svg className="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
-                    Delete
+                    {t('theme.section.images.delete')}
                   </button>
                 </div>
               )}
               {userData?.company?.Welcoming_Page && (
                 <div className="text-center">
-                  <p className="text-sm text-green-600 mb-2">Welcome Image</p>
+                  <p className="text-sm text-green-600 mb-2">{t('theme.section.images.welcomeImage')}</p>
                   <img 
                     src={`/api/AdminPanel/company/image/${userData.company.id}/welcoming?${Date.now()}`}
                     alt="Welcoming Page"
@@ -2939,7 +2976,7 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
                     <svg className="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
-                    Delete
+                    {t('theme.section.images.delete')}
                   </button>
                 </div>
               )}
@@ -2951,7 +2988,7 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Logo Upload */}
               <div>
-                <label className="block text-sm font-medium mb-3 text-gray-700">Company Logo</label>
+                <label className="block text-sm font-medium mb-3 text-gray-700">{t('theme.section.images.logoUpload.title')}</label>
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
                   <input
                     type="file"
@@ -2961,8 +2998,8 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
                     id="logo-upload"
                   />
                   <label htmlFor="logo-upload" className="cursor-pointer block">
-                    <div className="text-sm font-medium mb-2 text-gray-800">{selectedLogo ? selectedLogo.name : 'Select Logo'}</div>
-                    <div className="text-xs text-gray-500">JPEG, PNG, WebP (Max 5MB)</div>
+                    <div className="text-sm font-medium mb-2 text-gray-800">{selectedLogo ? selectedLogo.name : t('theme.section.images.logoUpload.selectLogo')}</div>
+                    <div className="text-xs text-gray-500">{t('theme.section.images.logoUpload.fileTypes')}</div>
                   </label>
                 </div>
                 {selectedLogo && (
@@ -2976,14 +3013,14 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
                       onClick={() => setSelectedLogo(null)}
                       className="mt-2 text-xs text-red-600 hover:text-red-800"
                     >
-                      Remove
+                      {t('theme.section.images.logoUpload.remove')}
                     </button>
                   </div>
                 )}
               </div>
               {/* Welcoming Page Upload */}
               <div>
-                <label className="block text-sm font-medium mb-3 text-gray-700">Welcome Image</label>
+                <label className="block text-sm font-medium mb-3 text-gray-700">{t('theme.section.images.welcomeUpload.title')}</label>
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
                   <input
                     type="file"
@@ -2993,8 +3030,8 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
                     id="welcoming-upload"
                   />
                   <label htmlFor="welcoming-upload" className="cursor-pointer block">
-                    <div className="text-sm font-medium mb-2 text-gray-800">{selectedWelcoming ? selectedWelcoming.name : 'Select Welcome Image'}</div>
-                    <div className="text-xs text-gray-500">JPEG, PNG, WebP (Max 5MB)</div>
+                    <div className="text-sm font-medium mb-2 text-gray-800">{selectedWelcoming ? selectedWelcoming.name : t('theme.section.images.welcomeUpload.selectWelcome')}</div>
+                    <div className="text-xs text-gray-500">{t('theme.section.images.welcomeUpload.fileTypes')}</div>
                   </label>
                 </div>
                 {selectedWelcoming && (
@@ -3008,7 +3045,7 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
                       onClick={() => setSelectedWelcoming(null)}
                       className="mt-2 text-xs text-red-600 hover:text-red-800"
                     >
-                      Remove
+                      {t('theme.section.images.welcomeUpload.remove')}
                     </button>
                   </div>
                 )}
@@ -3027,14 +3064,14 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
                       <svg className="w-5 h-5 inline mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
-                      Uploading...
+                      {t('theme.section.images.uploading')}
                     </>
                   ) : (
                     <>
                       <svg className="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                       </svg>
-                      Upload Images
+                      {t('theme.section.images.uploadButton')}
                     </>
                   )}
                 </button>
@@ -3049,6 +3086,7 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
 
 // Analytics Component
 function AnalyticsSection({ userData, onLoaded }: { userData: UserData | null, onLoaded?: () => void }) {
+  const { t } = useI18n()
   const [filterPeriod, setFilterPeriod] = useState<'daily' | 'weekly' | 'monthly' | 'total'>('total');
   const [showPopularDishes, setShowPopularDishes] = useState(false);
   const [showRecentOrders, setShowRecentOrders] = useState(false);
@@ -3178,6 +3216,7 @@ function AnalyticsSection({ userData, onLoaded }: { userData: UserData | null, o
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        <p className="ml-4 text-gray-600">{t('analytics.loading')}</p>
       </div>
     )
   }
@@ -3185,12 +3224,12 @@ function AnalyticsSection({ userData, onLoaded }: { userData: UserData | null, o
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-semibold text-gray-800">Restaurant Analytics</h2>
+        <h2 className="text-2xl font-semibold text-gray-800">{t('analytics.title')}</h2>
         <button
           onClick={fetchAnalyticsData}
           className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
         >
-          🔄 Refresh
+          {t('analytics.refresh')}
         </button>
       </div>
 
@@ -3205,7 +3244,7 @@ function AnalyticsSection({ userData, onLoaded }: { userData: UserData | null, o
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            📅 Daily
+            {t('analytics.filter.daily')}
           </button>
           <button
             onClick={() => setFilterPeriod('weekly')}
@@ -3215,7 +3254,7 @@ function AnalyticsSection({ userData, onLoaded }: { userData: UserData | null, o
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            📊 Weekly
+            {t('analytics.filter.weekly')}
           </button>
           <button
             onClick={() => setFilterPeriod('monthly')}
@@ -3225,7 +3264,7 @@ function AnalyticsSection({ userData, onLoaded }: { userData: UserData | null, o
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            📈 Monthly
+            {t('analytics.filter.monthly')}
           </button>
           <button
             onClick={() => setFilterPeriod('total')}
@@ -3235,7 +3274,7 @@ function AnalyticsSection({ userData, onLoaded }: { userData: UserData | null, o
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            📋 Total
+            {t('analytics.filter.total')}
           </button>
         </div>
       </div>
@@ -3250,9 +3289,9 @@ function AnalyticsSection({ userData, onLoaded }: { userData: UserData | null, o
         </div>
         <div className="ml-4">
           <p className="text-sm font-medium text-gray-600">
-            {filterPeriod === 'daily' ? 'Daily Orders' : 
-             filterPeriod === 'weekly' ? 'Weekly Orders' : 
-             filterPeriod === 'monthly' ? 'Monthly Orders' : 'Total Orders'}
+            {filterPeriod === 'daily' ? t('analytics.metrics.dailyOrders') : 
+             filterPeriod === 'weekly' ? t('analytics.metrics.weeklyOrders') : 
+             filterPeriod === 'monthly' ? t('analytics.metrics.monthlyOrders') : t('analytics.metrics.totalOrders')}
           </p>
           <p className="text-2xl font-bold text-gray-900">{analyticsData.totalOrders}</p>
         </div>
@@ -3266,9 +3305,9 @@ function AnalyticsSection({ userData, onLoaded }: { userData: UserData | null, o
         </div>
         <div className="ml-4">
           <p className="text-sm font-medium text-gray-600">
-            {filterPeriod === 'daily' ? 'Daily Revenue' : 
-             filterPeriod === 'weekly' ? 'Weekly Revenue' : 
-             filterPeriod === 'monthly' ? 'Monthly Revenue' : 'Total Revenue'}
+            {filterPeriod === 'daily' ? t('analytics.metrics.dailyRevenue') : 
+             filterPeriod === 'weekly' ? t('analytics.metrics.weeklyRevenue') : 
+             filterPeriod === 'monthly' ? t('analytics.metrics.monthlyRevenue') : t('analytics.metrics.totalRevenue')}
           </p>
           <p className="text-2xl font-bold text-gray-900">₺{formatPrice(analyticsData.totalRevenue)}</p>
         </div>
@@ -3285,7 +3324,7 @@ function AnalyticsSection({ userData, onLoaded }: { userData: UserData | null, o
           className="w-full flex items-center justify-between text-xl font-semibold text-gray-800 mb-4 hover:text-purple-600 transition-colors"
         >
           <span>
-            🍽️ Most Popular Dishes 
+            {t('analytics.popularDishes.title')} 
             {filterPeriod !== 'total' && ` (${filterPeriod.charAt(0).toUpperCase() + filterPeriod.slice(1)})`}
           </span>
           <svg 
@@ -3307,12 +3346,12 @@ function AnalyticsSection({ userData, onLoaded }: { userData: UserData | null, o
                   </div>
                   <div>
                     <p className="font-medium text-gray-900">{dish.name}</p>
-                    <p className="text-sm text-gray-600">{dish.orders} orders</p>
+                    <p className="text-sm text-gray-600">{dish.orders} {t('analytics.popularDishes.orders')}</p>
                   </div>
                 </div>
                 <div className="text-right">
                   <p className="font-semibold text-green-600">₺{formatPrice(dish.revenue)}</p>
-                  <p className="text-sm text-gray-500">revenue</p>
+                  <p className="text-sm text-gray-500">{t('analytics.popularDishes.revenue')}</p>
                 </div>
               </div>
             ))}
@@ -3327,7 +3366,7 @@ function AnalyticsSection({ userData, onLoaded }: { userData: UserData | null, o
           className="w-full flex items-center justify-between text-xl font-semibold text-gray-800 mb-4 hover:text-purple-600 transition-colors"
         >
           <span>
-            📋 Recent Orders
+            {t('analytics.recentOrders.title')}
             {filterPeriod !== 'total' && ` (${filterPeriod.charAt(0).toUpperCase() + filterPeriod.slice(1)})`}
           </span>
           <svg 
@@ -3344,7 +3383,7 @@ function AnalyticsSection({ userData, onLoaded }: { userData: UserData | null, o
             {analyticsData.recentOrders.map((order) => (
               <div key={order.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div>
-                  <p className="font-medium text-gray-900">Table no: {order.tableNumber}</p>
+                  <p className="font-medium text-gray-900">{t('analytics.recentOrders.tableNo')} {order.tableNumber}</p>
                   <p className="text-sm text-gray-600">
                     {new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString()}
                   </p>
@@ -3361,7 +3400,7 @@ function AnalyticsSection({ userData, onLoaded }: { userData: UserData | null, o
       {/* Monthly Revenue Chart */}
    <div className="bg-white rounded-xl shadow-lg p-6">
       <h3 className="text-xl font-semibold text-gray-800 mb-4">
-        📊 Revenue
+        {t('analytics.revenueChart.title')}
         {filterPeriod !== 'total' && ` (${filterPeriod.charAt(0).toUpperCase() + filterPeriod.slice(1)})`}
       </h3>
       <div className="flex items-end gap-4 justify-center h-48 overflow-x-auto">
