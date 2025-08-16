@@ -53,7 +53,7 @@ export default function UserLoginPage() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden flex flex-col">
+    <div className="min-h-screen relative overflow-hidden flex flex-col bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Header */}
       <header className="relative z-20 py-6 px-4">
         <div className="max-w-7xl mx-auto text-center">
