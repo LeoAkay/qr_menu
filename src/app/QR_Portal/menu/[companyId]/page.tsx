@@ -551,14 +551,14 @@ if (company && showWelcoming) {
               </h1>
             </div>
             <div className="flex-1 flex justify-end">
-              <button
-                onClick={() => setLocale(locale === 'en' ? 'tr' : 'en')}
-                className="bg-black text-white border border-gray-800 rounded-lg px-3 py-2 text-sm font-medium hover:bg-gray-800 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
-                title={t('language.switch')}
-              >
-                <Globe className="w-4 h-4" />
-                <span className="hidden sm:inline">{locale === 'en' ? 'EN' : 'TR'}</span>
-              </button>
+               <button
+            onClick={() => setLocale(locale === 'en' ? 'tr' : 'en')}
+            className="bg-white/80 backdrop-blur-sm border border-gray-200 rounded-full px-3 py-2 text-sm font-medium text-gray-700 hover:bg-white hover:border-gray-300 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
+            title={t('language.switch')}
+          >
+            <Globe className="w-5 h-5 text-black" />
+            <span className="text-black text-sm font-medium hidden sm:inline">{locale === 'en' ? 'EN' : 'TR'}</span>
+          </button>
             </div>
           </div>
         </header>

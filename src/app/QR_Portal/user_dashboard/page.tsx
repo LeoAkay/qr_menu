@@ -512,11 +512,11 @@ export default function UserDashboard() {
         <div className="flex items-center gap-3 ml-4 flex-1 justify-end">
           <button
             onClick={() => setLocale(locale === 'en' ? 'tr' : 'en')}
-            className="p-2 bg-black hover:bg-gray-800 rounded-full transition flex items-center gap-2"
+            className="bg-white/80 backdrop-blur-sm border border-gray-200 rounded-full px-3 py-2 text-sm font-medium text-gray-700 hover:bg-white hover:border-gray-300 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
             title={t('language.switch')}
           >
-            <Globe className="w-5 h-5 text-white" />
-            <span className="text-white text-sm font-medium hidden sm:inline">{locale === 'en' ? 'EN' : 'TR'}</span>
+            <Globe className="w-5 h-5 text-black" />
+            <span className="text-black text-sm font-medium hidden sm:inline">{locale === 'en' ? 'EN' : 'TR'}</span>
           </button>
 
           <button
