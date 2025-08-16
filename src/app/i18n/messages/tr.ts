@@ -431,7 +431,7 @@ export const tr = {
   'orderSystem.confirmPayAll.title': 'Ödeme Onayı',
   'orderSystem.confirmPayAll.message': 'Masa #',
   'orderSystem.confirmPayAll.total': ' için kalan tüm ürünleri ödemek istediğinizden emin misiniz? (₺',
-  'orderSystem.confirmPayAll.markInactive': ')? Bu işlem tüm siparişleri ödenmiş ve pasif olarak işaretleyecek.',
+  'orderSystem.confirmPayAll.markInactive': ')? Bu işlem tüm siparişleri ödenmiş olarak işaretleyecek.',
   'orderSystem.confirmPayAll.confirm': 'Ödemeyi Onayla',
   'orderSystem.confirmPayAll.cancel': 'İptal',
   'orderSystem.payAllSuccess': 'Tüm ürünler başarıyla ödendi! 💳',

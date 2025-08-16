@@ -3360,7 +3360,6 @@ function AnalyticsSection({ userData, onLoaded }: { userData: UserData | null, o
                 </div>
                 <div className="text-right">
                   <p className="font-semibold text-green-600">₺{formatPrice(dish.revenue)}</p>
-                  <p className="text-sm text-gray-500">{t('analytics.popularDishes.revenue')}</p>
                 </div>
               </div>
             ))}

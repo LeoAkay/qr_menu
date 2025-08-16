@@ -463,7 +463,7 @@ export const en = {
   'orderSystem.confirmPayAll.title': 'Confirm Payment',
   'orderSystem.confirmPayAll.message': 'Are you sure you want to pay all remaining items for Table #',
   'orderSystem.confirmPayAll.total': ' (₺',
-  'orderSystem.confirmPayAll.markInactive': ')? This action will mark all orders as paid and inactive.',
+  'orderSystem.confirmPayAll.markInactive': ')? This action will mark all orders as paid.',
   'orderSystem.confirmPayAll.confirm': 'Confirm Payment',
   'orderSystem.confirmPayAll.cancel': 'Cancel',
   'orderSystem.payAllSuccess': 'All items paid successfully! 💳',
