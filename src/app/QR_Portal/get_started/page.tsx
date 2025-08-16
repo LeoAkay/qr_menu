@@ -62,14 +62,14 @@ export default function GetStartedPage() {
           >
             {t('getStarted.return')}
           </Link>
-                     <button
-             onClick={() => setLocale(locale === 'en' ? 'tr' : 'en')}
-             className="bg-black text-white border border-gray-800 rounded-lg px-3 py-2 text-sm font-medium hover:bg-gray-800 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
-             title={t('language.switch')}
-           >
-             <Globe className="w-4 h-4" />
-             <span className="hidden sm:inline">{locale === 'en' ? 'EN' : 'TR'}</span>
-           </button>
+<button
+            onClick={() => setLocale(locale === 'en' ? 'tr' : 'en')}
+            className="bg-white/80 backdrop-blur-sm border border-gray-200 rounded-full px-3 py-2 text-sm font-medium text-gray-700 hover:bg-white hover:border-gray-300 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
+            title={t('language.switch')}
+          >
+            <Globe className="w-5 h-5 text-black" />
+            <span className="text-black text-sm font-medium hidden sm:inline">{locale === 'en' ? 'EN' : 'TR'}</span>
+          </button>
         </div>
       </header>
       
@@ -86,69 +86,65 @@ export default function GetStartedPage() {
 
         
         {submitted ? (
-          <>
-    <div className="min-h-screen flex flex-col items-center justify-center space-y-6">
-    
-    <div className="text-green-600 font-semibold text-4xl text-center">
-      {t('getStarted.thankYou')}
-    </div><div className="text-green-600 font-semibold text-4xl">
-      ✅
-    </div>
-    <Link
-      href="/"
-      className="bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-semibold text-lg"
-    >
-      {t('getStarted.returnHome')}
-    </Link>
-  </div>
-
-</>
-
-
-        ) : (
-        <div className="max-w-2xl w-full space-y-6 relative z-10">
-        <h1 className="text-6xl font-bold text-center text-gray-900">{t('getStarted.title')}</h1>
-        <p className="text-center text-gray-700 mb-6">{t('getStarted.subtitle')}</p>
-          <form onSubmit={handleSubmit} className="space-y-6 bg-white p-8 rounded-2xl shadow-lg border border-gray-200">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {[
-                { name: 'name', placeholder: t('getStarted.form.firstName') },
-                { name: 'surname', placeholder: t('getStarted.form.lastName') },
-                { name: 'phone', placeholder: t('getStarted.form.phone') },
-                { name: 'email', placeholder: t('getStarted.form.email'), type: 'email' },
-                { name: 'restaurant', placeholder: t('getStarted.form.restaurant') },
-                { name: 'country', placeholder: t('getStarted.form.country') },
-                { name: 'city', placeholder: t('getStarted.form.city') },
-              ].map(({ name, placeholder, type }) => (
-                <input
-                  key={name}
-                  name={name}
-                  type={type || 'text'}
-                  value={form[name as keyof typeof form]}
-                  onChange={handleChange}
-                  required
-                  placeholder={placeholder}
-                  className="w-full px-5 py-3 rounded-xl bg-white border border-gray-300 placeholder-gray-400 text-gray-900 text-lg transition focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent shadow-sm"
-                />
-              ))}
+          <div className="min-h-screen flex flex-col items-center justify-center space-y-6">
+            <div className="text-green-600 font-semibold text-4xl text-center">
+              {t('getStarted.thankYou')}
             </div>
-            <textarea
-              name="message"
-              value={form.message}
-              onChange={handleChange}
-              placeholder={t('getStarted.form.message')}
-              rows={5}
-              className="w-full px-3 sm:px-5 py-3 sm:py-4 rounded-xl bg-white border border-gray-300 placeholder-gray-400 text-gray-900 text-base sm:text-lg resize-none transition focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent shadow-sm"
-            />
-            <button
-              type="submit"
-              className="w-full py-3 sm:py-4 bg-purple-600 text-white text-base sm:text-lg font-semibold rounded-xl hover:bg-purple-700 transition shadow-md"
+            <div className="text-green-600 font-semibold text-4xl">
+              ✅
+            </div>
+            <Link
+              href="/"
+              className="bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-semibold text-lg"
             >
-              {t('getStarted.form.send')}
-            </button>
-          </form>
+              {t('getStarted.returnHome')}
+            </Link>
+          </div>
+        ) : (
+          <div className="max-w-2xl w-full space-y-6 relative z-10">
+            <h1 className="text-6xl font-bold text-center text-gray-900">{t('getStarted.title')}</h1>
+            <p className="text-center text-gray-700 mb-6">{t('getStarted.subtitle')}</p>
+            <form onSubmit={handleSubmit} className="space-y-6 bg-white p-8 rounded-2xl shadow-lg border border-gray-200">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {[
+                  { name: 'name', placeholder: t('getStarted.form.firstName') },
+                  { name: 'surname', placeholder: t('getStarted.form.lastName') },
+                  { name: 'phone', placeholder: t('getStarted.form.phone') },
+                  { name: 'email', placeholder: t('getStarted.form.email'), type: 'email' },
+                  { name: 'restaurant', placeholder: t('getStarted.form.restaurant') },
+                  { name: 'country', placeholder: t('getStarted.form.country') },
+                  { name: 'city', placeholder: t('getStarted.form.city') },
+                ].map(({ name, placeholder, type }) => (
+                  <input
+                    key={name}
+                    name={name}
+                    type={type || 'text'}
+                    value={form[name as keyof typeof form]}
+                    onChange={handleChange}
+                    required
+                    placeholder={placeholder}
+                    className="w-full px-5 py-3 rounded-xl bg-white border border-gray-300 placeholder-gray-400 text-gray-900 text-lg transition focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent shadow-sm"
+                  />
+                ))}
+              </div>
+              <textarea
+                name="message"
+                value={form.message}
+                onChange={handleChange}
+                placeholder={t('getStarted.form.message')}
+                rows={5}
+                className="w-full px-3 sm:px-5 py-3 sm:py-4 rounded-xl bg-white border border-gray-300 placeholder-gray-400 text-gray-900 text-base sm:text-lg resize-none transition focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent shadow-sm"
+              />
+              <button
+                type="submit"
+                className="w-full py-3 sm:py-4 bg-purple-600 text-white text-base sm:text-lg font-semibold rounded-xl hover:bg-purple-700 transition shadow-md"
+              >
+                {t('getStarted.form.send')}
+              </button>
+            </form>
           </div>
         )}
       </div>
+    </div>
   )
 }

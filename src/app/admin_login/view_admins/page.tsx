@@ -11,15 +11,18 @@ export default async function ViewAdmin() {
   })
 
   return (
-    <>
-      <div className="relative max-h-screen px-6 text-black">
-        <main className="max-w-xl mx-auto pt-12 ">
-          <h1 className="text-6xl font-bold mb-4 text-center">Admins</h1>
-          <ReturnButton/>
-    <CreateNewAdmin/>
+    <div className="min-h-screen bg-white">
+      <div className="relative px-6 text-black mb-16">
+        <main className="max-w-xl mx-auto pt-12">
+          <h1 className="text-6xl font-bold mb-8 text-center">Admins</h1>
+          <div className="flex flex-col items-center gap-6 mb-12">
+            <ReturnButton/>
+            <CreateNewAdmin/>
+          </div>
         </main>
       </div>
-      <main className="max-h-screen flex flex-col items-center  justify-start gap-8 p-8 pt-22 ">
+      
+      <main className="flex flex-col items-center justify-start gap-8 px-8 pb-8 pt-8">
         <section className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {users.map((user) => {
             return (
@@ -50,6 +53,6 @@ export default async function ViewAdmin() {
           })}
         </section>
       </main>
-    </>
+    </div>
   )
 }

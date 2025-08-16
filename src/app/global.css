@@ -79,14 +79,16 @@ body {
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
 }
 
-/* Common styles for both pages */
-body.dashboard-mode {
+/* Common styles for both pages - only apply when in admin section */
+[data-admin="true"] body.dashboard-mode,
+[data-admin="true"] .dashboard-mode {
   --background: #000000;
   --foreground: #000000;
   --background-image: url(https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRFdR5duGXRu6NBtxIy6R2Y7SWAJOdAOJgBuw&s);
 }
 
-body.dashboard-mode::before {
+[data-admin="true"] body.dashboard-mode::before,
+[data-admin="true"] .dashboard-mode::before {
   content: "";
   position: fixed;
   top: 0;
@@ -203,3 +205,41 @@ body.dashboard-mode::before {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* === Admin Dashboard Styles === */
+.admin-layout {
+  background-color: white;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.admin-layout * {
+  box-sizing: border-box;
+}
+
+/* Ensure admin pages have clean white backgrounds */
+.admin-layout main,
+.admin-layout div[class*="page"] {
+  background-color: white;
+}
+
+/* Admin page layout fixes */
+.admin-layout .relative {
+  position: relative;
+}
+
+.admin-layout .mb-8 {
+  margin-bottom: 2rem;
+}
+
+/* Prevent overlap between header and content */
+.admin-layout .flex.flex-col.items-center.gap-4 {
+  margin-bottom: 2rem;
+}
+
+/* Ensure company grid starts below header */
+.admin-layout .grid {
+  margin-top: 1rem;
+}
+
+

@@ -53,7 +53,7 @@ export default function UserLoginPage() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden flex flex-col">
       {/* Header */}
       <header className="relative z-20 py-6 px-4">
         <div className="max-w-7xl mx-auto text-center">
@@ -61,9 +61,9 @@ export default function UserLoginPage() {
         </div>
       </header>
       
-      <div className="flex items-center justify-center min-h-screen relative">
+      <div className="flex items-center justify-center flex-1 relative">
       {/* Animated Background Circles */}
-      <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-white">
+      <div className="absolute inset-0">
         {/* Purple circles */}
         <div className="absolute top-0 left-0 w-48 h-48 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full mix-blend-multiply opacity-70 animate-blob"></div>
         <div className="absolute top-0 right-0 w-56 h-56 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-full mix-blend-multiply opacity-70 animate-blob animation-delay-2000"></div>

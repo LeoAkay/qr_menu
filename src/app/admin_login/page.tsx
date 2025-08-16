@@ -87,12 +87,8 @@ export default function LoginPage() {
         <button
           onClick={handleLogin}
           onKeyPress={handleKeyPress}
-          disabled={loading || !userName.trim() || !password.trim()}
-          className={`w-full py-3 rounded-md transition font-semibold text-lg ${
-            loading || !userName.trim() || !password.trim()
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-blue-600 hover:bg-blue-700 text-white'
-          }`}
+          disabled={loading || !userName || !password}
+          className="w-full bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 transition font-semibold text-lg"
         >
          {loading ? 'Signing In...' : 'Sign In'}
         </button>

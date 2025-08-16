@@ -1787,7 +1787,6 @@ const toggleDescription = (itemId: string) => {
   }));
 };
 
-
   // Show first category by default
   useEffect(() => {
     if (sortedCategories.length > 0 && !selectedCategory) {

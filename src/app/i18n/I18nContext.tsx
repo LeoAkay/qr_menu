@@ -10,7 +10,7 @@ type Messages = typeof en
 interface I18nContextType {
   locale: Locale
   setLocale: (locale: Locale) => void
-  t: (key: keyof Messages) => string
+  t: (key: string) => string
 }
 
 const I18nContext = createContext<I18nContextType | undefined>(undefined)
@@ -33,8 +33,8 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('locale', newLocale)
   }
 
-  const t = (key: keyof Messages): string => {
-    return messages[locale][key] || messages.en[key] || key
+  const t = (key: string): string => {
+    return messages[locale][key as keyof Messages] || messages.en[key as keyof Messages] || key
   }
 
   return (
