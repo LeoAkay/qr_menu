@@ -80,6 +80,8 @@ export default function EditCompanyForm() {
   const [showItemForm, setShowItemForm] = useState<string | null>(null)
   const [showEditCategoryForm, setShowEditCategoryForm] = useState(false)
   const [showEditItemForm, setShowEditItemForm] = useState(false)
+  const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null)
+
 
   const [categoryForm, setCategoryForm] = useState({
     name: '',
@@ -531,264 +533,168 @@ return (
         {/* Edit Item Modal - REMOVED */}
 
         {/* Categories List */}
-      {categories.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
-          <div className="text-6xl mb-4">🍽️</div>
-          <h3 className="text-xl font-medium mb-2">No Categories Yet</h3>
-          <p className="text-sm">Start by adding your first menu category</p>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {categories.map((category) => (
-                         <div key={category.id} className="border border-gray-200 rounded-xl p-6 bg-white">
-               <div className="flex justify-between items-center mb-4">
-                 <h3 className="text-xl font-semibold text-gray-800">{category.name}</h3>
-                 <div className="flex space-x-2">
-                   <button
-                     onClick={() => setShowItemForm(showItemForm === category.id ? null : category.id)}
-                     className="bg-blue-400 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 text-sm shadow-sm hover:shadow-md"
-                   >
-                     <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                     </svg>
-                     Add Item
-                   </button>
-                   <button
-                     onClick={() => handleEditCategory(category)}
-                     className="bg-amber-400 hover:bg-amber-500 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 text-sm shadow-sm hover:shadow-md"
-                   >
-                     <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                     </svg>
-                     Edit
-                   </button>
-                   <button
-                     onClick={() => handleDeleteCategory(category.id, category.name)}
-                     className="bg-rose-400 hover:bg-rose-500 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 text-sm shadow-sm hover:shadow-md"
-                   >
-                     <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                     </svg>
-                     Delete
-                   </button>
-                 </div>
-               </div>
+{/* Categories List */}
+{categories.length === 0 ? (
+  <div className="text-center py-12 text-gray-500">
+    <div className="text-6xl mb-4">🍽️</div>
+    <h3 className="text-xl font-medium mb-2">No Categories Yet</h3>
+    <p className="text-sm">Start by adding your first menu category</p>
+  </div>
+) : (
+  <div className="space-y-6">
+    {categories.map((category) => (
+      <div key={category.id} className="border border-gray-200 rounded-xl p-6 bg-white shadow-md">
+        {/* Category Header */}
+<div
+  className="flex justify-between items-center mb-4 cursor-pointer"
+  onClick={() =>
+    setExpandedCategoryId(expandedCategoryId === category.id ? null : category.id)
+  }
+>
+  <h3 className="text-xl font-semibold text-gray-800 flex items-center space-x-2">
+    {category.name}
+    <svg
+      className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${
+        expandedCategoryId === category.id ? 'rotate-180' : ''
+      }`}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+    </svg>
+  </h3>
 
-              {/* Add Item Form */}
-              {showItemForm === category.id && (
-                <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <h4 className="text-lg font-medium mb-3">Add New Item to {category.name}</h4>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Item Name</label>
-                      <input
-                        type="text"
-                        value={itemForm.name}
-                        onChange={(e) => setItemForm({...itemForm, name: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
-                        placeholder="e.g., Grilled Chicken"
+  <div className="flex space-x-2">
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        setShowItemForm(showItemForm === category.id ? null : category.id);
+      }}
+      className="flex items-center bg-blue-400 hover:bg-blue-500 text-white px-3 py-1 rounded-lg text-sm font-medium transition-shadow shadow-sm hover:shadow-md"
+    >
+      + Item
+    </button>
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        handleEditCategory(category);
+      }}
+      className="flex items-center bg-amber-400 hover:bg-amber-500 text-white px-3 py-1 rounded-lg text-sm font-medium transition-shadow shadow-sm hover:shadow-md"
+    >
+      Edit
+    </button>
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        handleDeleteCategory(category.id, category.name);
+      }}
+      className="flex items-center bg-rose-400 hover:bg-rose-500 text-white px-3 py-1 rounded-lg text-sm font-medium transition-shadow shadow-sm hover:shadow-md"
+    >
+      Delete
+    </button>
+  </div>
+</div>
+
+
+        {/* Add Item Form */}
+        {showItemForm === category.id && (
+          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-4">
+            <h4 className="text-lg font-medium">Add New Item to {category.name}</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <input
+                type="text"
+                value={itemForm.name}
+                onChange={(e) => setItemForm({ ...itemForm, name: e.target.value })}
+                placeholder="Item Name"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+              />
+              <input
+                type="number"
+                step="0.01"
+                value={itemForm.price}
+                onChange={(e) => setItemForm({ ...itemForm, price: e.target.value })}
+                placeholder="Price (₺)"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+              />
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setItemForm({ ...itemForm, menuImage: e.target.files?.[0] || null })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+              />
+            </div>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => handleAddItem(category.id)}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium"
+              >
+                Save Item
+              </button>
+              <button
+                onClick={() => setShowItemForm(null)}
+                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Items List (Dropdown) */}
+        {expandedCategoryId === category.id && (
+          <div className="space-y-3">
+            {category.subCategories?.length ? (
+              category.subCategories.map((item: any) => (
+                <div
+                  key={item.id}
+                  className={`border border-gray-100 rounded-lg p-4 bg-gray-50 flex justify-between items-center ${
+                    highlightedItemId === item.id ? "ring-4 ring-purple-400" : ""
+                  }`}
+                >
+                  <div className="flex items-center space-x-4">
+                    {item.menuImageUrl && (
+                      <img
+                        src={`/api/QR_Panel/user/manual-menu/image/${item.id}`}
+                        alt={item.name}
+                        className="w-16 h-16 object-cover rounded-lg "
                       />
-                    </div>
+                    )}
                     <div>
-                      <label className="block text-sm font-medium mb-1">Price (₺)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={itemForm.price}
-                        onChange={(e) => setItemForm({...itemForm, price: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
-                        placeholder="e.g., 19.99"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Item Description</label>
-                      <input
-                        type="text"
-                        value={itemForm.description}
-                        onChange={(e) => setItemForm({...itemForm, description: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
-                        placeholder={('e.g., Cake with fresh fruits')}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Stock Status</label>
-                      <select
-                        value={itemForm.stock ? 'true' : 'false'}
-                        onChange={(e) => setItemForm({...itemForm, stock: e.target.value === 'true'})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
-                      >
-                        <option value="true">In Stock</option>
-                        <option value="false">Out of Stock</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Item Image (Optional)</label>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => setItemForm({...itemForm, menuImage: e.target.files?.[0] || null})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
-                      />
+                      <h4 className="font-semibold text-gray-800">{item.name}</h4>
+                      {item.price && <p className="text-green-600 font-bold">₺{Number(item.price).toFixed(2)}</p>}
+                      {item.description && <p className="text-gray-600 text-sm italic">{item.description}</p>}
                     </div>
                   </div>
-                  <div className="flex space-x-3 mt-4">
+
+                  <div className="flex space-x-2">
                     <button
-                      onClick={() => handleAddItem(category.id)}
-                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                      onClick={() => handleEditItem(item)}
+                      className="bg-amber-400 hover:bg-amber-500 text-white px-3 py-1 rounded-lg text-sm font-medium"
                     >
-                      Save Item
+                      Edit
                     </button>
                     <button
-                      onClick={() => setShowItemForm(null)}
-                      className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                      onClick={() => handleDeleteItem(item.id, item.name)}
+                      className="bg-rose-400 hover:bg-rose-500 text-white px-3 py-1 rounded-lg text-sm font-medium"
                     >
-                      Cancel
+                      Delete
                     </button>
                   </div>
                 </div>
-              )}
+              ))
+            ) : (
+              <p className="text-gray-500 text-sm text-center py-4">
+                No items yet. Click "Add Item" to add your first menu item.
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    ))}
+  </div>
+)}
 
-              {/* Items List */}
-             {/* Items List */}
-              <div className="space-y-3">
-                                 {category.subCategories?.map((item: any) => (
-                   <div key={item.id} ref={el => { itemRefs.current[item.id] = el; }} className={`border border-gray-100 rounded-lg p-4 bg-gray-50 ${highlightedItemId === item.id ? 'ring-4 ring-purple-400' : ''}`}>
-                     <div className="flex justify-between items-start">
-                       <div className="flex-1">
-                         <div className="flex items-center space-x-3">
-                           <h4 className="font-semibold text-gray-800">{item.name}</h4>
-                           {item.price && (
-                             <span className="text-green-600 font-bold">₺{formatPrice(item.price)}</span>
-                           )}
-                           {item.stock ? (
-                            <span className='text-green-600 font-bold'>In Stock</span>
-                           ):(
-                            <span className='text-red-600 font-bold'>Out of Stock</span>
-                           )}
-                         </div>
-                         {item.description && (
-                           <p className="text-sm text-gray-600 mt-1 italic">{item.description}</p>
-                         )}
-                       </div>
-                       <div className="flex items-center space-x-3">
-                         {item.menuImageUrl && (
-                           <div>
-                             <img 
-                               src={`/api/QR_Panel/user/manual-menu/image/${item.id}`}
-                               alt={item.name}
-                               className="w-16 h-16 object-cover rounded-lg"
-                             />
-                           </div>
-                         )}
-                         <button
-                           onClick={() => handleEditItem(item)}
-                           className="bg-amber-400 hover:bg-amber-500 text-white p-2 rounded-lg font-medium transition-all duration-200 text-sm shadow-sm hover:shadow-md"
-                           title="Edit item"
-                         >
-                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                           </svg>
-                         </button>
-                         <button
-                           onClick={() => handleDeleteItem(item.id, item.name)}
-                           className="bg-rose-400 hover:bg-rose-500 text-white p-2 rounded-lg font-medium transition-all duration-200 text-sm shadow-sm hover:shadow-md"
-                           title="Delete item"
-                         >
-                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                           </svg>
-                         </button>
-                       </div>
-                     </div>
-                     {/* Inline Edit Item Form */}
-                     {editingItem?.id === item.id && (
-                       <div className="mt-4 mb-2 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
-                         <h3 className="text-lg font-semibold mb-4">Edit Item: {editingItem?.name}</h3>
-                         
-                         <div className="space-y-4">
-                           <div>
-                             <label className="block text-sm font-medium mb-2">Item Name</label>
-                             <input
-                               type="text"
-                               value={editItemForm.name}
-                               onChange={(e) => setEditItemForm({...editItemForm, name: e.target.value})}
-                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none"
-                               placeholder="e.g., Grilled Chicken"
-                             />
-                           </div>
-                           <div>
-                             <label className="block text-sm font-medium mb-2">Price (₺)</label>
-                             <input
-                               type="number"
-                               step="0.01"
-                               value={editItemForm.price}
-                               onChange={(e) => setEditItemForm({...editItemForm, price: e.target.value})}
-                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none"
-                               placeholder="e.g., 19.99"
-                             />
-                           </div>
-                           <div>
-                             <label className="block text-sm font-medium mb-2">Item Description</label>
-                             <input
-                               type="text"
-                               value={editItemForm.description}
-                               onChange={(e) => setEditItemForm({...editItemForm, description: e.target.value})}
-                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none"
-                               placeholder="e.g., Grilled chicken with herbs"
-                             />
-                           </div>
-                           <div>
-                             <label className="block text-sm font-medium mb-2">Stock Status</label>
-                             <select
-                               value={editItemForm.stock ? 'true' : 'false'}
-                               onChange={(e) => setEditItemForm({...editItemForm, stock: e.target.value === 'true'})}
-                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none"
-                             >
-                               <option value="true">In Stock</option>
-                               <option value="false">Out of Stock</option>
-                             </select>
-                           </div>
-                           <div>
-                             <label className="block text-sm font-medium mb-2">Item Image (Optional - Leave empty to keep current)</label>
-                             <input
-                               type="file"
-                               accept="image/*"
-                               onChange={(e) => setEditItemForm({...editItemForm, menuImage: e.target.files?.[0] || null})}
-                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none"
-                             />
-                           </div>
-                         </div>
-                         <div className="flex space-x-3 mt-4">
-                           <button
-                             onClick={handleUpdateItem}
-                             className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
-                           >
-                             Update Item
-                           </button>
-                           <button
-                             onClick={() => {
-                               setShowEditItemForm(false)
-                               setEditingItem(null)
-                               setEditItemForm({ name: '', price: '', description: '', stock: true, menuImage: null })
-                             }}
-                             className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"
-                           >
-                             Cancel
-                           </button>
-                         </div>
-                       </div>
-                     )}
-                   </div>
-                 )) || (
-                  <p className="text-gray-500 text-sm text-center py-4">
-                    No items yet. Click "Add Item" to add your first menu item.
-                  </p>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
     </div>
     
