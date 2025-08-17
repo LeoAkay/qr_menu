@@ -243,10 +243,20 @@ export default function UserDashboard() {
       console.error('Dashboard WebSocket connection error:', error);
     });
 
-    socket.on('new-order', (newOrder: any) => {
+     socket.on("new-order", (newOrder: any) => {
       if (newOrder?.tableNumber) {
-        toast.info(`New order received for Table ${newOrder.tableNumber}! 🎉`);
-        return(<ToastContainer/>)
+        const toastId = toast.info(
+          <div
+            onClick={() => {
+              router.push("/QR_Portal/order_system"); // navigate
+              toast.dismiss(toastId); // close the toast
+            }}
+            className="cursor-pointer"
+          >
+            New order received for Table {newOrder.tableNumber}! 🎉
+          </div>,
+          { autoClose: 5000 } // optional: auto close after 5s
+        );
       }
     });
 
@@ -2197,7 +2207,7 @@ function PreviewSection({
             <div className="mt-4">
               <button
                 onClick={onDownloadQR}
-                className="bg-green-400 hover:bg-green-500 text-white px-6 py-3 rounded-lg transition-all duration-200 font-medium shadow-sm hover:shadow-md"
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition-all duration-200 font-medium shadow-sm hover:shadow-md"
               >
                 <svg className="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -2738,11 +2748,31 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-800">{t('theme.section.menuAppearance.title')}</h3>
           <button
-            onClick={() => setShowThemeOptions(!showThemeOptions)}
-            className="bg-purple-100 hover:bg-purple-200 text-purple-700 px-4 py-2 rounded-lg transition-colors text-sm font-medium"
-          >
-            {showThemeOptions ? t('theme.section.menuAppearance.hideButton') : t('theme.section.menuAppearance.customizeButton')}
-          </button>
+  onClick={() => setShowThemeOptions(!showThemeOptions)}
+  className="bg-purple-100 hover:bg-purple-200 text-purple-700 px-4 py-2 rounded-lg transition-colors text-sm font-medium flex items-center gap-1"
+>
+  {showThemeOptions ? (
+    <>
+      <svg
+        className="w-4 h-4"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M5 15l7-7 7 7"
+        />
+      </svg>
+      {t('theme.section.menuAppearance.hideButton')}
+    </>
+  ) : (
+    <>{t('theme.section.menuAppearance.customizeButton')}</>
+  )}
+</button>
+
         </div>
         {showThemeOptions && (
           <div className="bg-gray-50 rounded-xl p-6 space-y-6">
@@ -2862,12 +2892,12 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
       {/* Order System Toggle Section */}
       <div className="mt-8">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-800">{t('theme.section.orderSystem.title')}</h3>
+          <h3 className="text-lg font-semibold text-black-800">{t('theme.section.orderSystem.title')}</h3>
         </div>
         <div className="bg-gray-50 rounded-xl p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="text-md font-medium text-gray-700 mb-2">{t('theme.section.orderSystem.enableTitle')}</h4>
+              <h4 className="text-md font-medium text-black mb-2">{t('theme.section.orderSystem.enableTitle')}</h4>
               <p className="text-sm text-gray-600">
                 {t('theme.section.orderSystem.description')}
               </p>
@@ -2901,20 +2931,6 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
                 />
                 <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
               </label>
-            </div>
-          </div>
-          <div className="mt-4 p-4 bg-purple-50 border border-purple-200 rounded-lg">
-            <div className="flex items-start space-x-3">
-              <div className="text-purple-600 text-lg">ℹ️</div>
-              <div className="text-sm text-purple-800">
-                <strong>{t('theme.section.orderSystem.currentStatus')}</strong> {userData?.company?.orderSystem ? t('theme.section.orderSystem.status.enabled') : t('theme.section.orderSystem.status.disabled')}
-                <br />
-                <span className="text-purple-600">
-                  {userData?.company?.orderSystem 
-                    ? t('theme.section.orderSystem.enabled')
-                    : t('theme.section.orderSystem.status.displayOnly')}
-                </span>
-              </div>
             </div>
           </div>
         </div>
@@ -2998,7 +3014,7 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Logo Upload */}
               <div>
-                <label className="block text-sm font-medium mb-3 text-gray-700">{t('theme.section.images.logoUpload.title')}</label>
+                <label className="block text-sm text-center font-medium mb-3 text-black">{t('theme.section.images.logoUpload.title')}</label>
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
                   <input
                     type="file"
@@ -3030,7 +3046,7 @@ function ThemeSettingsSection({ userData, onLoaded }: { userData: UserData | nul
               </div>
               {/* Welcoming Page Upload */}
               <div>
-                <label className="block text-sm font-medium mb-3 text-gray-700">{t('theme.section.images.welcomeUpload.title')}</label>
+                <label className="block text-sm text-center font-medium mb-3 text-black">{t('theme.section.images.welcomeUpload.title')}</label>
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
                   <input
                     type="file"
@@ -3139,16 +3155,23 @@ function AnalyticsSection({ userData, onLoaded }: { userData: UserData | null, o
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       
       switch (filterPeriod) {
-        case 'daily':
-          return diffDays <= 1;
-        case 'weekly':
-          return diffDays <= 7;
-        case 'monthly':
-          return diffDays <= 30;
-        case 'total':
-        default:
-          return true;
-      }
+  case 'daily':
+    return orderDate.toDateString() === now.toDateString();
+  case 'weekly': {
+    const weekAgo = new Date();
+    weekAgo.setDate(now.getDate() - 7);
+    return orderDate >= weekAgo;
+  }
+  case 'monthly': {
+    const monthAgo = new Date();
+    monthAgo.setMonth(now.getMonth() - 1);
+    return orderDate >= monthAgo;
+  }
+  case 'total':
+  default:
+    return true;
+}
+
     });
 
     // Calculate analytics
