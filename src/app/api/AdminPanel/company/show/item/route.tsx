@@ -24,6 +24,8 @@ let imageUrl: string | null = null
     const formData = await request.formData()
     const name = formData.get('name') as string
     const price = formData.get('price') as string
+    const description = formData.get('description') as string
+    const stock = formData.get('stock') as string
     const mainCategoryId = formData.get('mainCategoryId') as string
     const menuImage = formData.get('menuImage') as File | null
 
@@ -86,6 +88,8 @@ if (menuImage && menuImage.size > 0) {
   data: {
     name,
     price: price ? parseFloat(price) : null,
+    description: formData.has('description') ? description : null,
+    stock: stock ? stock === 'true' : true,
     orderNo,
     mainCategoryId,
     menuImageUrl: imageUrl
@@ -193,6 +197,8 @@ export async function PUT(request: NextRequest) {
     const formData = await request.formData();
     const name = formData.get('name') as string;
     const price = formData.get('price') as string;
+    const description = formData.get('description') as string;
+    const stock = formData.get('stock') as string;
     const menuImage = formData.get('menuImage') as File | null;
 
     if (!name) {
@@ -204,7 +210,14 @@ export async function PUT(request: NextRequest) {
     if (price) {
       updateData.price = parseFloat(price);
     }
-
+    // Always update description when it's provided in form data
+    if (formData.has('description')) {
+      updateData.description = description || null; // Allow empty descriptions to be saved
+    }
+    if (stock !== undefined && stock !== null) {
+      updateData.stock = stock === 'true';
+    }
+    
     // Upload new image to Supabase
     if (menuImage && menuImage.size > 0) {
       const supabase = createClient(process.env.DB_URL!, process.env.ROLE_KEY!);

@@ -83,23 +83,25 @@ export default function EditCompanyForm() {
 
   const [categoryForm, setCategoryForm] = useState({
     name: '',
-    backgroundImage: null as File | null
   })
 
   const [itemForm, setItemForm] = useState({
     name: '',
     price: '',
+    description: '',
+    stock: true,
     menuImage: null as File | null
   })
 
   const [editCategoryForm, setEditCategoryForm] = useState({
     name: '',
-    backgroundImage: null as File | null
   })
 
   const [editItemForm, setEditItemForm] = useState({
     name: '',
     price: '',
+    description: '',
+    stock: true,
     menuImage: null as File | null
   })
 
@@ -163,9 +165,6 @@ const fetchUserIdFromCId = async (cId: number) => {
     try {
       const formData = new FormData()
       formData.append('name', categoryForm.name)
-      if (categoryForm.backgroundImage) {
-        formData.append('backgroundImage', categoryForm.backgroundImage)
-      }
       const userId = localStorage.getItem('userId');
 
       const res = await fetch('/api/AdminPanel/company/show/category', {
@@ -176,7 +175,6 @@ const fetchUserIdFromCId = async (cId: number) => {
 
       if (res.ok) {
         alert('Category added successfully!')
-        setCategoryForm({ name: '', backgroundImage: null })
         setShowCategoryForm(false)
         fetchCategories()
       } else {
@@ -196,6 +194,10 @@ const fetchUserIdFromCId = async (cId: number) => {
       if (itemForm.price) {
         formData.append('price', itemForm.price)
       }
+      // Always send description to ensure it gets saved properly
+      formData.append('description', itemForm.description || '')
+      // Always send stock
+      formData.append('stock', itemForm.stock ? 'true' : 'false')
       formData.append('mainCategoryId', categoryId)
       if (itemForm.menuImage) {
         formData.append('menuImage', itemForm.menuImage)
@@ -211,7 +213,7 @@ const fetchUserIdFromCId = async (cId: number) => {
       if (res.ok) {
         alert('Item added successfully!')
         setItemForm({
-          name: '', price: '', menuImage: null
+          name: '', price: '',description: '',stock:true, menuImage: null
         })
         setShowItemForm(null)
         fetchCategories()
@@ -277,7 +279,6 @@ const fetchUserIdFromCId = async (cId: number) => {
     setEditingCategory(category)
     setEditCategoryForm({
       name: category.name,
-      backgroundImage: null
     })
     setShowEditCategoryForm(true)
   }
@@ -287,6 +288,8 @@ const fetchUserIdFromCId = async (cId: number) => {
     setEditItemForm({
       name: item.name,
       price: item.price?.toString() || '',
+      description: item.description || '',
+      stock: item.stock !== undefined ? item.stock : true,
       menuImage: null
     })
     setShowEditItemForm(true)
@@ -299,10 +302,7 @@ const fetchUserIdFromCId = async (cId: number) => {
     const cId = searchParams.get('cId') // 👈 get it from query param
     const formData = new FormData()
     formData.append('name', editCategoryForm.name)
-    if (editCategoryForm.backgroundImage) {
-      formData.append('backgroundImage', editCategoryForm.backgroundImage)
-    }
-
+  
     const res = await fetch(
       `/api/AdminPanel/company/show/category?categoryId=${editingCategory.id}&cId=${cId}`,
       {
@@ -313,7 +313,6 @@ const fetchUserIdFromCId = async (cId: number) => {
 
     if (res.ok) {
       alert('Category updated successfully!')
-      setEditCategoryForm({ name: '', backgroundImage: null })
       setShowEditCategoryForm(false)
       setEditingCategory(null)
       fetchCategories()
@@ -337,9 +336,14 @@ const fetchUserIdFromCId = async (cId: number) => {
     if (editItemForm.price) {
       formData.append('price', editItemForm.price)
     }
+    // Always send description to ensure it gets updated properly
+    formData.append('description', editItemForm.description || '')
+    // Always send stock
+    formData.append('stock', editItemForm.stock ? 'true' : 'false')
     if (editItemForm.menuImage) {
       formData.append('menuImage', editItemForm.menuImage)
     }
+    
     const userId = localStorage.getItem('userId');
     const res = await fetch(`/api/AdminPanel/company/show/item?itemId=${editingItem.id}&userId=${userId}`, {
       method: 'PUT',
@@ -349,7 +353,7 @@ const fetchUserIdFromCId = async (cId: number) => {
 
     if (res.ok) {
       alert('Item updated successfully!')
-      setEditItemForm({ name: '', price: '', menuImage: null })
+      setEditItemForm({ name: '', price: '', description: '', stock: true, menuImage: null })
       setShowEditItemForm(false)
       setEditingItem(null)
       fetchCategories()
@@ -470,15 +474,6 @@ return (
                 placeholder="e.g., Appetizers, Main Courses"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Background Image (Optional)</label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setCategoryForm({...categoryForm, backgroundImage: e.target.files?.[0] || null})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
-              />
-            </div>
           </div>
           <div className="flex space-x-3 mt-4">
             <button
@@ -512,15 +507,6 @@ return (
                   placeholder="e.g., Appetizers, Main Courses"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Background Image (Optional - Leave empty to keep current)</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setEditCategoryForm({...editCategoryForm, backgroundImage: e.target.files?.[0] || null})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none"
-                />
-              </div>
             </div>
             <div className="flex space-x-3 mt-4">
               <button
@@ -533,7 +519,6 @@ return (
                 onClick={() => {
                   setShowEditCategoryForm(false)
                   setEditingCategory(null)
-                  setEditCategoryForm({ name: '', backgroundImage: null })
                 }}
                 className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
               >
@@ -543,62 +528,7 @@ return (
           </div>
         )}
 
-        {/* Edit Item Modal */}
-        {showEditItemForm && (
-          <div className="mb-6 p-6 bg-yellow-50 border border-yellow-200 rounded-xl">
-            <h3 className="text-lg font-semibold mb-4">Edit Item: {editingItem?.name}</h3>
-                         <div className="space-y-4">
-               <div>
-                 <label className="block text-sm font-medium mb-2">Item Name</label>
-                 <input
-                   type="text"
-                   value={editItemForm.name}
-                   onChange={(e) => setEditItemForm({...editItemForm, name: e.target.value})}
-                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none"
-                   placeholder="e.g., Grilled Chicken"
-                 />
-               </div>
-               <div>
-                 <label className="block text-sm font-medium mb-2">Price (₺)</label>
-                 <input
-                   type="number"
-                   step="0.01"
-                   value={editItemForm.price}
-                   onChange={(e) => setEditItemForm({...editItemForm, price: e.target.value})}
-                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none"
-                   placeholder="e.g., 19.99"
-                 />
-               </div>
-               <div>
-                 <label className="block text-sm font-medium mb-2">Item Image (Optional - Leave empty to keep current)</label>
-                 <input
-                   type="file"
-                   accept="image/*"
-                   onChange={(e) => setEditItemForm({...editItemForm, menuImage: e.target.files?.[0] || null})}
-                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none"
-                 />
-               </div>
-             </div>
-            <div className="flex space-x-3 mt-4">
-              <button
-                onClick={handleUpdateItem}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-              >
-                Update Item
-              </button>
-              <button
-                onClick={() => {
-                  setShowEditItemForm(false)
-                  setEditingItem(null)
-                  setEditItemForm({ name: '', price: '', menuImage: null })
-                }}
-                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
+        {/* Edit Item Modal - REMOVED */}
 
         {/* Categories List */}
       {categories.length === 0 ? (
@@ -671,6 +601,27 @@ return (
                       />
                     </div>
                     <div>
+                      <label className="block text-sm font-medium mb-1">Item Description</label>
+                      <input
+                        type="text"
+                        value={itemForm.description}
+                        onChange={(e) => setItemForm({...itemForm, description: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                        placeholder={('e.g., Cake with fresh fruits')}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Stock Status</label>
+                      <select
+                        value={itemForm.stock ? 'true' : 'false'}
+                        onChange={(e) => setItemForm({...itemForm, stock: e.target.value === 'true'})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                      >
+                        <option value="true">In Stock</option>
+                        <option value="false">Out of Stock</option>
+                      </select>
+                    </div>
+                    <div>
                       <label className="block text-sm font-medium mb-1">Item Image (Optional)</label>
                       <input
                         type="file"
@@ -709,7 +660,15 @@ return (
                            {item.price && (
                              <span className="text-green-600 font-bold">₺{formatPrice(item.price)}</span>
                            )}
+                           {item.stock ? (
+                            <span className='text-green-600 font-bold'>In Stock</span>
+                           ):(
+                            <span className='text-red-600 font-bold'>Out of Stock</span>
+                           )}
                          </div>
+                         {item.description && (
+                           <p className="text-sm text-gray-600 mt-1 italic">{item.description}</p>
+                         )}
                        </div>
                        <div className="flex items-center space-x-3">
                          {item.menuImageUrl && (
@@ -745,6 +704,7 @@ return (
                      {editingItem?.id === item.id && (
                        <div className="mt-4 mb-2 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
                          <h3 className="text-lg font-semibold mb-4">Edit Item: {editingItem?.name}</h3>
+                         
                          <div className="space-y-4">
                            <div>
                              <label className="block text-sm font-medium mb-2">Item Name</label>
@@ -768,6 +728,27 @@ return (
                              />
                            </div>
                            <div>
+                             <label className="block text-sm font-medium mb-2">Item Description</label>
+                             <input
+                               type="text"
+                               value={editItemForm.description}
+                               onChange={(e) => setEditItemForm({...editItemForm, description: e.target.value})}
+                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none"
+                               placeholder="e.g., Grilled chicken with herbs"
+                             />
+                           </div>
+                           <div>
+                             <label className="block text-sm font-medium mb-2">Stock Status</label>
+                             <select
+                               value={editItemForm.stock ? 'true' : 'false'}
+                               onChange={(e) => setEditItemForm({...editItemForm, stock: e.target.value === 'true'})}
+                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-yellow-500 focus:outline-none"
+                             >
+                               <option value="true">In Stock</option>
+                               <option value="false">Out of Stock</option>
+                             </select>
+                           </div>
+                           <div>
                              <label className="block text-sm font-medium mb-2">Item Image (Optional - Leave empty to keep current)</label>
                              <input
                                type="file"
@@ -780,7 +761,7 @@ return (
                          <div className="flex space-x-3 mt-4">
                            <button
                              onClick={handleUpdateItem}
-                             className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                             className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
                            >
                              Update Item
                            </button>
@@ -788,9 +769,9 @@ return (
                              onClick={() => {
                                setShowEditItemForm(false)
                                setEditingItem(null)
-                               setEditItemForm({ name: '', price: '', menuImage: null })
+                               setEditItemForm({ name: '', price: '', description: '', stock: true, menuImage: null })
                              }}
-                             className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                             className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"
                            >
                              Cancel
                            </button>

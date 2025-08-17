@@ -90,7 +90,7 @@ if (menuImage && menuImage.size > 0) {
   data: {
     name,
     price: price ? parseFloat(price) : null,
-    description: formData.get('description') as string | null,
+    description: formData.has('description') ? (formData.get('description') as string) || null : null,
     orderNo,
     mainCategoryId,
     menuImageUrl: imageUrl,
@@ -209,8 +209,9 @@ export async function PUT(request: NextRequest) {
     if (price) {
       updateData.price = parseFloat(price)
     }
-    if (description) {
-      updateData.description = description
+    // Always update description when it's provided in form data
+    if (formData.has('description')) {
+      updateData.description = description || null; // Allow empty descriptions to be saved
     }
 
     if (stockRaw !== null) {

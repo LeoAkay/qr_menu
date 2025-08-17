@@ -1339,9 +1339,8 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
       if (itemForm.price) {
         formData.append('price', itemForm.price)
       }
-      if (itemForm.description) {
-        formData.append('description', itemForm.description)
-      }
+      // Always send description to ensure it gets saved properly
+      formData.append('description', itemForm.description || '')
       formData.append('mainCategoryId', categoryId)
       if (itemForm.menuImage) {
         formData.append('menuImage', itemForm.menuImage)
@@ -1480,13 +1479,12 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
       if (editItemForm.price) {
         formData.append('price', editItemForm.price)
       }
-      if (editItemForm.description) {
-        formData.append('description', editItemForm.description)
-      }
+      // Always send description to ensure it gets updated properly
+      formData.append('description', editItemForm.description || '')
       if (editItemForm.menuImage) {
         formData.append('menuImage', editItemForm.menuImage)
       }
-      formData.append('stock', itemForm.stock ? 'true' : 'false');
+      formData.append('stock', editItemForm.stock ? 'true' : 'false');
       const res = await fetch(`/api/QR_Panel/user/manual-menu/item?itemId=${editingItem.id}`, {
         method: 'PUT',
         body: formData,
@@ -1813,6 +1811,9 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
                             <span className='text-red-600 font-bold'>{t('manualMenu.stockStatus.outOfStock')}</span>
                            )}
                          </div>
+                         {item.description && (
+                           <p className="text-sm text-gray-600 mt-1 italic">{item.description}</p>
+                         )}
                        </div>
                        <div className="flex items-center space-x-3">
                          {item.menuImageUrl && (
@@ -1911,8 +1912,8 @@ function ManualMenuSection({ searchQuery, onSearchHandled, onLoaded }: { searchQ
                             <div>
                             <label className="block text-sm font-medium mb-1">{t('manualMenu.editItem.stockNote')}</label>
                             <select
-                              value={itemForm.stock ? 'true' : 'false'}
-                              onChange={(e) => setItemForm({ ...itemForm, stock: e.target.value === 'true' })}
+                              value={editItemForm.stock ? 'true' : 'false'}
+                              onChange={(e) => setEditItemForm({ ...editItemForm, stock: e.target.value === 'true' })}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
                             >
                               <option value="true">{t('manualMenu.editItem.stockInStock')}</option>
